@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arachnova Controller</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#000000" />
+
+  </head>
+  <body>
+    <h1>Arachnova Controller</h1>
+
+    <!-- Logo Image -->
+    <img
+      src="/heig_vd_logo.png"
+      id="heig_icon"
+      alt="HEIG-VD Logo"
+      class="logo"
+    />
+
+    <!-- Joystick Container -->
+    <div class="main-content">
+      <div class="joystick-wrapper">
+        <div class="joystick" id="joystick1"></div>
+        <div class="joystick-instructions">
+          <span>&uarr; Forward</span><br />
+          <span>&darr; Backward</span>
+        </div>
+      </div>
+    
+      <div class="joystick-wrapper">
+        <div class="joystick" id="joystick2"></div>
+        <div class="joystick-instructions">
+          <span>&larr; Left</span> / <span>Right &rarr;</span>
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- Battery Indicator -->
+    <div id="battery-indicator">
+      <div id="battery-icon">
+        <svg
+          id="battery-svg"
+          viewBox="0 0 60 30"
+          preserveAspectRatio="xMidYMid meet"
+          style="width: 10vw; height: auto;"
+        >
+          <!-- Battery body -->
+          <rect x="1" y="5" width="50" height="20" rx="4" ry="4" fill="#222" stroke="#c4c4c4" stroke-width="2"/>
+          
+          <!-- Battery level -->
+          <rect id="battery-level" x="3" y="7" width="0" height="16" rx="2" ry="2" fill="limegreen"/>
+    
+          <!-- Positive terminal -->
+          <rect x="53" y="11" width="6" height="8" rx="1" ry="1" fill="#c4c4c4"/>
+        </svg>
+      </div>
+      <div id="battery-text">
+        <span id="battery-percentage">--- %</span>
+        <span id="battery-voltage">-.- V</span>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="buttons">
+      <button class="button" onclick="send_button('Calibrate')">Calibrate</button>
+      <button class="button" onclick="send_button('Demo')">Demo</button>
+
+      <!-- Color Picker Button -->
+      <div class="button color-picker-button" id="color-button">
+        Eyes
+        <input type="color" id="robot-color" value="#00ffc8" onchange="sendColor(this.value)" />
+      </div>
+    </div>
+    <script src="/nipplejs.min.js"></script>
+    <script src="/script.js"></script>
+  </body>
+</html>

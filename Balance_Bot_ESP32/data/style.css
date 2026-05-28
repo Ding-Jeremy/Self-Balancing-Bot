@@ -1,0 +1,185 @@
+/* General reset */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0f0f0f, #010000);
+  color: #e0e0e0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Heading */
+h1 {
+  margin-top: 2vh;
+  margin-bottom: 0;
+  font-size: 4vw; /* Responsive heading */
+  color: #ffffff;
+}
+
+/* Main joystick area */
+.main-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20vw;
+  flex-wrap: wrap;
+  padding: 5vh 5vw;
+}
+
+/* Joystick wrapper */
+.joystick-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+}
+
+/* Joystick style */
+.joystick {
+  width: 20vw;
+  height: 20vw;
+  border: 0.5vw solid #00ffc8;
+  box-shadow: 0 0 2vw #00ffc888;
+  border-radius: 100%;
+}
+
+/* Instruction text below joystick */
+.joystick-instructions {
+  position: absolute;
+  top: calc(100% + 1vh); /* Place below joystick */
+  font-size: 2vw;
+  color: #aaaaaa;
+  text-align: center;
+  text-shadow: 0 0 5px #00ffc8;
+}
+
+.joystick-wrapper.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Buttons section */
+.buttons {
+  margin-bottom: 4vh;
+  margin-top: 4vh;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 3vw;
+}
+
+.buttons button {
+  padding: 2vh 3vw;
+  font-size: 2.5vw;
+  border: none;
+  border-radius: 2vw;
+  background-color: #1f1f1f;
+  color: white;
+  cursor: pointer;
+  min-width: 20vw;
+  max-width: 30vw;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.buttons button:active {
+  background-color: #0b5ed7;  /* or any color you want for pressed state */
+  transform: scale(0.95);     /* slight shrink for press effect */
+  transition: transform 0.1s ease, background-color 0.1s ease;
+}
+
+
+/* Disabled button state */
+.buttons .button.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  filter: grayscale(100%);
+}
+
+.color-picker-button input[type="color"]:disabled {
+  cursor: not-allowed;
+}
+/* Battery indicator area */
+#battery-indicator {
+  position: fixed;
+  top: 2vh;
+  right: 2vw;
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+  z-index: 1000;
+}
+
+#battery-level {
+  width: 0%;
+  height: 16px;
+  transition: width 0.5s ease-in-out;
+}
+
+#battery-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  font-size: 1.5vw;
+  color: white;
+}
+
+#battery-percentage {
+  font-weight: bold;
+}
+
+#battery-voltage {
+  font-size: 1.2vw;
+}
+
+/* Logo positioning */
+#heig_icon {
+  position: fixed;
+  top: 2vh;
+  left: 2vw;
+  width: 10vw;
+  height: auto;
+  z-index: 1000;
+}
+
+/* Styled color picker button */
+.color-picker-button {
+  position: relative;
+  font-size: 2.5vw;
+  border: none;
+  border-radius: 2vw;
+  color: white;
+  cursor: pointer;
+  min-width: 20vw;
+  max-width: 30vw;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+  background-color: #00ffc8; /* default color */
+}
+
+/* Remove hover effect since background changes */
+.color-picker-button:hover {
+  filter: brightness(1.1);
+}
+
+/* Invisible color input fills the button */
+.color-picker-button input[type="color"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
