@@ -22,7 +22,9 @@
 //-------------- DEFINES ---------------
 #define D_UART_BAUDRATE 9600
 
-// SPI pins
+// UART pints
+#define D_PIN_TX2 25
+#define D_PIN_RX2 26
 
 // WiFi credentials
 #define D_SSID "self-balancing-bot"
@@ -39,6 +41,7 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len);
 void on_event(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 void init_websocket();
 
+void calculate_crc(uint8_t *frame, uint8_t framelength);
 //-------------- GLOBAL VARIABLES ---------------
 AsyncWebServer server(80); // Web server
 AsyncWebSocket ws("/ws");  // WebSocket endpoint
@@ -47,6 +50,10 @@ AsyncWebSocket ws("/ws");  // WebSocket endpoint
 void setup()
 {
   Serial.begin(D_UART_BAUDRATE); // Open serial port
+  Serial.println("Serial1 initialized");
+  Serial2.begin(9600, SERIAL_8N1, D_PIN_RX2, D_PIN_TX2);
+  Serial.println("UART2 initialized");
+
   init_wifi();
   init_littlefs();
   init_websocket();
@@ -64,8 +71,64 @@ void setup()
 //-------------- MAIN LOOP ---------------
 void loop()
 {
+  uint8_t frame[4];
+  frame[0] = 0x05;
+  frame[1] = 0x00;
+  frame[2] = 0x06;
+
+  calculate_crc(frame, 4);
+
+  Serial.print("Sent: ");
+
+  for (int i = 0; i < 4; i++)
+  {
+    Serial.print(frame[i], HEX);
+    Serial.print(" ");
+  }
+
+  // IMPORTANT: correct UART send
+  Serial2.write(frame, 4);
+  Serial2.flush(); // wait until sent
+
+  delayMicroseconds(1000); // allow TMC to respond
+
+  Serial.print("\nReceived: ");
+
+  while (Serial2.available())
+  {
+    uint8_t c = Serial2.read();
+    Serial.print(c, HEX);
+    Serial.print(" ");
+  }
+
+  Serial.println();
+  delay(1000);
 }
 
+void calculate_crc(uint8_t *frame, uint8_t framelength)
+{
+  int i, j;
+  uint8_t crc = 0;
+  uint8_t current_byte;
+
+  for (i = 0; i < (framelength - 1); i++)
+  {
+    current_byte = frame[i];
+    for (j = 0; j < 8; j++)
+    {
+      if ((crc >> 7) ^ (current_byte & 0x01))
+      {
+        crc = (crc << 1) ^ 0x07;
+      }
+      else
+      {
+        crc = (crc << 1);
+      }
+      current_byte = current_byte >> 1;
+    }
+  }
+  frame[framelength - 1] = crc;
+}
 //-------------- FUNCTION IMPLEMENTATIONS ---------------
 
 /*
