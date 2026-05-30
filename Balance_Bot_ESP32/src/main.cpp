@@ -18,6 +18,7 @@
 #include <Arduino_JSON.h>
 #include "LittleFS.h"
 #include <SPI.h>
+#include "TMC2226.h"
 
 //-------------- DEFINES ---------------
 #define D_UART_BAUDRATE 9600
@@ -51,12 +52,11 @@ void setup()
 {
   Serial.begin(D_UART_BAUDRATE); // Open serial port
   Serial.println("Serial1 initialized");
-  Serial2.begin(9600, SERIAL_8N1, D_PIN_RX2, D_PIN_TX2);
-  Serial.println("UART2 initialized");
 
   init_wifi();
   init_littlefs();
   init_websocket();
+  TMC_init(9600, D_PIN_RX2, D_PIN_TX2);
 
   // Serve root HTML
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -71,39 +71,30 @@ void setup()
 //-------------- MAIN LOOP ---------------
 void loop()
 {
-  uint8_t frame[4];
-  frame[0] = 0x05;
-  frame[1] = 0x00;
-  frame[2] = 0x06;
-
-  calculate_crc(frame, 4);
+  // sent a frame making the motor move
+  uint8_t frame[7];
+  frame[0] = 0x05;        // Init
+  frame[1] = 0x00;        // Chip address
+  frame[2] = 0x80 | 0x22; // Reg address + W
+  uint32_t speed = 100;
+  frame[3] = (speed & 0xFF0000) >> 16;
+  frame[4] = (speed & 0x00FF00) >> 8;
+  frame[5] = speed & 0xFF;
+  calculate_crc(frame, 7);
 
   Serial.print("Sent: ");
-
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 7; i++)
   {
     Serial.print(frame[i], HEX);
     Serial.print(" ");
   }
 
-  // IMPORTANT: correct UART send
-  Serial2.write(frame, 4);
-  Serial2.flush(); // wait until sent
+  TMC_send_frame(frame, 7);
 
-  delayMicroseconds(1000); // allow TMC to respond
-
-  Serial.print("\nReceived: ");
-
-  while (Serial2.available())
-  {
-    uint8_t c = Serial2.read();
-    Serial.print(c, HEX);
-    Serial.print(" ");
-  }
-
-  Serial.println();
   delay(1000);
 }
+
+//-------------- FUNCTION IMPLEMENTATIONS ---------------
 
 void calculate_crc(uint8_t *frame, uint8_t framelength)
 {
@@ -129,8 +120,8 @@ void calculate_crc(uint8_t *frame, uint8_t framelength)
   }
   frame[framelength - 1] = crc;
 }
-//-------------- FUNCTION IMPLEMENTATIONS ---------------
 
+// SERVER //
 /*
  * Initializes the LittleFS file system
  */
