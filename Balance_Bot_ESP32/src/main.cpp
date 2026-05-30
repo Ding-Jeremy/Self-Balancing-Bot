@@ -52,11 +52,11 @@ void setup()
 {
   Serial.begin(D_UART_BAUDRATE); // Open serial port
   Serial.println("Serial1 initialized");
-
-  init_wifi();
+  TMC_init(9600, D_PIN_RX2, D_PIN_TX2);
+  /*init_wifi();
   init_littlefs();
   init_websocket();
-  TMC_init(9600, D_PIN_RX2, D_PIN_TX2);
+
 
   // Serve root HTML
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -65,61 +65,26 @@ void setup()
   // Serve static files
   server.serveStatic("/", LittleFS, "/");
 
-  server.begin();
+  server.begin();*/
 }
 
 //-------------- MAIN LOOP ---------------
 void loop()
 {
   // sent a frame making the motor move
-  uint8_t frame[7];
-  frame[0] = 0x05;        // Init
-  frame[1] = 0x00;        // Chip address
-  frame[2] = 0x80 | 0x22; // Reg address + W
-  uint32_t speed = 100;
-  frame[3] = (speed & 0xFF0000) >> 16;
-  frame[4] = (speed & 0x00FF00) >> 8;
-  frame[5] = speed & 0xFF;
-  calculate_crc(frame, 7);
+  uint32_t speed = 1000;
+  uint8_t data[4];
 
-  Serial.print("Sent: ");
-  for (int i = 0; i < 7; i++)
-  {
-    Serial.print(frame[i], HEX);
-    Serial.print(" ");
-  }
-
-  TMC_send_frame(frame, 7);
-
+  data[0] = (speed >> 24) & 0xFF;
+  data[1] = (speed >> 16) & 0xFF;
+  data[2] = (speed >> 8) & 0xFF;
+  data[3] = (speed >> 0) & 0xFF;
+  Serial.print("Sending speed");
+  TMC_write_to_register(E_TMC_REG_VACTUAL, data);
   delay(1000);
 }
 
 //-------------- FUNCTION IMPLEMENTATIONS ---------------
-
-void calculate_crc(uint8_t *frame, uint8_t framelength)
-{
-  int i, j;
-  uint8_t crc = 0;
-  uint8_t current_byte;
-
-  for (i = 0; i < (framelength - 1); i++)
-  {
-    current_byte = frame[i];
-    for (j = 0; j < 8; j++)
-    {
-      if ((crc >> 7) ^ (current_byte & 0x01))
-      {
-        crc = (crc << 1) ^ 0x07;
-      }
-      else
-      {
-        crc = (crc << 1);
-      }
-      current_byte = current_byte >> 1;
-    }
-  }
-  frame[framelength - 1] = crc;
-}
 
 // SERVER //
 /*
