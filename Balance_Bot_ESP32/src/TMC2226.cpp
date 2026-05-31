@@ -11,6 +11,14 @@ void TMC_send_frame(uint8_t *frame)
     Serial2.flush();
 }
 
+/// @brief Pulses the step pin
+void TMC_step()
+{
+    digitalWrite(D_TMC_PIN_STEP, HIGH);
+    delayMicroseconds(500);
+    digitalWrite(D_TMC_PIN_STEP, LOW);
+}
+
 /// @brief Initializes the TMC, (initializes UART protocol)
 /// @param baud_rate
 /// @param tx_pin
@@ -28,7 +36,6 @@ void TMC_init(uint32_t baud_rate, uint8_t tx_pin, uint8_t rx_pin)
     gconf.bytes[1] = 0x00;
     // Disable pdn
     gconf.bits.pdn_disable = 1;
-
     // Write config to TMC
     TMC_write_to_register(E_TMC_REG_GCONF, gconf.bytes);
 }
@@ -77,7 +84,7 @@ void TMC_write_to_register(E_TMC_REG reg_address, uint8_t *data)
     uint32_t speed = 100;
     for (uint8_t i = 0; i < 4; i++)
     {
-        frame[i + 3] = data[i];
+        frame[i + 3] = data[3 - i]; // MSB first
     }
     calculate_crc(frame);
     // Send frame

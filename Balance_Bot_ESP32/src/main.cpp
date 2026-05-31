@@ -54,13 +54,24 @@ void setup()
   Serial.begin(D_UART_BAUDRATE); // Open serial port
   Serial.println("Serial1 initialized");
   TMC_init(9600, D_PIN_RX2, D_PIN_TX2);
+  U_TMC_CHOPCONF chopconf;
 
+  chopconf.value = 0x10000053; // DEFAULT VALUE
+  chopconf.bits.mres = 0b0010; // Microstepping
+
+  Serial.print(chopconf.value, HEX);
+  Serial.print("Setting usteps...");
+  TMC_write_to_register(E_TMC_REG_CHOPCONF, chopconf.bytes);
+
+  U_TMC_VACTUAL vactual;
+  vactual.value = 1000;
+  TMC_write_to_register(E_TMC_REG_VACTUAL, vactual.bytes);
   /*init_wifi();
   init_littlefs();
   init_websocket();
 
 
-  // Serve root HTML
+  // Se¢ve root HTML
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(LittleFS, "/index.html", "text/html"); });
 
@@ -74,7 +85,7 @@ void setup()
 void loop()
 {
   // sent a frame making the motor move
-  uint32_t speed = 1000;
+  /*uint32_t speed = 1000;
   uint8_t data[4];
 
   data[0] = (speed >> 24) & 0xFF;
@@ -83,8 +94,9 @@ void loop()
   data[3] = (speed >> 0) & 0xFF;
 
   Serial.print("Sending speed");
-  TMC_write_to_register(E_TMC_REG_VACTUAL, data);
-  delay(1000);
+  TMC_write_to_register(E_TMC_REG_VACTUAL, data);*/
+  TMC_step();
+  delay(1);
 }
 
 //-------------- FUNCTION IMPLEMENTATIONS ---------------
