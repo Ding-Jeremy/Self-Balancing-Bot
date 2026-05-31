@@ -26,6 +26,7 @@
 // UART pints
 #define D_PIN_TX2 25
 #define D_PIN_RX2 26
+#define D_PIN_DIR 34
 
 // WiFi credentials
 #define D_SSID "self-balancing-bot"
@@ -53,6 +54,7 @@ void setup()
   Serial.begin(D_UART_BAUDRATE); // Open serial port
   Serial.println("Serial1 initialized");
   TMC_init(9600, D_PIN_RX2, D_PIN_TX2);
+
   /*init_wifi();
   init_littlefs();
   init_websocket();
@@ -79,6 +81,7 @@ void loop()
   data[1] = (speed >> 16) & 0xFF;
   data[2] = (speed >> 8) & 0xFF;
   data[3] = (speed >> 0) & 0xFF;
+
   Serial.print("Sending speed");
   TMC_write_to_register(E_TMC_REG_VACTUAL, data);
   delay(1000);

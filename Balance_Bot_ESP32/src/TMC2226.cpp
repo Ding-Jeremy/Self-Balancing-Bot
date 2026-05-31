@@ -17,6 +17,8 @@ void TMC_send_frame(uint8_t *frame)
 /// @param rx_pin
 void TMC_init(uint32_t baud_rate, uint8_t tx_pin, uint8_t rx_pin)
 {
+    // Set pins
+    pinMode(D_TMC_PIN_STEP, OUTPUT);
     // Start UART
     Serial2.begin(9600, SERIAL_8N1, rx_pin, tx_pin);
     // Send config (use uart pin)

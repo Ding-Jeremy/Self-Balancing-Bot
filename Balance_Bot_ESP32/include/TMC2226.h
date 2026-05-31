@@ -5,6 +5,9 @@
 #define D_TMC_INIT_BYTE 0x05
 #define D_TMC_NODE_ADDRESS 0x00
 #define D_TMC_FRAME_LENGTH 8 // bytes
+
+#define D_TMC_PIN_STEP 34
+
 typedef enum
 {
     E_TMC_REG_GCONF = 0x00,
