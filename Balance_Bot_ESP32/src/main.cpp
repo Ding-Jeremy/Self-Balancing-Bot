@@ -51,21 +51,28 @@ AsyncWebSocket ws("/ws");  // WebSocket endpoint
 //-------------- SETUP FUNCTION ---------------
 void setup()
 {
+  // Begin serial transmission
   Serial.begin(D_UART_BAUDRATE); // Open serial port
   Serial.println("Serial1 initialized");
+
+  // Initializes TMC
   TMC_init(9600, D_PIN_RX2, D_PIN_TX2);
+
+  // Set chopper config
   U_TMC_CHOPCONF chopconf;
 
-  chopconf.value = 0x10000053; // DEFAULT VALUE
-  chopconf.bits.mres = 0b0010; // Microstepping
-
-  Serial.print(chopconf.value, HEX);
-  Serial.print("Setting usteps...");
+  chopconf.value = D_TMC_REGDFV_CHOPCONF; // DEFAULT VALUE
+  chopconf.bits.mres = 0b0110;            // Microstepping
   TMC_write_to_register(E_TMC_REG_CHOPCONF, chopconf.bytes);
-
   U_TMC_VACTUAL vactual;
   vactual.value = 1000;
   TMC_write_to_register(E_TMC_REG_VACTUAL, vactual.bytes);
+
+  // TMC_reset();
+  /*U_TMC_VACTUAL vactual;
+  vactual.value = 1000;
+  TMC_write_to_register(E_TMC_REG_VACTUAL, vactual.bytes);*/
+
   /*init_wifi();
   init_littlefs();
   init_websocket();
@@ -84,19 +91,19 @@ void setup()
 //-------------- MAIN LOOP ---------------
 void loop()
 {
-  // sent a frame making the motor move
-  /*uint32_t speed = 1000;
-  uint8_t data[4];
+  /*U_TMC_CHOPCONF chopconf;
+  U_TMC_GCONF gconf;
+  TMC_read_from_register(E_TMC_REG_CHOPCONF, chopconf.bytes);
+  TMC_read_from_register(E_TMC_REG_GCONF, gconf.bytes);
 
-  data[0] = (speed >> 24) & 0xFF;
-  data[1] = (speed >> 16) & 0xFF;
-  data[2] = (speed >> 8) & 0xFF;
-  data[3] = (speed >> 0) & 0xFF;
-
-  Serial.print("Sending speed");
-  TMC_write_to_register(E_TMC_REG_VACTUAL, data);*/
+  Serial.print("Chopconf: ");
+  Serial.println(chopconf.value, HEX);
+  Serial.print("GConf: ");
+  Serial.println(gconf.value, HEX);
+  // TMC_step();
+  delay(1000);*/
   TMC_step();
-  delay(1);
+  delay(10);
 }
 
 //-------------- FUNCTION IMPLEMENTATIONS ---------------

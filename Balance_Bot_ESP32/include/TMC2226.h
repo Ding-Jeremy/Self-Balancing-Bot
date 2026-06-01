@@ -1,12 +1,17 @@
 #ifndef TMC2226_H
 #include <stdint.h>
 #include <Arduino.h>
+#include <driver/uart.h>
+// Pining
+#define D_TMC_PIN_STEP 32
 
+// UART constants
 #define D_TMC_INIT_BYTE 0x05
 #define D_TMC_NODE_ADDRESS 0x00
 #define D_TMC_FRAME_LENGTH 8 // bytes
 
-#define D_TMC_PIN_STEP 32
+// Registers default values
+#define D_TMC_REGDFV_CHOPCONF 0x15010053
 
 // ENUMERATES
 typedef enum
@@ -68,13 +73,17 @@ typedef union
 // Prototypes
 
 void TMC_step();
-void TMC_send_frame(uint8_t *frame);
+void TMC_send_frame(uint8_t *frame, uint8_t frame_length);
 
 void TMC_init(uint32_t baud_rate, uint8_t tx_pin, uint8_t rx_pin);
 
-void calculate_crc(uint8_t *frame);
+void TMC_calculate_crc(uint8_t *frame);
 
 void TMC_write_to_register(E_TMC_REG reg_address, uint8_t *data);
 
+void TMC_read_from_register(E_TMC_REG reg_address, uint8_t rx[D_TMC_FRAME_LENGTH]);
+
+void TMC_order_bytes(uint8_t frame[D_TMC_FRAME_LENGTH - 4]);
+void TMC_reset();
 #endif
 #define TMC2226_H
