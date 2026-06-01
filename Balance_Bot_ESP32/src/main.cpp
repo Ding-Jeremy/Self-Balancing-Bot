@@ -19,20 +19,16 @@
 #include "LittleFS.h"
 #include <SPI.h>
 #include "TMC2226.h"
+#include <Wire.h>
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
 
 //-------------- DEFINES ---------------
 #define D_UART_BAUDRATE 9600
 
-// UART pints
-#define D_PIN_TX2 25
-#define D_PIN_RX2 26
-#define D_PIN_DIR 34
-
 // WiFi credentials
 #define D_SSID "self-balancing-bot"
 #define D_PASSWORD "123456789"
-
-//-------------- ENUMS ---------------
 
 //-------------- FUNCTION PROTOTYPES ---------------
 void init_littlefs();
@@ -48,6 +44,8 @@ void calculate_crc(uint8_t *frame, uint8_t framelength);
 AsyncWebServer server(80); // Web server
 AsyncWebSocket ws("/ws");  // WebSocket endpoint
 
+Adafruit_MPU6050 mpu;
+
 //-------------- SETUP FUNCTION ---------------
 void setup()
 {
@@ -56,27 +54,29 @@ void setup()
   Serial.println("Serial1 initialized");
 
   // Initializes TMC
-  TMC_init(9600, D_PIN_RX2, D_PIN_TX2);
-
+  TMC_init(115200);
   // Set chopper config
   U_TMC_CHOPCONF chopconf;
 
   chopconf.value = D_TMC_REGDFV_CHOPCONF; // DEFAULT VALUE
   chopconf.bits.mres = 0b0110;            // Microstepping
-  TMC_write_to_register(E_TMC_REG_CHOPCONF, chopconf.bytes);
-  U_TMC_VACTUAL vactual;
-  vactual.value = 1000;
-  TMC_write_to_register(E_TMC_REG_VACTUAL, vactual.bytes);
+  TMC_write_to_register(0x00, E_TMC_REG_CHOPCONF, chopconf.bytes);
+  TMC_write_to_register(0x01, E_TMC_REG_CHOPCONF, chopconf.bytes);
 
-  // TMC_reset();
-  /*U_TMC_VACTUAL vactual;
-  vactual.value = 1000;
-  TMC_write_to_register(E_TMC_REG_VACTUAL, vactual.bytes);*/
+  if (!mpu.begin())
+  {
+    Serial.println("MPU6050 not found");
+    while (1)
+      ;
+  }
 
-  /*init_wifi();
+  mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
+  mpu.setGyroRange(MPU6050_RANGE_500_DEG);
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+
+  init_wifi();
   init_littlefs();
   init_websocket();
-
 
   // Se¢ve root HTML
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -85,24 +85,25 @@ void setup()
   // Serve static files
   server.serveStatic("/", LittleFS, "/");
 
-  server.begin();*/
+  server.begin();
 }
 
 //-------------- MAIN LOOP ---------------
 void loop()
 {
-  /*U_TMC_CHOPCONF chopconf;
-  U_TMC_GCONF gconf;
-  TMC_read_from_register(E_TMC_REG_CHOPCONF, chopconf.bytes);
-  TMC_read_from_register(E_TMC_REG_GCONF, gconf.bytes);
+  sensors_event_t accel, gyro, temp;
+  mpu.getEvent(&accel, &gyro, &temp);
 
-  Serial.print("Chopconf: ");
-  Serial.println(chopconf.value, HEX);
-  Serial.print("GConf: ");
-  Serial.println(gconf.value, HEX);
-  // TMC_step();
-  delay(1000);*/
-  TMC_step();
+  float ax = accel.acceleration.x;
+  float ay = accel.acceleration.y;
+  float az = accel.acceleration.z;
+  // read angle to gravity.
+  float angleX = atan2(ax, sqrt(ay * ay + az * az)) * 180.0 / PI;
+  int32_t speed = angleX * 50;
+  // Run motors at speed corresponding to an error
+  TMC_runspeed(0x00, speed);
+  TMC_runspeed(0x01, -speed);
+
   delay(10);
 }
 

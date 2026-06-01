@@ -2,16 +2,27 @@
 #include <stdint.h>
 #include <Arduino.h>
 #include <driver/uart.h>
+
 // Pining
-#define D_TMC_PIN_STEP 32
+#define D_TMC_PIN_STEP0 25
+#define D_TMC_PIN_DIR0 32
+#define D_TMC_PIN_STEP1 26
+#define D_TMC_PIN_DIR1 33
+#define D_TMC_PIN_EN 27
+
+// UART pins
+#define D_TMC_PIN_TX2 17
+#define D_TMC_PIN_RX2 16
 
 // UART constants
 #define D_TMC_INIT_BYTE 0x05
 #define D_TMC_NODE_ADDRESS 0x00
+#define D_TMC_MASTER_ADRESS 0xFF
 #define D_TMC_FRAME_LENGTH 8 // bytes
 
 // Registers default values
 #define D_TMC_REGDFV_CHOPCONF 0x15010053
+#define D_TMC_REGDFV_GCONF 0x101
 
 // ENUMERATES
 typedef enum
@@ -19,6 +30,7 @@ typedef enum
     E_TMC_REG_GCONF = 0x00,
     E_TMC_REG_VACTUAL = 0x22,
     E_TMC_REG_CHOPCONF = 0x6C,
+    E_TMC_REG_IOIN = 0x06
 } E_TMC_REG;
 // REGISTERS
 typedef struct
@@ -73,17 +85,22 @@ typedef union
 // Prototypes
 
 void TMC_step();
+
+void TMC_enable();
+
+void TMC_disable();
+
 void TMC_send_frame(uint8_t *frame, uint8_t frame_length);
 
-void TMC_init(uint32_t baud_rate, uint8_t tx_pin, uint8_t rx_pin);
-
+void TMC_init(uint32_t baud_rate);
 void TMC_calculate_crc(uint8_t *frame);
 
-void TMC_write_to_register(E_TMC_REG reg_address, uint8_t *data);
+void TMC_write_to_register(uint8_t node_addr, E_TMC_REG reg_address, uint8_t *data);
 
-void TMC_read_from_register(E_TMC_REG reg_address, uint8_t rx[D_TMC_FRAME_LENGTH]);
+uint32_t TMC_read_from_register(uint8_t node_addr, E_TMC_REG reg_address);
 
-void TMC_order_bytes(uint8_t frame[D_TMC_FRAME_LENGTH - 4]);
-void TMC_reset();
+void TMC_invert_bytes(uint8_t frame[D_TMC_FRAME_LENGTH - 4]);
+void TMC_runspeed(uint8_t node_addr, int32_t speed);
+
 #endif
 #define TMC2226_H
