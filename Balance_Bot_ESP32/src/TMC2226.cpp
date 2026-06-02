@@ -13,14 +13,6 @@ void TMC_send_frame(uint8_t *frame, uint8_t frame_length)
     vTaskDelay(pdMS_TO_TICKS(1));
 }
 
-/// @brief Pulses the step pin
-void TMC_step()
-{
-    digitalWrite(D_TMC_PIN_STEP0, HIGH);
-    delayMicroseconds(500);
-    digitalWrite(D_TMC_PIN_STEP0, LOW);
-}
-
 /// @brief Enables the motors
 void TMC_enable()
 {
@@ -33,11 +25,8 @@ void TMC_disable()
     digitalWrite(D_TMC_PIN_EN, HIGH);
 }
 
-/// @brief Initializes the TMC, (initializes UART protocol)
-/// @param baud_rate
-/// @param tx_pin
-/// @param rx_pin
-void TMC_init(uint32_t baud_rate)
+/// @brief Initializes TMC modules
+void TMC_init()
 {
     pinMode(D_TMC_PIN_STEP0, OUTPUT);
     pinMode(D_TMC_PIN_STEP1, OUTPUT);
@@ -48,7 +37,7 @@ void TMC_init(uint32_t baud_rate)
     TMC_enable();
     delay(10);
     uart_config_t uart_config = {
-        .baud_rate = baud_rate,
+        .baud_rate = D_TMC_BAUDRATE,
         .data_bits = UART_DATA_8_BITS,
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
@@ -69,11 +58,11 @@ void TMC_init(uint32_t baud_rate)
     U_TMC_GCONF gconf;
     // Set all to 0
     gconf.value = 0;
-    // Disable pdn
+    // Disable pdn (enable uart)
     gconf.bits.pdn_disable = 1;      // Enable uart communication
     gconf.bits.mstep_reg_select = 1; // Microstepping from register
     gconf.bits.scale_analog = 1;     // Vref a sense
-    gconf.bits.multistep_filt = 1;
+    gconf.bits.multistep_filt = 1;   // Activate multistep filtering
     // Write config to devices
     TMC_write_to_register(0x00, E_TMC_REG_GCONF, gconf.bytes);
     TMC_write_to_register(0x01, E_TMC_REG_GCONF, gconf.bytes);

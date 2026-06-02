@@ -24,11 +24,34 @@
 #include <Adafruit_Sensor.h>
 
 //-------------- DEFINES ---------------
+
 #define D_UART_BAUDRATE 9600
+
+// REGULATOR
+#define D_REG_KPV 0
+#define D_REG_TDV 0
+#define D_REG_TIV 0
+
+#define D_REG_KPT 0
+#define D_REG_TDT 5000
+#define D_REG_TIT 0
 
 // WiFi credentials
 #define D_SSID "self-balancing-bot"
 #define D_PASSWORD "123456789"
+// Stuctures
+typedef struct PIDController
+{
+  float kp;
+  float ki;
+  float kd;
+
+  float integral;
+  float previousError;
+
+  float outputMin;
+  float outputMax;
+} PIDController;
 
 //-------------- FUNCTION PROTOTYPES ---------------
 void init_littlefs();
@@ -39,12 +62,43 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len);
 void on_event(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 void init_websocket();
 
-void calculate_crc(uint8_t *frame, uint8_t framelength);
+float PID_update(PIDController *pid, float error, float dt);
+
 //-------------- GLOBAL VARIABLES ---------------
 AsyncWebServer server(80); // Web server
 AsyncWebSocket ws("/ws");  // WebSocket endpoint
 
 Adafruit_MPU6050 mpu;
+float speed_target = 0;
+float speed = 0;
+float angleX = 0.0f;
+unsigned long lastMicros = 0;
+float e_v = 0, e_theta = 0;
+float motor_speed = 0;
+
+PIDController speedPID =
+    {
+        .kp = D_REG_KPV,
+        .ki = D_REG_TIV,
+        .kd = D_REG_TDV,
+
+        .integral = 0.0f,
+        .previousError = 0.0f,
+
+        .outputMin = -10.0f, // max desired tilt
+        .outputMax = 10.0f};
+
+PIDController tiltPID =
+    {
+        .kp = D_REG_KPT,
+        .ki = D_REG_TIT,
+        .kd = D_REG_TDT,
+
+        .integral = 0.0f,
+        .previousError = 0.0f,
+
+        .outputMin = -100000.0f, // motor command
+        .outputMax = 100000.0f};
 
 //-------------- SETUP FUNCTION ---------------
 void setup()
@@ -54,7 +108,7 @@ void setup()
   Serial.println("Serial1 initialized");
 
   // Initializes TMC
-  TMC_init(115200);
+  TMC_init();
   // Set chopper config
   U_TMC_CHOPCONF chopconf;
 
@@ -74,7 +128,7 @@ void setup()
   mpu.setGyroRange(MPU6050_RANGE_500_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
 
-  init_wifi();
+  /*init_wifi();
   init_littlefs();
   init_websocket();
 
@@ -85,29 +139,78 @@ void setup()
   // Serve static files
   server.serveStatic("/", LittleFS, "/");
 
-  server.begin();
+  server.begin();*/
 }
 
 //-------------- MAIN LOOP ---------------
 void loop()
 {
+  // ANGLE READING
   sensors_event_t accel, gyro, temp;
   mpu.getEvent(&accel, &gyro, &temp);
 
-  float ax = accel.acceleration.x;
-  float ay = accel.acceleration.y;
-  float az = accel.acceleration.z;
-  // read angle to gravity.
-  float angleX = atan2(ax, sqrt(ay * ay + az * az)) * 180.0 / PI;
-  int32_t speed = angleX * 50;
-  // Run motors at speed corresponding to an error
-  TMC_runspeed(0x00, speed);
-  TMC_runspeed(0x01, -speed);
+  unsigned long now = micros();
+  float dt = (now - lastMicros) * 1e-6f;
+  lastMicros = now;
 
-  delay(10);
+  // Accelerometer angle
+  float accelAngleX =
+      atan2(accel.acceleration.x,
+            sqrt(accel.acceleration.y * accel.acceleration.y +
+                 accel.acceleration.z * accel.acceleration.z)) *
+      180.0f / PI;
+
+  // Gyro rate (Adafruit returns rad/s)
+  float gyroRateX = gyro.gyro.x * 180.0f / PI;
+
+  // Complementary filter
+  angleX = 0.98f * (angleX + gyroRateX * dt) + 0.02f * accelAngleX;
+
+  // REGULATOR (outer loop)
+  float speed_error = speed_target - speed;
+
+  float theta_target =
+      PID_update(&speedPID, speed_error, dt);
+
+  float thetaError = theta_target - angleX;
+
+  float motor_accel =
+      PID_update(&tiltPID, thetaError, dt);
+
+  // Update motor speed
+  motor_speed += motor_accel * dt;
+  // run motors
+  TMC_runspeed(0x00, (int32_t)motor_speed);
+  TMC_runspeed(0x01, -(int32_t)motor_speed);
+  delay(5);
 }
 
 //-------------- FUNCTION IMPLEMENTATIONS ---------------
+// PID //
+float PID_update(PIDController *pid, float error, float dt)
+{
+  // Integral term
+  pid->integral += error * dt;
+
+  // Derivative term
+  float derivative = (error - pid->previousError) / dt;
+
+  // PID output
+  float output =
+      pid->kp * error +
+      pid->ki * pid->integral +
+      pid->kd * derivative;
+
+  // Output saturation
+  if (output > pid->outputMax)
+    output = pid->outputMax;
+  else if (output < pid->outputMin)
+    output = pid->outputMin;
+
+  pid->previousError = error;
+
+  return output;
+}
 
 // SERVER //
 /*

@@ -19,6 +19,7 @@
 #define D_TMC_NODE_ADDRESS 0x00
 #define D_TMC_MASTER_ADRESS 0xFF
 #define D_TMC_FRAME_LENGTH 8 // bytes
+#define D_TMC_BAUDRATE 200000
 
 // Registers default values
 #define D_TMC_REGDFV_CHOPCONF 0x15010053
@@ -63,6 +64,7 @@ typedef struct
     uint32_t test_mode : 1;
 } S_TMC_GCONF;
 
+// UNION
 typedef union
 {
     int32_t value;
@@ -84,15 +86,14 @@ typedef union
 
 // Prototypes
 
-void TMC_step();
-
 void TMC_enable();
 
 void TMC_disable();
 
 void TMC_send_frame(uint8_t *frame, uint8_t frame_length);
 
-void TMC_init(uint32_t baud_rate);
+void TMC_init();
+
 void TMC_calculate_crc(uint8_t *frame);
 
 void TMC_write_to_register(uint8_t node_addr, E_TMC_REG reg_address, uint8_t *data);
@@ -100,6 +101,7 @@ void TMC_write_to_register(uint8_t node_addr, E_TMC_REG reg_address, uint8_t *da
 uint32_t TMC_read_from_register(uint8_t node_addr, E_TMC_REG reg_address);
 
 void TMC_invert_bytes(uint8_t frame[D_TMC_FRAME_LENGTH - 4]);
+
 void TMC_runspeed(uint8_t node_addr, int32_t speed);
 
 #endif
