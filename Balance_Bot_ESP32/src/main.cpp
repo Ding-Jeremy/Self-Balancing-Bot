@@ -32,8 +32,8 @@
 #define D_REG_TDV 0
 #define D_REG_TIV 0
 
-#define D_REG_KPT 0
-#define D_REG_TDT 5000
+#define D_REG_KPT 1000
+#define D_REG_TDT 1000
 #define D_REG_TIT 0
 
 // WiFi credentials
@@ -76,6 +76,7 @@ unsigned long lastMicros = 0;
 float e_v = 0, e_theta = 0;
 float motor_speed = 0;
 
+// PID controllers
 PIDController speedPID =
     {
         .kp = D_REG_KPV,
@@ -97,7 +98,7 @@ PIDController tiltPID =
         .integral = 0.0f,
         .previousError = 0.0f,
 
-        .outputMin = -100000.0f, // motor command
+        .outputMin = -100000.0f, // Motor acceleration
         .outputMax = 100000.0f};
 
 //-------------- SETUP FUNCTION ---------------
@@ -117,6 +118,7 @@ void setup()
   TMC_write_to_register(0x00, E_TMC_REG_CHOPCONF, chopconf.bytes);
   TMC_write_to_register(0x01, E_TMC_REG_CHOPCONF, chopconf.bytes);
 
+  // Start MPU
   if (!mpu.begin())
   {
     Serial.println("MPU6050 not found");
@@ -124,9 +126,12 @@ void setup()
       ;
   }
 
+  // Initialize MPU settings
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
   mpu.setGyroRange(MPU6050_RANGE_500_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+
+  // Start WIFI and server
 
   /*init_wifi();
   init_littlefs();
@@ -179,7 +184,10 @@ void loop()
 
   // Update motor speed
   motor_speed += motor_accel * dt;
-  // run motors
+
+  motor_speed = motor_speed > 2000 ? 2000 : motor_speed < -2000 ? -2000
+                                                                : motor_speed;
+  // run motors (standalone speed)
   TMC_runspeed(0x00, (int32_t)motor_speed);
   TMC_runspeed(0x01, -(int32_t)motor_speed);
   delay(5);

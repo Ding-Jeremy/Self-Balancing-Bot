@@ -34,6 +34,8 @@ typedef enum
     E_TMC_REG_IOIN = 0x06
 } E_TMC_REG;
 // REGISTERS
+
+// Chopper Configuration Register
 typedef struct
 {
     uint32_t toff : 4;
@@ -50,6 +52,7 @@ typedef struct
     uint32_t diss2vs : 1;
 } S_TMC_CHOPCONF;
 
+// General Configuration Register
 typedef struct
 {
     uint32_t scale_analog : 1;
@@ -84,7 +87,7 @@ typedef union
     uint32_t value;
 } U_TMC_GCONF;
 
-// Prototypes
+// PROTOTYPES
 
 void TMC_enable();
 
