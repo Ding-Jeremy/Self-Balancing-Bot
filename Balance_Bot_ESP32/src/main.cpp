@@ -28,13 +28,15 @@
 #define D_UART_BAUDRATE 9600
 
 // REGULATOR
-#define D_REG_KPV 0
+#define D_REG_KPV 15
 #define D_REG_TDV 0
 #define D_REG_TIV 0
 
-#define D_REG_KPT 1000
-#define D_REG_TDT 1000
+#define D_REG_KPT 300
+#define D_REG_TDT 5
 #define D_REG_TIT 0
+
+#define D_REG_RESTTILT -0.5
 
 // WiFi credentials
 #define D_SSID "self-balancing-bot"
@@ -98,8 +100,8 @@ PIDController tiltPID =
         .integral = 0.0f,
         .previousError = 0.0f,
 
-        .outputMin = -100000.0f, // Motor acceleration
-        .outputMax = 100000.0f};
+        .outputMin = -2000.0f, // Motor speed
+        .outputMax = 2000.0f};
 
 //-------------- SETUP FUNCTION ---------------
 void setup()
@@ -177,15 +179,13 @@ void loop()
   float theta_target =
       PID_update(&speedPID, speed_error, dt);
 
-  float thetaError = theta_target - angleX;
+  float thetaError = (theta_target + D_REG_RESTTILT) - angleX;
 
-  float motor_accel =
+  float motor_speed =
       PID_update(&tiltPID, thetaError, dt);
 
   // Update motor speed
-  motor_speed += motor_accel * dt;
-
-  motor_speed = motor_speed > 2000 ? 2000 : motor_speed < -2000 ? -2000
+  motor_speed = motor_speed > 3000 ? 3000 : motor_speed < -3000 ? -3000
                                                                 : motor_speed;
   // run motors (standalone speed)
   TMC_runspeed(0x00, (int32_t)motor_speed);
