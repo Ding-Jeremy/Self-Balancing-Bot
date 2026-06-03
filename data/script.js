@@ -10,26 +10,10 @@ let old_y_l = null;
 let motors_on = false;
 
 
-function showPage(pageId) {
-    document.querySelectorAll(".page").forEach(p => {
-        p.style.display = "none";
-    });
-
-    document.getElementById(pageId).style.display = "block";
-}
-
-function showPIDPage() {
-    showPage("pid-page");
-}
-
-function showControlPage() {
-    showPage("control-page");
-} 
 
 window.addEventListener("load", onLoad);
 
 function onLoad() {
-  showControlPage(); // Show control page by default
   initWebSocket();
   createJoystick("joystick1", "left");
   createJoystick("joystick2", "right");
@@ -65,7 +49,6 @@ function initWebSocket() {
     }
     else if(message.id === "motors_on" || message.id === "motors_off"){
       update_motors_button(message.id);
-      console.log(message.id);
     }
 
   } 
@@ -205,7 +188,7 @@ function update_motors_button(state){
   }
 }
 function send_button(button) {
-  if (button === "motors_toggle"){
+  if (button == "motors_toggle"){
     if (motors_on){
       websocket.send(JSON.stringify({ id: `motors_off` }));
     }
@@ -251,37 +234,4 @@ window.addEventListener("resize", () => {
 
 function calibrate(){
   websocket.send(JSON.stringify({ id: `calibrate` }));
-}
-
-// PID
-const sliders = document.querySelectorAll("input[type='range']");
-
-sliders.forEach(slider => {
-    const valueSpan =
-        document.getElementById(slider.id + "Value");
-
-    valueSpan.textContent = slider.value;
-
-    slider.addEventListener("input", () => {
-        valueSpan.textContent = slider.value;
-    });
-});
-
-function savePID() {
-
-    const pidValues = {
-        id: "pid_values",
-        balance: {
-            kp: parseFloat(balanceP.value),
-            ki: parseFloat(balanceI.value),
-            kd: parseFloat(balanceD.value)
-        },
-        velocity: {
-            kp: parseFloat(velocityP.value),
-            ki: parseFloat(velocityI.value),
-            kd: parseFloat(velocityD.value)
-        }
-    };
-    // Sned those values to the server
-    websocket.send(JSON.stringify(pidValues));
 }

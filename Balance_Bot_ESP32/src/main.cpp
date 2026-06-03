@@ -86,6 +86,7 @@ float e_v = 0, e_theta = 0;
 float motor_speed = 0;
 uint32_t angle_timer = 0;
 int8_t angle_limits[2] = D_ANGLE_LIMITS;
+bool motor_state = false;
 // PID controllers
 PIDController speedPID =
     {
@@ -199,9 +200,13 @@ void loop()
   // If angle out of safe range.
   if (!is_angle_withing_range())
   {
-    motor_speed = 0;
-    TMC_disable();
-    send_motor_state(false);
+    if (motor_state)
+    {
+      motor_state = false;
+      motor_speed = 0;
+      TMC_disable();
+      send_motor_state(false);
+    }
   }
   // run motors (standalone speed)
   TMC_runspeed(0x00, (int32_t)motor_speed);
@@ -323,24 +328,30 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len)
     // If the received message is correct
     if (JSON.typeof(msg) == "object")
     {
-      String ctrl_id = (const char *)msg["id"];
-      String type = (const char *)msg["type"];
-      if (ctrl_id == "motors_off")
+      String msg_id = (const char *)msg["id"];
+      if (msg_id == "motors_off")
       {
+        motor_state = false;
         TMC_disable();
         send_motor_state(false);
       }
-      else if (ctrl_id == "motors_on")
+      else if (msg_id == "motors_on")
       {
         if (is_angle_withing_range())
         {
           TMC_enable();
+          motor_state = true;
           send_motor_state(true);
         }
       }
-      else if (ctrl_id == "calibrate")
+      else if (msg_id == "calibrate")
       {
         angleX_offset = angleX;
+      }
+      else if (msg_id == "pid_values")
+      {
+        Serial.println("Received: PID");
+        Serial.println(msg);
       }
       // Check what action to take based on the received msg.
     }

@@ -2,54 +2,23 @@
 html, body {
   margin: 0;
   padding: 0;
-  min-height: 100vh;
+  height: 100vh;
   overflow: hidden;
   background: linear-gradient(135deg, #0f0f0f, #010000);
   color: #e0e0e0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  display: block;
-
+  display: flex;
+  flex-direction: column;
   align-items: center;
-
+  justify-content: space-between;
 }
 
-.page {
-  position: absolute;
-  inset: 0;
-  overflow-y: auto;
-  display: none;
-  padding: 2vh 2vw;
-}
-
-.page.active {
-  display: block;
-}
 /* Heading */
 h1 {
   margin-top: 2vh;
+  margin-bottom: 0;
   font-size: 4vw; /* Responsive heading */
   color: #ffffff;
-  text-align: center;
-}
-
-.pid-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 3vw;
-  width: 90%;
-  margin: auto;
-}
-.pid-group {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5vh;
-}
-.pid-title {
-  grid-column: 1 / -1; /* <-- key line */
-  text-align: center;
-  font-size: 3vw;
-  color: #00ffc8;
-  margin: 3vh 0 2vh 0;
 }
 
 /* Main joystick area */
@@ -58,9 +27,9 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 30vw;
+  gap: 20vw;
   flex-wrap: wrap;
-  padding: 10vh 5vw;
+  padding: 5vh 5vw;
 }
 
 /* Joystick wrapper */
@@ -216,14 +185,14 @@ h1 {
 #angle-indicator {
   position: absolute;
   left: 50%;
- 
+  top: 50%;
   transform: translate(-50%, -50%);
   
   display: flex;
   align-items: center;
   justify-content: center;
 
-  padding: 1vh 1vw;
+  padding: 1vw 1vw;
   border-radius: 2vw;
 
   background: rgba(0, 255, 200, 0.08);
@@ -242,20 +211,4 @@ h1 {
   letter-spacing: 0.2vw;
 
   text-shadow: 0 0 1vw rgba(0, 255, 200, 0.6);
-}
-
-.slider-container {
-    width: 80%;
-    max-width: 600px;
-    margin: 15px auto;
-}
-
-.slider-container label {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-}
-
-.slider-container input {
-    width: 100%;
 }
