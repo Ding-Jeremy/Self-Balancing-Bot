@@ -7,6 +7,9 @@ let joysticks = {};
 let old_x_r = null;
 let old_y_l = null;
 
+let motors_on = false;
+
+
 
 window.addEventListener("load", onLoad);
 
@@ -34,18 +37,24 @@ function initWebSocket() {
     updateBatteryInfo(null);
     setTimeout(initWebSocket, 2000); // Retry connection
   };
-
+  
   websocket.onmessage = (event) => {
-    try {
-      const message = JSON.parse(event.data);
-      if (message.id === "battery") {
-        updateBatteryInfo(message);
-      }
-    } catch (error) {
-      console.log("Received non-JSON message:", event.data);
+
+    const message = JSON.parse(event.data);
+    if (message.id === "battery") { 
+      updateBatteryInfo(message);
     }
-  };
-}
+    else if (message.id === "angle"){
+      updateAngleInfo(message);
+    }
+    else if(message.id === "motors_on" || message.id === "motors_off"){
+      update_motors_button(message.id);
+    }
+
+  } 
+    
+};
+
 
 function createJoystick(containerId, idPrefix) {
   const container = document.getElementById(containerId);
@@ -149,8 +158,44 @@ function updateBatteryInfo(message) {
   }
 }
 
+function updateAngleInfo(message) {
+  const angle_text = document.getElementById("angle-text");
+
+  if (message != null) {
+    const angle_value = Math.round(message.value);
+
+    angle_text.textContent = `${angle_value} °`;
+
+
+    // Change color depending on level
+    if (angle_value < -20 || angle_value > 20) {
+    } else {
+    }
+  } else {
+    document.getElementById("angle_indicator").value = `--- °`;
+
+  }
+}
+
+function update_motors_button(state){
+  if (state === "motors_on"){
+    motors_on = true;
+    document.getElementById("button_motors_toggle").textContent="Disable Motors";
+  }
+  else{
+    motors_on = false;
+    document.getElementById("button_motors_toggle").textContent="Enable Motors";
+  }
+}
 function send_button(button) {
-  websocket.send(JSON.stringify({ id: `button-${button}` }));
+  if (button == "motors_toggle"){
+    if (motors_on){
+      websocket.send(JSON.stringify({ id: `motors_off` }));
+    }
+    else{
+      websocket.send(JSON.stringify({ id: `motors_on` }));
+    }
+  }
 }
 
 function setButtonEnabled(enabled) {
@@ -187,45 +232,6 @@ window.addEventListener("resize", () => {
   joysticks["right"].enabled = true;
 });
 
-function sendColor(color) {
-  // Update joystick borders live
-  document.querySelectorAll('.joystick').forEach(js => {
-    js.style.borderColor = color;
-    js.style.boxShadow = `0 0 2vw ${color}88`;
-  });
-
-  // Update color picker button background
-  const colorBtn = document.getElementById('color-button');
-  if (colorBtn) {
-    colorBtn.style.backgroundColor = color;
-  }
-
-  // Send the color over websocket
-  const {r, g, b } = hexToRgb(color);
-  const message = {
-    id: 'eyes-color',
-    r: r,
-    g: g,
-    b: b 
-  };
-
-  websocket.send(JSON.stringify(message));
-}
-
- // Convert hex color to RGB components
-function hexToRgb(hex) {
-  // Remove leading '#' if present
-  hex = hex.replace(/^#/, '');
-
-  // Parse 3-digit hex (#abc) into 6-digit (#aabbcc)
-  if (hex.length === 3) {
-    hex = hex.split('').map(c => c + c).join('');
-  }
-
-  const bigint = parseInt(hex, 16);
-  const r = (bigint >> 16) & 255;
-  const g = (bigint >> 8) & 255;
-  const b = bigint & 255;
-
-  return { r, g, b };
+function calibrate(){
+  websocket.send(JSON.stringify({ id: `calibrate` }));
 }

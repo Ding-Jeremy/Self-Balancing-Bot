@@ -11,7 +11,7 @@
 
   </head>
   <body>
-    <h1>Arachnova Controller</h1>
+    <h1>Self-Balancing_Bot</h1>
 
     <!-- Logo Image -->
     <img
@@ -30,7 +30,10 @@
           <span>&darr; Backward</span>
         </div>
       </div>
-    
+      <!-- Angle indicator-->
+      <div id="angle-indicator">
+      <span id="angle-text">--- °</span>
+      </div>
       <div class="joystick-wrapper">
         <div class="joystick" id="joystick2"></div>
         <div class="joystick-instructions">
@@ -67,14 +70,9 @@
 
     <!-- Buttons -->
     <div class="buttons">
-      <button class="button" onclick="send_button('Calibrate')">Calibrate</button>
-      <button class="button" onclick="send_button('Demo')">Demo</button>
+      <button id = "button_motors_toggle" class="button" onclick="send_button('motors_toggle')">Enable Motors</button>
+      <button id = "button_calibrate" class="button" onclick="calibrate()">Calibrate</button>
 
-      <!-- Color Picker Button -->
-      <div class="button color-picker-button" id="color-button">
-        Eyes
-        <input type="color" id="robot-color" value="#00ffc8" onchange="sendColor(this.value)" />
-      </div>
     </div>
     <script src="/nipplejs.min.js"></script>
     <script src="/script.js"></script>
