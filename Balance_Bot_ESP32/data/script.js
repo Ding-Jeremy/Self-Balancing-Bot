@@ -77,6 +77,9 @@ function initWebSocket() {
     else if(message.id === "calibration_angle"){
       update_calibration_angle(message);
     }
+    else if(message.id === "speed"){
+      updateSpeedInfo(message);
+    }
   } 
     
 };
@@ -188,19 +191,40 @@ function updateAngleInfo(message) {
   const angle_text = document.getElementById("angle-text");
 
   if (message != null) {
-    const angle_value = Math.round(message.value);
+    const angle_value = Number(message.value);
 
     const sign = angle_value < 0 ? '-' : '+';
-    const value = Math.abs(angle_value).toString().padStart(2, '0');
 
-    angle_text.textContent = `${sign}${value}°`;
+    const absValue = Math.abs(angle_value);
+    const [integer, decimal] = absValue.toFixed(1).split('.');
 
-    // Change color depending on level
-    if (angle_value < -20 || angle_value > 20) {
-    } else {
-    }
+    const formatted =
+      `${sign}${integer.padStart(2, '0')}.${decimal}°`;
+
+    angle_text.textContent = formatted;
+    
   } else {
-    document.getElementById("angle-text").textContent = `--- °`;
+    document.getElementById("angle-text").textContent = `---.-°`;
+  }
+}
+function updateSpeedInfo(message) {
+  const speed_text = document.getElementById("speed-text");
+
+  if (message != null) {
+    const speed_value = Number(message.value);
+
+    const sign = speed_value < 0 ? '-' : '+';
+
+    const absValue = Math.abs(speed_value);
+    const [integer, decimal] = absValue.toFixed(2).split('.');
+
+    const formatted =
+      `${sign}${integer.padStart(1, '0')}.${decimal} m/s`;
+
+    speed_text.textContent = formatted;
+
+  } else {
+    speed_text.textContent = "---.-- m/s";
   }
 }
 
@@ -240,23 +264,24 @@ function update_pid_values(message){
   velocityDValue.textContent = Number(message.velocity.td).toFixed(2);
 
 }
-function update_calibration_angle(message){
+function update_calibration_angle(message) {
   const angle_text = document.getElementById("calibration-angle-text");
 
   if (message != null) {
-    const angle_value = Math.round(message.value);
+    const angle_value = Number(message.value);
 
     const sign = angle_value < 0 ? '-' : '+';
-    const value = Math.abs(angle_value).toString().padStart(2, '0');
 
-    angle_text.textContent = `${sign}${value}°`;
+    const absValue = Math.abs(angle_value);
+    const [integer, decimal] = absValue.toFixed(1).split('.');
 
-    // Change color depending on level
-    if (angle_value < -20 || angle_value > 20) {
-    } else {
-    }
+    const formatted =
+      `${sign}${integer.padStart(3, '0')}.${decimal}°`;
+
+    angle_text.textContent = formatted;
+
   } else {
-    document.getElementById("calibration-angle-text").textContent = `--- °`;
+    angle_text.textContent = "---.-°";
   }
 }
 

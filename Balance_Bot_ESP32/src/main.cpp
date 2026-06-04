@@ -28,11 +28,11 @@
 #define D_UART_BAUDRATE 9600
 
 // REGULATOR
-#define D_REG_KPV 0
+#define D_REG_KPV 1
 #define D_REG_TDV 0
 #define D_REG_TIV 0
 
-#define D_REG_KPT 0
+#define D_REG_KPT 1
 #define D_REG_TDT 0
 #define D_REG_TIT 0
 
@@ -40,7 +40,7 @@
 
 #define D_ANGLE_TIMEOUT 500      // Timeout between angle sents
 #define D_ANGLE_LIMITS {-20, 20} // Limit angle (degrees)
-#define D_SPEED_LIMITS {-.5, .5} // Speed limits (when moving) [m/s]
+#define D_SPEED_LIMITS {-1, 1}   // Speed limits (when moving) [m/s]
 
 #define D_WHEEL_RADIUS 0.055 // [m]
 // WiFi credentials
@@ -72,30 +72,32 @@ void init_websocket();
 float PID_update(PIDController *pid, float error, float dt);
 
 void send_angle(float theta);
+void send_speed(float speed);
 void send_motor_state(bool state);
+
 bool is_angle_withing_range();
 float map_f(float value, float min1, float max1, float min2, float max2);
 float rad_s_to_ustp_s(float rad_s, uint8_t micro_stepping_value);
-
 //-------------- GLOBAL VARIABLES ---------------
 AsyncWebServer server(80); // Web server
 AsyncWebSocket ws("/ws");  // WebSocket endpoint
 
 Adafruit_MPU6050 mpu;
-float speed_target = 0;
-float speed = 0;
+float position_target = 0.0f;
+float speed = 0.0f;
 float angleX = 0.0f;
 float angleX_offset = 0.0f;
 unsigned long lastMicros = 0;
-float e_v = 0, e_theta = 0;
-float motor_speed = 0;
+float motor_speed = 0.0f;
+float position = 0.0f;
 uint32_t angle_timer = 0;
 int8_t angle_limits[2] = D_ANGLE_LIMITS;
 float angle_control_range[2] = D_SPEED_LIMITS;
-bool motor_state = false;
+bool motor_state = true;
 uint8_t micro_stepping_value = 0;
+float us_speed = 0;
 // PID controllers
-PIDController speedPID =
+PIDController positionPID =
     {
         .kp = D_REG_KPV,
         .ki = D_REG_TIV,
@@ -190,22 +192,23 @@ void loop()
   // Complementary filter
   angleX = 0.98f * (angleX + gyroRateX * dt) + 0.02f * accelAngleX;
 
-  // REGULATOR (outer loop)
-  float speed_error = speed_target - speed;
+  // REGULATOR (outer loop, speed regulation)
 
+  float position_error = (position_target - position);
+
+  // Generate angle theta based on position Error
   float theta_target =
-      PID_update(&speedPID, speed_error, dt);
+      PID_update(&positionPID, position_error, dt);
 
   // Defines the error from speed (and saved offset)
   float thetaError = theta_target + angleX_offset - angleX;
 
+  // Generate motor speed from inner loop
   float motor_speed =
       PID_update(&tiltPID, thetaError, dt);
 
-  // Chariot speed
-  speed = motor_speed * D_WHEEL_RADIUS;
   // Convert rad/s to ustp/stp
-  motor_speed = rad_s_to_ustp_s(motor_speed, micro_stepping_value);
+  us_speed = rad_s_to_ustp_s(motor_speed, micro_stepping_value);
 
   // If angle out of safe range.
   if (!is_angle_withing_range())
@@ -218,19 +221,27 @@ void loop()
       send_motor_state(false);
     }
   }
+
+  // Chariot speed
+  speed = motor_speed * D_WHEEL_RADIUS;
+  // Compute position
+  position += speed * dt;
   // run motors (standalone speed)
-  TMC_runspeed(0x00, (int32_t)motor_speed);
-  TMC_runspeed(0x01, -(int32_t)motor_speed);
-  // compute chariot speed.
+  TMC_runspeed(0x00, (int32_t)us_speed);
+  TMC_runspeed(0x01, -(int32_t)us_speed);
+
+  // Send angle and speed to clients
   if (millis() - angle_timer > D_ANGLE_TIMEOUT)
   {
+    Serial.print("speed: ");
+    Serial.println(speed);
+    Serial.print("pos: ");
+    Serial.println(position);
     angle_timer = millis();
+    send_speed(position);
     send_angle(angleX);
-    JSONVar json;
-    json["id"] = "calibration_angle";
-    json["value"] = speed;
   }
-  delay(5);
+  delay(1);
 }
 
 //-------------- FUNCTION IMPLEMENTATIONS ---------------
@@ -270,6 +281,18 @@ void send_angle(float theta)
   JSONVar json;
   json["id"] = "angle";
   json["value"] = theta;
+  String msg = JSON.stringify(json);
+  notify_clients(msg);
+}
+
+/// @brief Sends speed to clients
+/// @param speed
+void send_speed(float speed)
+{
+  // Create JSON message, send it
+  JSONVar json;
+  json["id"] = "speed";
+  json["value"] = speed;
   String msg = JSON.stringify(json);
   notify_clients(msg);
 }
@@ -392,9 +415,9 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len)
 
         if (msg["velocity"].hasOwnProperty("kp"))
         {
-          speedPID.kp = (double)msg["velocity"]["kp"];
-          speedPID.ki = (double)msg["velocity"]["ti"];
-          speedPID.kd = (double)msg["velocity"]["td"];
+          positionPID.kp = (double)msg["velocity"]["kp"];
+          positionPID.ki = (double)msg["velocity"]["ti"];
+          positionPID.kd = (double)msg["velocity"]["td"];
         }
       }
       else if (msg_id == "pid_request")
@@ -404,16 +427,16 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len)
         json["balance"]["kp"] = tiltPID.kp;
         json["balance"]["td"] = tiltPID.kd;
         json["balance"]["ti"] = tiltPID.ki;
-        json["velocity"]["kp"] = speedPID.kp;
-        json["velocity"]["td"] = speedPID.kd;
-        json["velocity"]["ti"] = speedPID.ki;
+        json["velocity"]["kp"] = positionPID.kp;
+        json["velocity"]["td"] = positionPID.kd;
+        json["velocity"]["ti"] = positionPID.ki;
         String msg = JSON.stringify(json);
         notify_clients(msg);
       }
       else if (msg_id == "joystick-left")
       {
         // Adjust speed target from joystick
-        speed_target = map_f((double)msg["y"], -100, 100, angle_control_range[0], angle_control_range[1]);
+        position_target = position + map_f((double)msg["y"], -100, 100, angle_control_range[0], angle_control_range[1]);
       }
     }
   }
