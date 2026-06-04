@@ -34,7 +34,9 @@
       <!-- Angle indicator-->
       <div id="angle-indicator">
       <span id="angle-text">--- °</span>
+      <span id="calibration-angle-text">---°</span>
       </div>
+  
       <div class="joystick-wrapper">
         <div class="joystick" id="joystick2"></div>
         <div class="joystick-instructions">
@@ -87,15 +89,15 @@
       <h2 class="pid-title">Balance</h2>
       
       <div class="slider-container">
-          <label>P:
+          <label>Kp_t:
               <span id="balancePValue">0.0</span>
           </label>
           <input type="range" id="balanceP"
-                min="0" max="100" step="0.1" value="0">
+                min="0" max="1000" step="0.1" value="0">
       </div>
 
       <div class="slider-container">
-          <label>I:
+          <label>Ti_t:
               <span id="balanceIValue">0.0</span>
           </label>
           <input type="range" id="balanceI"
@@ -103,25 +105,25 @@
       </div>
 
       <div class="slider-container">
-          <label>D:
+          <label>Td_t:
               <span id="balanceDValue">0.0</span>
           </label>
           <input type="range" id="balanceD"
-                min="0" max="100" step="0.1" value="0">
+                min="0" max="10" step="0.1" value="0">
       </div>
     </div>
     <div class="pid-group">
       <h2 class="pid-title">Velocity</h2>
       <div class="slider-container">
-          <label>P:
+          <label>Kp_v:
               <span id="velocityPValue">0.0</span>
           </label>
           <input type="range" id="velocityP"
-                min="0" max="100" step="0.1" value="0">
+                min="0" max="10" step="0.1" value="0">
       </div>
 
       <div class="slider-container">
-          <label>I:
+          <label>Ti_v:
               <span id="velocityIValue">0.0</span>
           </label>
           <input type="range" id="velocityI"
@@ -129,11 +131,11 @@
       </div>
 
       <div class="slider-container">
-          <label>D:
+          <label>Td_v:
               <span id="velocityDValue">0.0</span>
           </label>
           <input type="range" id="velocityD"
-                min="0" max="100" step="0.1" value="0">
+                min="0" max="10" step="0.1" value="0">
       </div>
     </div>
     </div>

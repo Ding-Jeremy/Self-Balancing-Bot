@@ -19,6 +19,7 @@ function showPage(pageId) {
 }
 
 function showPIDPage() {
+    requestPID();
     showPage("pid-page");
 }
 
@@ -51,6 +52,7 @@ function initWebSocket() {
     setJoystickEnabled(false);
     setButtonEnabled(false);
     updateBatteryInfo(null);
+    updateAngleInfo(null);
     setTimeout(initWebSocket, 2000); // Retry connection
   };
   
@@ -67,7 +69,14 @@ function initWebSocket() {
       update_motors_button(message.id);
       console.log(message.id);
     }
-
+     // IF pid values received.
+    else if(message.id === "pid_values")
+    {
+      update_pid_values(message);
+    }
+    else if(message.id === "calibration_angle"){
+      update_calibration_angle(message);
+    }
   } 
     
 };
@@ -99,7 +108,7 @@ function createJoystick(containerId, idPrefix) {
   joystick.enabled = false; // Add manual enabled flag
 
   // Limit the packet to each 20 ms
-  const sendInterval = 20; // ms
+  const sendInterval = 100; // ms
   let lastX = null;
   let lastY = null;
   lastSent = 0;
@@ -149,7 +158,7 @@ function setJoystickEnabled(enabled) {
   });
 }
 
-function updateBatteryInfo(message) {
+  function updateBatteryInfo(message) {
   const batteryLevel = document.getElementById("battery-level");
 
   if (message != null) {
@@ -181,16 +190,17 @@ function updateAngleInfo(message) {
   if (message != null) {
     const angle_value = Math.round(message.value);
 
-    angle_text.textContent = `${angle_value} °`;
+    const sign = angle_value < 0 ? '-' : '+';
+    const value = Math.abs(angle_value).toString().padStart(2, '0');
 
+    angle_text.textContent = `${sign}${value}°`;
 
     // Change color depending on level
     if (angle_value < -20 || angle_value > 20) {
     } else {
     }
   } else {
-    document.getElementById("angle_indicator").value = `--- °`;
-
+    document.getElementById("angle-text").textContent = `--- °`;
   }
 }
 
@@ -204,6 +214,52 @@ function update_motors_button(state){
     document.getElementById("button_motors_toggle").textContent="Enable Motors";
   }
 }
+function update_pid_values(message){
+  // Update sliders
+  balanceP.value = message.balance.kp;
+  balanceI.value = message.balance.ti;
+  balanceD.value = message.balance.td;
+  velocityP.value = message.velocity.kp;
+  velocityI.value = message.velocity.ti;
+  velocityD.value = message.velocity.td;
+  // Update text
+  const balancePValue = document.getElementById("balancePValue");
+  const balanceIValue = document.getElementById("balanceIValue");
+  const balanceDValue = document.getElementById("balanceDValue");
+
+  const velocityPValue = document.getElementById("velocityPValue");
+  const velocityIValue = document.getElementById("velocityIValue");
+  const velocityDValue = document.getElementById("velocityDValue");
+
+  balancePValue.textContent = Number(message.balance.kp).toFixed(2);
+  balanceIValue.textContent = Number(message.balance.ti).toFixed(2);
+  balanceDValue.textContent = Number(message.balance.td).toFixed(2);
+
+  velocityPValue.textContent = Number(message.velocity.kp).toFixed(2);
+  velocityIValue.textContent = Number(message.velocity.ti).toFixed(2);
+  velocityDValue.textContent = Number(message.velocity.td).toFixed(2);
+
+}
+function update_calibration_angle(message){
+  const angle_text = document.getElementById("calibration-angle-text");
+
+  if (message != null) {
+    const angle_value = Math.round(message.value);
+
+    const sign = angle_value < 0 ? '-' : '+';
+    const value = Math.abs(angle_value).toString().padStart(2, '0');
+
+    angle_text.textContent = `${sign}${value}°`;
+
+    // Change color depending on level
+    if (angle_value < -20 || angle_value > 20) {
+    } else {
+    }
+  } else {
+    document.getElementById("calibration-angle-text").textContent = `--- °`;
+  }
+}
+
 function send_button(button) {
   if (button === "motors_toggle"){
     if (motors_on){
@@ -267,19 +323,24 @@ sliders.forEach(slider => {
     });
 });
 
+// Request PID info from the server
+function requestPID(){
+  websocket.send(JSON.stringify({"id":"pid_request"}));
+}
+
 function savePID() {
 
     const pidValues = {
         id: "pid_values",
         balance: {
             kp: parseFloat(balanceP.value),
-            ki: parseFloat(balanceI.value),
-            kd: parseFloat(balanceD.value)
+            ti: parseFloat(balanceI.value),
+            td: parseFloat(balanceD.value)
         },
         velocity: {
             kp: parseFloat(velocityP.value),
-            ki: parseFloat(velocityI.value),
-            kd: parseFloat(velocityD.value)
+            ti: parseFloat(velocityI.value),
+            td: parseFloat(velocityD.value)
         }
     };
     // Sned those values to the server

@@ -28,11 +28,11 @@
 #define D_UART_BAUDRATE 9600
 
 // REGULATOR
-#define D_REG_KPV 1
+#define D_REG_KPV 0
 #define D_REG_TDV 0
 #define D_REG_TIV 0
 
-#define D_REG_KPT 500
+#define D_REG_KPT 0
 #define D_REG_TDT 0
 #define D_REG_TIT 0
 
@@ -40,7 +40,9 @@
 
 #define D_ANGLE_TIMEOUT 500      // Timeout between angle sents
 #define D_ANGLE_LIMITS {-20, 20} // Limit angle (degrees)
+#define D_SPEED_LIMITS {-.5, .5} // Speed limits (when moving) [m/s]
 
+#define D_WHEEL_RADIUS 0.055 // [m]
 // WiFi credentials
 #define D_SSID "self-balancing-bot"
 #define D_PASSWORD "123456789"
@@ -72,6 +74,9 @@ float PID_update(PIDController *pid, float error, float dt);
 void send_angle(float theta);
 void send_motor_state(bool state);
 bool is_angle_withing_range();
+float map_f(float value, float min1, float max1, float min2, float max2);
+float rad_s_to_ustp_s(float rad_s, uint8_t micro_stepping_value);
+
 //-------------- GLOBAL VARIABLES ---------------
 AsyncWebServer server(80); // Web server
 AsyncWebSocket ws("/ws");  // WebSocket endpoint
@@ -86,7 +91,9 @@ float e_v = 0, e_theta = 0;
 float motor_speed = 0;
 uint32_t angle_timer = 0;
 int8_t angle_limits[2] = D_ANGLE_LIMITS;
+float angle_control_range[2] = D_SPEED_LIMITS;
 bool motor_state = false;
+uint8_t micro_stepping_value = 0;
 // PID controllers
 PIDController speedPID =
     {
@@ -97,7 +104,7 @@ PIDController speedPID =
         .integral = 0.0f,
         .previousError = 0.0f,
 
-        .outputMin = -10.0f, // max desired tilt
+        .outputMin = -10.0f, // max desired tilt [°]
         .outputMax = 10.0f};
 
 PIDController tiltPID =
@@ -109,8 +116,8 @@ PIDController tiltPID =
         .integral = 0.0f,
         .previousError = 0.0f,
 
-        .outputMin = -2000.0f, // Motor speed
-        .outputMax = 2000.0f};
+        .outputMin = -4 * M_PI, // Motor speed [rad/s]
+        .outputMax = 4 * M_PI};
 
 //-------------- SETUP FUNCTION ---------------
 void setup()
@@ -125,7 +132,8 @@ void setup()
   U_TMC_CHOPCONF chopconf;
 
   chopconf.value = D_TMC_REGDFV_CHOPCONF; // DEFAULT VALUE
-  chopconf.bits.mres = 0b0110;            // Microstepping
+  chopconf.bits.mres = 0b0101;            // Microstepping
+  micro_stepping_value = 8;
   TMC_write_to_register(0x00, E_TMC_REG_CHOPCONF, chopconf.bytes);
   TMC_write_to_register(0x01, E_TMC_REG_CHOPCONF, chopconf.bytes);
 
@@ -194,9 +202,11 @@ void loop()
   float motor_speed =
       PID_update(&tiltPID, thetaError, dt);
 
-  // Update motor speed
-  motor_speed = motor_speed > 3000 ? 3000 : motor_speed < -3000 ? -3000
-                                                                : motor_speed;
+  // Chariot speed
+  speed = motor_speed * D_WHEEL_RADIUS;
+  // Convert rad/s to ustp/stp
+  motor_speed = rad_s_to_ustp_s(motor_speed, micro_stepping_value);
+
   // If angle out of safe range.
   if (!is_angle_withing_range())
   {
@@ -211,16 +221,29 @@ void loop()
   // run motors (standalone speed)
   TMC_runspeed(0x00, (int32_t)motor_speed);
   TMC_runspeed(0x01, -(int32_t)motor_speed);
+  // compute chariot speed.
   if (millis() - angle_timer > D_ANGLE_TIMEOUT)
   {
     angle_timer = millis();
     send_angle(angleX);
+    JSONVar json;
+    json["id"] = "calibration_angle";
+    json["value"] = speed;
   }
   delay(5);
 }
 
 //-------------- FUNCTION IMPLEMENTATIONS ---------------
 
+float rad_s_to_ustp_s(float rad_s, uint8_t micro_stepping_value)
+{
+  const float steps_per_rev = 200.0f; // typical stepper motor (1.8°)
+
+  float rev_per_sec = rad_s / (2.0f * M_PI);
+  float steps_per_sec = rev_per_sec * steps_per_rev;
+
+  return steps_per_sec * micro_stepping_value;
+}
 /// @brief Reads current angleX and assess if in the range
 /// @return
 bool is_angle_withing_range()
@@ -239,6 +262,8 @@ void send_motor_state(bool state)
   String msg = JSON.stringify(json);
   notify_clients(msg);
 }
+/// @brief Sends the current angle to the clients
+/// @param theta
 void send_angle(float theta)
 {
   // Create JSON message, send it
@@ -346,14 +371,50 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len)
       }
       else if (msg_id == "calibrate")
       {
+        // Save angle offset
         angleX_offset = angleX;
+        // Transmit saved angle to server
+        JSONVar json;
+        json["id"] = "calibration_angle";
+        json["value"] = angleX_offset;
+        String msg = JSON.stringify(json);
+        notify_clients(msg);
       }
       else if (msg_id == "pid_values")
       {
-        Serial.println("Received: PID");
-        Serial.println(msg);
+        // Safety check
+        if (msg["balance"].hasOwnProperty("kp"))
+        {
+          tiltPID.kp = (double)msg["balance"]["kp"];
+          tiltPID.ki = (double)msg["balance"]["ti"];
+          tiltPID.kd = (double)msg["balance"]["td"];
+        }
+
+        if (msg["velocity"].hasOwnProperty("kp"))
+        {
+          speedPID.kp = (double)msg["velocity"]["kp"];
+          speedPID.ki = (double)msg["velocity"]["ti"];
+          speedPID.kd = (double)msg["velocity"]["td"];
+        }
       }
-      // Check what action to take based on the received msg.
+      else if (msg_id == "pid_request")
+      {
+        JSONVar json;
+        json["id"] = "pid_values";
+        json["balance"]["kp"] = tiltPID.kp;
+        json["balance"]["td"] = tiltPID.kd;
+        json["balance"]["ti"] = tiltPID.ki;
+        json["velocity"]["kp"] = speedPID.kp;
+        json["velocity"]["td"] = speedPID.kd;
+        json["velocity"]["ti"] = speedPID.ki;
+        String msg = JSON.stringify(json);
+        notify_clients(msg);
+      }
+      else if (msg_id == "joystick-left")
+      {
+        // Adjust speed target from joystick
+        speed_target = map_f((double)msg["y"], -100, 100, angle_control_range[0], angle_control_range[1]);
+      }
     }
   }
 }
@@ -387,4 +448,23 @@ void init_websocket()
 {
   ws.onEvent(on_event);
   server.addHandler(&ws);
+}
+
+/// @brief Simple map function.
+/// @param value
+/// @param min1
+/// @param max1
+/// @param min2
+/// @param max2
+/// @return
+float map_f(float value, float min1, float max1, float min2, float max2)
+{
+  if (max1 == min1)
+  {
+    // avoid division by zero
+    return min2;
+  }
+
+  float t = (value - min1) / (max1 - min1);
+  return min2 + t * (max2 - min2);
 }
