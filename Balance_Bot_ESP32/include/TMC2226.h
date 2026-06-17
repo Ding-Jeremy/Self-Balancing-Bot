@@ -19,93 +19,94 @@
 #define D_TMC_NODE_ADDRESS 0x00
 #define D_TMC_MASTER_ADRESS 0xFF
 #define D_TMC_FRAME_LENGTH 8 // bytes
+#define D_TMC_DATA_LENGTH 4
 #define D_TMC_BAUDRATE 200000
 
 // Registers default values
 #define D_TMC_REGDFV_CHOPCONF 0x15010053
 #define D_TMC_REGDFV_GCONF 0x101
 
-// ENUMERATES
-typedef enum
+// Class
+class TMC2226
 {
-    E_TMC_REG_GCONF = 0x00,
-    E_TMC_REG_VACTUAL = 0x22,
-    E_TMC_REG_CHOPCONF = 0x6C,
-    E_TMC_REG_IOIN = 0x06
-} E_TMC_REG;
-// REGISTERS
+public:
+    // Enumerates
+    enum Register : uint8_t
+    {
+        E_REG_GCONF = 0x00,
+        E_REG_IOIN = 0x06,
+        E_REG_VACTUAL = 0x22,
+        E_REG_CHOPCONF = 0x6C
+    };
+    // Registers Unions
+    union CHOPCONF
+    {
+        struct
+        {
+            uint32_t toff : 4;
+            uint32_t hstrt : 3;
+            uint32_t hend : 4;
+            uint32_t reserved : 4;
+            uint32_t tbl : 2;
+            uint32_t vsense : 1;
+            uint32_t reserved2 : 6;
+            uint32_t mres : 4;
+            uint32_t intpol : 1;
+            uint32_t dedge : 1;
+            uint32_t diss2g : 1;
+            uint32_t diss2vs : 1;
+        } bits;
 
-// Chopper Configuration Register
-typedef struct
-{
-    uint32_t toff : 4;
-    uint32_t hstrt : 3;
-    uint32_t hend : 4;
-    uint32_t reserved : 4;
-    uint32_t tbl : 2;
-    uint32_t vsense : 1;
-    uint32_t reserved_2 : 6;
-    uint32_t mres : 4;
-    uint32_t intpol : 1;
-    uint32_t dedge : 1;
-    uint32_t diss2g : 1;
-    uint32_t diss2vs : 1;
-} S_TMC_CHOPCONF;
+        uint32_t value;
+        uint8_t bytes[4];
+    };
+    union GCONF
+    {
+        struct
+        {
+            uint32_t scale_analog : 1;
+            uint32_t internal_rsense : 1;
+            uint32_t en_spreadcycle : 1;
+            uint32_t shaft : 1;
+            uint32_t index_otpw : 1;
+            uint32_t index_step : 1;
+            uint32_t pdn_disable : 1;
+            uint32_t mstep_reg_select : 1;
+            uint32_t multistep_filt : 1;
+            uint32_t test_mode : 1;
+        } bits;
+        uint32_t value;
+        uint8_t bytes[4];
+    };
 
-// General Configuration Register
-typedef struct
-{
-    uint32_t scale_analog : 1;
-    uint32_t internal_rsense : 1;
-    uint32_t en_spreadcycle : 1;
-    uint32_t shaft : 1;
-    uint32_t index_otpw : 1;
-    uint32_t index_step : 1;
-    uint32_t pdn_disable : 1;
-    uint32_t mstep_reg_select : 1;
-    uint32_t multistep_filt : 1;
-    uint32_t test_mode : 1;
-} S_TMC_GCONF;
+    union VACTUAL
+    {
+        int32_t value;
+        uint8_t bytes[4];
+    };
+    // Attributs
+    uint8_t node_address;
+    // Functions
+    // Constructor
+    TMC2226(uint8_t nd_addr);
 
-// UNION
-typedef union
-{
-    int32_t value;
-    uint8_t bytes[4];
-} U_TMC_VACTUAL;
+    void init();
 
-typedef union
-{
-    S_TMC_CHOPCONF bits;
-    uint8_t bytes[4];
-    uint32_t value;
-} U_TMC_CHOPCONF;
-typedef union
-{
-    S_TMC_GCONF bits;
-    uint8_t bytes[4];
-    uint32_t value;
-} U_TMC_GCONF;
+    void enable();
+    void disable();
 
-// PROTOTYPES
+    void run_speed(int32_t speed);
 
-void TMC_enable();
+    void write_to_register(Register reg_address, uint8_t *data);
+    uint32_t read_register(Register reg_address);
 
-void TMC_disable();
+private:
+    uint8_t m_nodeAddress;
 
-void TMC_send_frame(uint8_t *frame, uint8_t frame_length);
-
-void TMC_init();
-
-void TMC_calculate_crc(uint8_t *frame);
-
-void TMC_write_to_register(uint8_t node_addr, E_TMC_REG reg_address, uint8_t *data);
-
-uint32_t TMC_read_from_register(uint8_t node_addr, E_TMC_REG reg_address);
-
-void TMC_invert_bytes(uint8_t frame[D_TMC_FRAME_LENGTH - 4]);
-
-void TMC_runspeed(uint8_t node_addr, int32_t speed);
+    void send_frame(uint8_t *frame, uint8_t length);
+    void calculate_crc(uint8_t *frame, uint8_t frame_length);
+    void invert_bytes(uint8_t frane[D_TMC_FRAME_LENGTH - 4]);
+};
 
 #endif
 #define TMC2226_H

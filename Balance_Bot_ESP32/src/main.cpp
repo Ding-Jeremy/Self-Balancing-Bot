@@ -82,20 +82,32 @@ float rad_s_to_ustp_s(float rad_s, uint8_t micro_stepping_value);
 AsyncWebServer server(80); // Web server
 AsyncWebSocket ws("/ws");  // WebSocket endpoint
 
+// Mpu unit
 Adafruit_MPU6050 mpu;
+TMC2226 tmc2226_left(0x00);
+TMC2226 tmc2226_right(0x01);
+
+float position = 0.0f;
 float position_target = 0.0f;
-float speed = 0.0f;
+
 float angleX = 0.0f;
 float angleX_offset = 0.0f;
+
 unsigned long lastMicros = 0;
+
+float us_speed = 0;
 float motor_speed = 0.0f;
-float position = 0.0f;
+float speed = 0.0f;
+
 uint32_t angle_timer = 0;
+
 int8_t angle_limits[2] = D_ANGLE_LIMITS;
 float angle_control_range[2] = D_SPEED_LIMITS;
+
 bool motor_state = true;
+
 uint8_t micro_stepping_value = 0;
-float us_speed = 0;
+
 // PID controllers
 PIDController positionPID =
     {
@@ -129,15 +141,18 @@ void setup()
   Serial.println("Serial1 initialized");
 
   // Initializes TMC
-  TMC_init();
+  tmc2226_left.init();
+  tmc2226_right.init();
+
   // Set chopper config
-  U_TMC_CHOPCONF chopconf;
+  TMC2226::CHOPCONF chopconf;
 
   chopconf.value = D_TMC_REGDFV_CHOPCONF; // DEFAULT VALUE
   chopconf.bits.mres = 0b0101;            // Microstepping
   micro_stepping_value = 8;
-  TMC_write_to_register(0x00, E_TMC_REG_CHOPCONF, chopconf.bytes);
-  TMC_write_to_register(0x01, E_TMC_REG_CHOPCONF, chopconf.bytes);
+
+  tmc2226_left.write_to_register(TMC2226::E_REG_CHOPCONF, chopconf.bytes);
+  tmc2226_right.write_to_register(TMC2226::E_REG_CHOPCONF, chopconf.bytes);
 
   // Start MPU
   if (!mpu.begin())
@@ -217,7 +232,8 @@ void loop()
     {
       motor_state = false;
       motor_speed = 0;
-      TMC_disable();
+      tmc2226_left.disable();
+      tmc2226_right.disable();
       send_motor_state(false);
     }
   }
@@ -227,18 +243,14 @@ void loop()
   // Compute position
   position += speed * dt;
   // run motors (standalone speed)
-  TMC_runspeed(0x00, (int32_t)us_speed);
-  TMC_runspeed(0x01, -(int32_t)us_speed);
+  tmc2226_left.run_speed((int32_t)us_speed);
+  tmc2226_right.run_speed(-(int32_t)us_speed);
 
   // Send angle and speed to clients
   if (millis() - angle_timer > D_ANGLE_TIMEOUT)
   {
-    Serial.print("speed: ");
-    Serial.println(speed);
-    Serial.print("pos: ");
-    Serial.println(position);
     angle_timer = millis();
-    send_speed(position);
+    send_speed(speed);
     send_angle(angleX);
   }
   delay(1);
@@ -380,14 +392,16 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len)
       if (msg_id == "motors_off")
       {
         motor_state = false;
-        TMC_disable();
+        tmc2226_left.disable();
+        tmc2226_right.disable();
         send_motor_state(false);
       }
       else if (msg_id == "motors_on")
       {
         if (is_angle_withing_range())
         {
-          TMC_enable();
+          tmc2226_left.enable();
+          tmc2226_right.enable();
           motor_state = true;
           send_motor_state(true);
         }
