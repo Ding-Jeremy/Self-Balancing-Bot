@@ -8,8 +8,11 @@ let old_x_r = null;
 let old_y_l = null;
 
 let motors_on = false;
+// save data flag
+let recording = false;
+let csv_data = "";
 
-
+// Page system
 function showPage(pageId) {
     document.querySelectorAll(".page").forEach(p => {
         p.style.display = "none";
@@ -27,6 +30,7 @@ function showControlPage() {
     showPage("control-page");
 } 
 
+// Window
 window.addEventListener("load", onLoad);
 
 function onLoad() {
@@ -38,6 +42,7 @@ function onLoad() {
   setButtonEnabled(false);   // Default disabled
 }
 
+// Web sockets parameters
 function initWebSocket() {
   websocket = new WebSocket(gateway);
 
@@ -58,32 +63,65 @@ function initWebSocket() {
   
   websocket.onmessage = (event) => {
 
-    const message = JSON.parse(event.data);
-    if (message.id === "battery") { 
-      updateBatteryInfo(message);
+  // Recording mode (raw CSV stream)
+  if (recording) {
+    // stop signal
+    if (event.data === "save_end") {
+      recording = false;
+      saveCsv(csv_data);
+      console.log("Recording saved");
+      return;
     }
-    else if (message.id === "angle"){
-      updateAngleInfo(message);
-    }
-    else if(message.id === "motors_on" || message.id === "motors_off"){
-      update_motors_button(message.id);
-      console.log(message.id);
-    }
-     // IF pid values received.
-    else if(message.id === "pid_values")
-    {
-      update_pid_values(message);
-    }
-    else if(message.id === "calibration_angle"){
-      update_calibration_angle(message);
-    }
-    else if(message.id === "speed"){
-      updateSpeedInfo(message);
-    }
-  } 
-    
-};
 
+    csv_data += event.data + "\n";
+    return;
+  }
+
+  // Check received message (not recording)
+  let message;
+  try {
+    message = JSON.parse(event.data);
+  } catch (e) {
+    console.warn("Unknown non-JSON message:", event.data);
+    return;
+  }
+
+  switch (message.id) {
+
+    case "save_start":
+      recording = true;
+      csv_data = "";
+      console.log("Recording started");
+      break;
+
+    case "battery":
+      updateBatteryInfo(message);
+      break;
+
+    case "angle":
+      updateAngleInfo(message);
+      break;
+
+    case "motors_on":
+    case "motors_off":
+      update_motors_button(message.id);
+      break;
+
+    case "pid_values":
+      update_pid_values(message);
+      break;
+
+    case "calibration_angle":
+      update_calibration_angle(message);
+      break;
+
+    case "target_angle":
+      updateTargetAngleInfo(message);
+      break;
+  }
+  };
+}
+  
 
 function createJoystick(containerId, idPrefix) {
   const container = document.getElementById(containerId);
@@ -207,8 +245,8 @@ function updateAngleInfo(message) {
     document.getElementById("angle-text").textContent = `---.-°`;
   }
 }
-function updateSpeedInfo(message) {
-  const speed_text = document.getElementById("speed-text");
+function updateTargetAngleInfo(message) {
+  const speed_text = document.getElementById("target-angle-text");
 
   if (message != null) {
     const speed_value = Number(message.value);
@@ -219,7 +257,7 @@ function updateSpeedInfo(message) {
     const [integer, decimal] = absValue.toFixed(2).split('.');
 
     const formatted =
-      `${sign}${integer.padStart(1, '0')}.${decimal} m/s`;
+      `${sign}${integer.padStart(1, '0')}.${decimal} °`;
 
     speed_text.textContent = formatted;
 
@@ -312,6 +350,24 @@ function setButtonEnabled(enabled) {
   }
 }
 
+function record(){
+  // If not recording 
+  if(!recording)
+  {
+    recording = true;
+    document.getElementById("button_record").style.backgroundColor = "red";
+    document.getElementById("button_record").textContent="Stop";
+    websocket.send(JSON.stringify({ id: `record_start` }));
+  }
+  // If currently recording
+  else{
+    recording = false;
+    document.getElementById("button_record").style.backgroundColor = "green";
+    document.getElementById("button_record").textContent="Record";
+    websocket.send(JSON.stringify({ id: `record_stop` }));
+  }
+}
+
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -370,4 +426,30 @@ function savePID() {
     };
     // Sned those values to the server
     websocket.send(JSON.stringify(pidValues));
+}
+
+// CSV 
+function saveCsv(data) {
+
+  const blob = new Blob(
+    [data],
+    { type: "text/csv" }
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download =
+    `recording_${Date.now()}.csv`;
+
+  document.body.appendChild(a);
+
+  a.click();
+
+  a.remove();
+
+  URL.revokeObjectURL(url);
 }

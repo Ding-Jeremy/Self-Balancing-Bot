@@ -38,8 +38,8 @@
           <span id="calibration-angle-text">---.-°</span>
         </div>
 
-        <div id="speed-indicator">
-          <span id="speed-text">+0.00 m/s</span>
+        <div id="target-angle-indicator">
+          <span id="target-angle-text">+0.00 °</span>
         </div>
       </div>
       <div class="joystick-wrapper">
@@ -80,7 +80,9 @@
     <div class="buttons">
       <button id = "button_motors_toggle" class="button" onclick="send_button('motors_toggle')">Enable Motors</button>
       <button id = "button_calibrate" class="button" onclick="calibrate()">Calibrate</button>
+      <button id = "button_record" class="button"onclick="record()">Record</button>
       <button class = "button"onclick="showPIDPage()">
+      
       PID Settings
     </button>
     </div>

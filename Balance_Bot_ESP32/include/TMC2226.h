@@ -20,7 +20,7 @@
 #define D_TMC_MASTER_ADRESS 0xFF
 #define D_TMC_FRAME_LENGTH 8 // bytes
 #define D_TMC_DATA_LENGTH 4
-#define D_TMC_BAUDRATE 200000
+#define D_TMC_BAUDRATE 500000
 
 // Registers default values
 #define D_TMC_REGDFV_CHOPCONF 0x15010053
