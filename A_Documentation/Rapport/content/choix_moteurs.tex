@@ -1,0 +1,46 @@
+La première étape de réalisation de ce projet consiste au choix des différents composants le constituant.
+
+Il est important de noter que les critères de choix ne sont pas toujours issus directement du cahier des charges. Cependant, ils permettent une sélection objective des meilleurs composants.
+
+\section{Moteurs}
+
+\subsection{Critères de choix}
+
+\begin{itemize}
+    \item \textbf{Vitesse de rotation élevée}  
+    Les moteurs doivent pouvoir tourner rapidement afin de permettre une régulation efficace de la position du robot et de le maintenir en équilibre.
+
+    \item \textbf{Précision du contrôle de vitesse}  
+    La vitesse des moteurs doit être ajustable avec précision afin de réguler efficacement le balancement du système.  
+    Les moteurs doivent également rester précis même à faible vitesse.
+
+    \item \textbf{Synchronisation des moteurs}  
+    Les moteurs doivent fonctionner de manière synchrone. Une différence importante de vitesse entre les deux moteurs peut entraîner une rotation non désirée du robot.
+
+    \item \textbf{Consommation énergétique}  
+    Les moteurs ne doivent pas consommer trop d’énergie. Étant donné que le système embarqué fonctionne sur batterie, il est important de limiter la consommation afin de préserver l’autonomie.
+
+    \item \textbf{Système de contrôle}  
+    Le système de commande des moteurs doit rester simple. Il convient d’éviter une électronique de contrôle trop complexe.
+\end{itemize}
+
+\begin{table}[h]
+    \centering
+    \caption{Synthèse des critères de choix}
+    \label{tab:criteres_moteurs}
+    \begin{tabular}{|l|p{10cm}|}
+        \hline
+        \textbf{Critère} & \textbf{Justification} \\
+        \hline
+        Vitesse de rotation élevée & Permet une réaction rapide pour la stabilisation du robot. \\
+        \hline
+        Précision du contrôle de vitesse & Assure un contrôle fin du balancement et de la stabilité. \\
+        \hline
+        Synchronisation des moteurs & Évite les rotations parasites du robot. \\
+        \hline
+        Consommation énergétique & Améliore l’autonomie du système embarqué sur batterie. \\
+        \hline
+        Système de contrôle simple & Réduit la complexité électronique et facilite l’implémentation. \\
+        \hline
+    \end{tabular}
+\end{table}

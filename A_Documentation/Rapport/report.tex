@@ -1,12 +1,12 @@
 \documentclass[
     iai, % Saisir le nom de l'institut rattaché
-    eai, % Saisir le nom de l'orientation
-    confidential, % Décommentez si le travail est confidentiel
+    eem, % Saisir le nom de l'orientation
+    %confidential, % Décommentez si le travail est confidentiel
 ]{heig-tb}
 
 \usepackage[nooldvoltagedirection,european,americaninductors]{circuitikz}
 
-\signature{mbernasconi.svg} % Remplacer par votre propre signature vectorielle.
+\signature{jding.svg} % Remplacer par votre propre signature vectorielle.
 
 \makenomenclature
 \makenoidxglossaries
@@ -26,7 +26,7 @@
 \selectlanguage{french}
 \maketitle
 \frontmatter
-\clearemptydoublepage
+
 
 %% Requis par les dispositions générales des travaux de Bachelor
 \preamble
@@ -38,7 +38,6 @@
 \end{abstract}
 
 %% Sommaire et tables
-\clearemptydoublepage
 {
     \tableofcontents
     \let\cleardoublepage\clearpage
@@ -56,11 +55,25 @@
 %% Contenu
 \mainmatter
 \chapter{Introduction}
-\input{introduction.tex}
-\input{examples.tex}
+\input{content/introduction.tex}
+%\input{content/examples.tex}
+\chapter{Cahier des charges}
+\input{content/cahier_des_charges.tex}
+\chapter{Choix moteurs}
+\input{content/choix_moteurs.tex}
+\chapter{Principe physique}
+\input{content/principe_physique.tex}
+\chapter{Maquette}
+\include{content/maquette.tex}
+\chapter{Programmation}
+\include{content/programmation.tex}
+\chapter{Mesures}
+\input{content/mesures.tex}
+\chapter{Analyse Résultats}
+\include{content/analyse_resultats}
 
 \chapter{Conclusion}
-\input{conclusion.tex}
+\input{content/conclusion.tex}
 
 \clearpage
 \printbibliography
@@ -73,8 +86,8 @@
 \chapter{Première annexe}
 
 Les annexes n'ont pas un contenu \underline{normatif} mais \underline{descriptif}. Tout contenu annexé ne doit pas être nécessaire à la bonne compréhension du travail.
-
 Les annexes contiennent généralement :
+
 
 \begin{itemize}
     \item les dessins mécaniques (mises en plan);
