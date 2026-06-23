@@ -213,7 +213,7 @@
 \RequirePackage{float}
 \RequirePackage{fmtcount}
 \RequirePackage{framed}
-\RequirePackage{glossaries}
+\RequirePackage[acronym]{glossaries}
 \RequirePackage{graphicx}
 \RequirePackage{lastpage}
 \RequirePackage{lipsum}

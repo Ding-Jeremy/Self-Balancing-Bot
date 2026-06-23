@@ -1,0 +1,306 @@
+
+% !TeX root = ../report.tex
+La première étape de réalisation de ce projet consiste au choix des différents composants le constituant. Il est en effet nécessaire de déterminer par exemple quel type de moteur sera utilisé d'utiliser la bonne approche théorique.
+Il est important de noter que les critères de choix ne sont pas toujours issus directement du cahier des charges. Cependant, ils permettent une sélection objective des meilleurs composants.
+Les composants soumis à ces choix sont les composants principaux suivants:
+
+\begin{itemize}
+    \item Moteurs
+    \item Drivers Moteurs
+    \item Microcontrôleur
+    \item Capteur, \ac{imu}
+\end{itemize}
+
+
+\section{Moteurs}
+
+\subsection{Critères de choix}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|l|}
+        \hline
+        \textbf{Critère} & \textbf{Justification} \\
+        \hline
+        Vitesse de rotation & Permet une réaction rapide pour la stabilisation du robot. \\
+        \hline
+        Précision du contrôle de vitesse & Assure un contrôle fin du balancement et de la stabilité. \\
+        \hline
+        Synchronisation des moteurs & Évite les rotations parasites du robot. \\
+        \hline
+        Consommation énergétique & Améliore l'autonomie du système embarqué sur batterie. \\
+        \hline
+        Système de contrôle simple & Réduit la complexité électronique et facilite l'implémentation. \\
+        \hline
+    \end{tabular}
+    \caption{Critères moteurs}
+    \label{tab:criteres_moteurs}
+\end{table}
+Ces critères de choix sont utilisés afin de mettre en concurrence trois types de moteurs distincts, décrits ci-dessous.
+\subsection{Moteur DC}
+\subsubsection{Vitesse de rotation}
+
+La vitesse de rotation d'un moteur à courant continu (DC) dépend de sa conception mécanique, laquelle varie fortement selon les modèles.
+
+Il existe des moteurs DC plus lents mais offrant un couple plus élevé. Par exemple, en recherchant \textit{« DC motors with gearbox »} sur Distrelec, on trouve une gamme de modèles dont la vitesse de rotation varie approximativement entre :
+
+$$
+\omega_{\text{mot}} \in [10, 20000] \ \text{tr/min}
+$$
+
+\subsubsection{Précision du contrôle de vitesse}
+
+La vitesse d'un moteur DC peut être contrôlée à l'aide d'un signal PWM.
+
+Cependant, la vitesse de rotation ne peut pas être déterminée avec une grande précision uniquement par PWM. En effet, les tolérances de fabrication entraînent des différences de comportement entre moteurs, ce qui implique une relation PWM $\rightarrow$ vitesse non parfaitement reproductible d'un moteur à l'autre.
+
+\subsubsection{Synchronisation des moteurs}
+
+En boucle ouverte (\textit{open-loop}), c'est-à-dire sans encodeur permettant de mesurer la position angulaire des moteurs, il est impossible d'assurer une synchronisation précise entre deux moteurs.
+
+Une telle approche nécessiterait donc l'ajout d'encodeurs pour fermer la boucle de contrôle.
+
+\subsubsection{Consommation énergétique}
+
+La consommation énergétique de ce type de moteur dépend directement de la puissance mécanique délivrée. Ainsi, il n'est pas nécessaire de maintenir une alimentation constante pour conserver une position, contrairement à un moteur pas à pas.
+
+On peut exprimer la puissance électrique par :
+
+$$
+p(t) = u(t)\, i(t)
+$$
+
+et le courant en fonction du couple :
+
+$$
+i(t) = \frac{T(t)}{k_t}
+$$
+
+La consommation d'un moteur DC est donc directement liée au couple qu'il fournit.
+
+\subsubsection{Système de contrôle}
+
+Le système de contrôle de ce type de moteur repose sur un pont en H, permettant de contrôler le sens de rotation.
+
+La vitesse est régulée par un signal PWM en tension. La position du moteur peut être mesurée à l'aide d'un encodeur placé en sortie.
+
+L'ensemble est généralement intégré dans une boucle de régulation de type \ac{pid} afin d'assurer un contrôle précis de la vitesse et/ou de la position.
+\subsubsection{Résultat Moteur DC}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Critère} & \textbf{Note (/10)} \\
+        \hline
+        Vitesse de rotation & $8/10$\\
+        \hline
+        Précision du contrôle de vitesse & $5/10$ \\
+        \hline
+        Synchronisation des moteurs & $6/10$\\
+        \hline
+        Consommation énergétique & $9/10$\\
+        \hline
+        Système de contrôle simple & $5/10$\\
+        \hline
+    \end{tabular}
+    \caption{Résultat Moteur DC}
+    \label{tab:resultat_moteur_dc}
+\end{table}
+
+$$
+\text{Note globale} = \frac{35}{50}
+$$
+
+\subsection{Moteur pas à pas}
+Le moteur pas à pas est un type de moteur largement utilisé dans les systèmes nécessitant des déplacements angulaires extrêmement précis (CNC, impression 3D, plotters, etc.).
+
+Ces moteurs fonctionnent selon un principe de déplacement par incréments (\textit{steps} ou pas).
+
+\subsubsection{Vitesse de rotation}
+
+La vitesse de rotation d'un moteur pas à pas n'est généralement pas son point fort. Elle dépend de sa capacité à enchaîner les pas.
+
+D'après les données disponibles en ligne, la vitesse maximale des moteurs pas à pas varie approximativement entre :
+
+$$
+\omega_{\text{mot}} \in [600, 1200] \ \text{tr/min}
+$$
+
+Il est important de noter que le couple diminue lorsque la vitesse augmente.
+
+\subsubsection{Précision du contrôle de vitesse}
+
+Le contrôle des moteurs pas à pas s'effectue généralement en boucle ouverte (\textit{open-loop}). Cette technologie permet un positionnement angulaire très précis.
+
+L'utilisation d'un driver avec micro-stepping permet de subdiviser chaque pas en micro-pas, améliorant encore la précision.
+
+Par exemple, pour un moteur de 200 pas par tour avec un micro-stepping de 16, la résolution angulaire est :
+
+$$
+\theta = \frac{360^\circ}{200 \cdot 16} \approx 0.1125^\circ
+$$
+
+Cependant, comme le système est en boucle ouverte, aucune information de position réelle n'est disponible en sortie moteur. Il est donc difficile de détecter un décrochage (\textit{stall}).
+
+Ainsi, si un pas est perdu, cette erreur n'est pas forcément détectée. Toutefois, en dimensionnant correctement le système (couple adapté à la charge), on peut limiter fortement ce risque.
+
+\subsubsection{Synchronisation des moteurs}
+
+La synchronisation entre deux moteurs pas à pas est généralement très bonne. En l'absence de décrochage, ils peuvent être considérés comme parfaitement synchrones.
+
+\subsubsection{Consommation énergétique}
+
+Le moteur pas à pas se distingue négativement sur ce point.
+
+Afin de maintenir une position, il est nécessaire d'alimenter en permanence les bobines, ce qui entraîne une consommation énergétique élevée par rapport aux autres technologies.
+
+\subsubsection{Système de contrôle}
+
+Le contrôle d'un moteur pas à pas repose sur des drivers permettant de configurer le micro-stepping (généralement de 1 à 32 micro-pas par pas).
+
+Le contrôle se fait via deux signaux principaux :
+
+\begin{itemize}
+    \item \textbf{STEP} : chaque impulsion correspond à un micro-pas
+    \item \textbf{DIR} : définit le sens de rotation
+\end{itemize}
+
+\subsubsection{Synthèse des performances}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Critère} & \textbf{Note (/10)} \\
+        \hline
+        Vitesse de rotation & 5/10 \\
+        \hline
+        Précision du contrôle de vitesse & 10/10 \\
+        \hline
+        Synchronisation des moteurs & 10/10 \\
+        \hline
+        Consommation énergétique & 3/10 \\
+        \hline
+        Système de contrôle & 7/10 \\
+        \hline
+    \end{tabular}
+    \caption{Résultats Moteur Pas à pas}
+    \label{tab:stepper_resultats}
+\end{table}
+
+$$
+\text{Note globale} = \frac{35}{50}
+$$
+
+\subsection{Moteur Brushless}
+
+Le moteur brushless est un type de moteur très efficace, présentant un excellent rapport couple/poids. Il permet d'atteindre des vitesses de rotation très élevées.
+
+\subsubsection{Vitesse de rotation}
+
+La vitesse de rotation d'un moteur brushless peut être très élevée.
+
+En cherchant sur internet différents modèles, on trouve des vitesses maximales variant entre:
+
+$$
+\omega_{\text{mot}} \in [10\,000, 50\,000] \ \text{tr/min}
+$$
+
+Il s'agit donc d'un moteur extrêmement rapide et réactif.
+
+Cependant, il est plus difficile d'obtenir un contrôle précis à basse vitesse, ce qui est critique pour ce projet, car le robot doit pouvoir effectuer de très faibles variations de vitesse afin de maintenir son équilibre.
+
+\subsubsection{Précision du contrôle de vitesse}
+
+Le contrôle des moteurs brushless peut être réalisé selon deux approches principales.
+
+La première utilise des capteurs à effet Hall permettant de déterminer la position du rotor et de commander les phases au bon moment.
+
+La seconde repose sur la mesure de la force contre-électromotrice (\textit{Back-EMF}) dans les phases non alimentées afin d'estimer la position du rotor.
+
+Une fois la position connue, plusieurs méthodes de commande sont possibles :
+
+\paragraph{Commande trapézoïdale}
+Cette méthode consiste à alimenter deux des trois phases simultanément.
+
+Elle est simple à implémenter, mais génère des variations brusques de couple et est peu performante à basse vitesse.
+
+\paragraph{\ac{foc}}
+La commande \ac{foc} repose sur la décomposition du courant moteur en deux composantes orthogonales via les transformations de Clarke et Park.
+
+Cette méthode permet :
+\begin{itemize}
+    \item un mouvement fluide,
+    \item une meilleure efficacité énergétique,
+    \item un excellent contrôle à basse vitesse.
+\end{itemize}
+
+Dans le cadre de ce projet, une commande trapézoïdale seule n'est pas suffisante et doit idéalement être remplacée par une commande FOC.
+
+\subsubsection{Synchronisation des moteurs}
+
+La synchronisation dépend fortement de la qualité de l'ESC (Electronic Speed Controller).
+
+Avec une commande FOC, il est possible d'obtenir une bonne synchronisation des vitesses entre moteurs.
+
+\subsubsection{Consommation énergétique}
+
+La consommation d'un moteur brushless dépend du couple fourni.
+
+Cependant, contrairement au moteur DC, l'électronique de commande (ESC) consomme également de l'énergie, ce qui doit être pris en compte dans le bilan global.
+
+\subsubsection{Système de contrôle}
+
+Le contrôle d'un moteur brushless nécessite un ESC (Electronic Speed Controller).
+
+Pour obtenir de bonnes performances, il est nécessaire d'avoir une estimation de la position du rotor.
+
+Cependant, la détection par Back-EMF est peu efficace à basse vitesse, ce qui rend la commande complexe et coûteuse à mettre en oeuvre.
+
+\subsubsection{Synthèse des performances}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Critère} & \textbf{Note (/10)} \\
+        \hline
+        Vitesse de rotation & 7/10 \\
+        \hline
+        Précision du contrôle de vitesse & 8/10 \\
+        \hline
+        Synchronisation des moteurs & 8/10 \\
+        \hline
+        Consommation énergétique & 4/10 \\
+        \hline
+        Système de contrôle & 1/10 \\
+        \hline
+    \end{tabular}
+    \caption{Synthèse des performances du moteur brushless}
+    \label{tab:brushless_resultats}
+\end{table}
+
+$$
+\text{Note globale} = \frac{28}{50}
+$$
+
+\subsection{Choix final}
+À l'issue de l'analyse des trois technologies étudiées (moteur DC, moteur pas à pas et moteur brushless), le moteur pas à pas apparaît comme le meilleur compromis pour ce projet.
+
+Bien qu'il présente une consommation énergétique plus élevée que les autres solutions et une vitesse maximale plus limitée, il se distingue clairement sur les critères essentiels au bon fonctionnement du système.
+
+En effet, le moteur pas à pas offre :
+
+\begin{itemize}
+    \item une excellente précision de contrôle grâce au micro-stepping,
+    \item une très bonne synchronisation entre moteurs en fonctionnement normal,
+    \item un contrôle simple basé sur des signaux STEP/DIR,
+    \item une bonne répétabilité du mouvement en boucle ouverte.
+\end{itemize}
+
+Ces caractéristiques sont particulièrement adaptées à un système de stabilisation, où la précision des petits déplacements et la synchronisation des moteurs sont des éléments critiques.
+
+De plus, la simplicité de mise en oeuvre des drivers pas à pas permet de limiter la complexité électronique globale du système, ce qui constitue un avantage important dans le cadre de ce projet embarqué.
+
+Ainsi, malgré ses limites en termes de rendement énergétique et de vitesse maximale, le moteur pas à pas est retenu comme solution finale, car il répond le mieux aux exigences de précision, de contrôle et de simplicité imposées par le cahier des charges.
+

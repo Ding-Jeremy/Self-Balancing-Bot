@@ -5,19 +5,18 @@
 ]{heig-tb}
 
 \usepackage[nooldvoltagedirection,european,americaninductors]{circuitikz}
-
 \signature{jding.svg} % Remplacer par votre propre signature vectorielle.
 
 \makenomenclature
-\makenoidxglossaries
 \makeindex
-
+\makenoidxglossaries
 \addbibresource{bibliography.bib}
 
-\input{nomenclature}
-\input{acronyms}
-\input{glossary}
-\input{meta}
+
+\input{nomenclature.tex}
+\input{acronyms.tex}
+\input{glossary.tex}
+\input{meta.tex}
 
 \surroundwithmdframed{minted}
 
@@ -48,6 +47,7 @@
     \listoflistings
 }
 
+
 \printnomenclature
 \clearemptydoublepage
 \pagenumbering{arabic}
@@ -59,8 +59,8 @@
 %\input{content/examples.tex}
 \chapter{Cahier des charges}
 \input{content/cahier_des_charges.tex}
-\chapter{Choix moteurs}
-\input{content/choix_moteurs.tex}
+\chapter{Choix composants}
+\input{content/choix_composants.tex}
 \chapter{Principe physique}
 \input{content/principe_physique.tex}
 \chapter{Maquette}
