@@ -207,7 +207,7 @@ function setJoystickEnabled(enabled) {
     const batteryVoltage = message.voltage;
 
     document.getElementById("battery-percentage").textContent = `${batteryPercentage} %`;
-    document.getElementById("battery-voltage").textContent = `${(batteryVoltage / 1000).toFixed(2)} V`;
+    document.getElementById("battery-voltage").textContent = `${batteryVoltage} V`;
 
     // Set new width relative to viewBox or SVG proportions
     batteryLevel.style.width = `${batteryPercentage * 0.77}%`;

@@ -27,8 +27,14 @@
 
 #define D_UART_BAUDRATE 9600
 
+// BATTERY MANAGEMENT
+#define D_PIN_BATTERY_LVL 35
+#define D_R1_VAL 51000.0                                // First resistor of the divider bridge
+#define D_R2_VAL 10000.0                                // Second resistor
+#define D_BATT_RATIO ((D_R1_VAL + D_R2_VAL) / D_R2_VAL) // Resistors ratio (Vbat/Vadc)
+#define D_BATT_MIN_V 14.70
+#define D_BATT_MAX_V 16.00
 // REGULATOR VALUES
-
 // POSITION
 #define D_REG_KPV 0.0
 #define D_REG_TDV 0.0
@@ -40,9 +46,9 @@
 
 #define D_REG_RESTTILT 0
 
-#define D_ANGLE_TIMEOUT 500      // Timeout between angle sents
-#define D_ANGLE_LIMITS {-20, 20} // Limit angle (degrees)
-#define D_SPEED_LIMITS {-5, 5}   // Speed limits (when moving) [m/s]
+#define D_ANGLE_TIMEOUT 500       // Timeout between angle sents
+#define D_ANGLE_LIMITS {-20, 20}  // Limit angle (degrees)
+#define D_SPEED_LIMITS {-0.1, .1} // Speed limits (when moving) [m/s]
 
 #define D_WHEEL_RADIUS 0.055 // [m]
 // WiFi credentials
@@ -52,10 +58,11 @@
 // File management (data saving)
 #define D_MAX_RECORDING_SIZE 2000 // (Samples)
 
-#define D_INNER_LOOP_FREQ 500
-#define D_INNER_LOOP_PERI 1 / D_INNER_LOOP_FREQ
-#define D_OUTER_LOOP_FREQ 100
-#define D_OUTER_LOOP_PERI 1 / D_OUTER_LOOP_FREQ
+#define D_BATTERY_TIMEOUT 5000 // Update battery every x[ms]
+#define D_INNER_LOOP_FREQ 100.0
+#define D_INNER_LOOP_PERI 1.0 / D_INNER_LOOP_FREQ
+#define D_OUTER_LOOP_FREQ 20.0
+#define D_OUTER_LOOP_PERI 1.0 / D_OUTER_LOOP_FREQ
 
 // Stuctures
 typedef struct PIDController
@@ -100,6 +107,8 @@ bool is_angle_withing_range();
 float map_f(float value, float min1, float max1, float min2, float max2);
 float rad_s_to_ustp_s(float rad_s, uint16_t micro_stepping_value);
 void send_recording();
+float read_battery();
+void send_battery(float battery_voltage);
 
 //-------------- GLOBAL VARIABLES ---------------
 AsyncWebServer server(80); // Web server
@@ -147,6 +156,8 @@ uint16_t recording_size = 0;
 
 uint16_t micro_stepping_value = 0;
 
+float battery_timer = 0;
+
 // PID controllers
 PIDController speed_PID =
     {
@@ -192,6 +203,9 @@ void setup()
 
   tmc2226_left.write_to_register(TMC2226::E_REG_CHOPCONF, chopconf.bytes);
   tmc2226_right.write_to_register(TMC2226::E_REG_CHOPCONF, chopconf.bytes);
+
+  // Initialize battery pin
+  pinMode(D_PIN_BATTERY_LVL, INPUT);
 
   // Start MPU
   if (!mpu.begin())
@@ -271,12 +285,14 @@ void loop()
         PID_update(&tilt_PID, thetaError, inner_loop_cnt);
 
     // Convert rad/s to ustp/stp
-
     us_speed = rad_s_to_ustp_s(motor_speed, micro_stepping_value);
+
     // Chariot speed
     speed = motor_speed * D_WHEEL_RADIUS;
+
     // Compute position
     position += speed * inner_loop_cnt;
+
     // run motors (standalone speed)
     tmc2226_left.run_speed((int32_t)us_speed);
     tmc2226_right.run_speed(-(int32_t)us_speed);
@@ -309,12 +325,20 @@ void loop()
     }
   }
 
-  // Send angle and speed to clients
-  if (millis() - angle_timer > D_ANGLE_TIMEOUT)
+  // Send angle and speed to clients (if not recording)
+  if (!recording)
   {
-    angle_timer = millis();
-    send_target_angle(theta_target);
-    send_angle(angleX);
+    if (millis() - angle_timer > D_ANGLE_TIMEOUT)
+    {
+      angle_timer = millis();
+      send_target_angle(theta_target);
+      send_angle(angleX);
+    }
+    if (millis() - battery_timer > D_BATTERY_TIMEOUT)
+    {
+      battery_timer = millis();
+      send_battery(read_battery());
+    }
   }
 }
 
@@ -396,6 +420,19 @@ void send_recording()
   }
 
   ws.textAll("save_end");
+}
+
+/// @brief Sends battery infos to clients
+/// @param battery_voltage
+void send_battery(float battery_voltage)
+{
+  // Create JSON message, send it
+  JSONVar json;
+  json["id"] = "battery";
+  json["voltage"] = String(battery_voltage, 2);
+  json["percentage"] = String(map_f(battery_voltage, D_BATT_MIN_V, D_BATT_MAX_V, 0, 100), 2);
+  String msg = JSON.stringify(json);
+  notify_clients(msg);
 }
 
 /// @brief Sends target angle to clients
@@ -614,21 +651,49 @@ void init_websocket()
   server.addHandler(&ws);
 }
 
-/// @brief Simple map function.
-/// @param value
-/// @param min1
-/// @param max1
-/// @param min2
-/// @param max2
-/// @return
+/// @brief Maps a value from one range to another and clamps the output.
+/// @param value Input value
+/// @param min1 Input range minimum
+/// @param max1 Input range maximum
+/// @param min2 Output range minimum
+/// @param max2 Output range maximum
+/// @return Mapped and clamped value
 float map_f(float value, float min1, float max1, float min2, float max2)
 {
   if (max1 == min1)
   {
-    // avoid division by zero
+    // Avoid division by zero
     return min2;
   }
 
   float t = (value - min1) / (max1 - min1);
-  return min2 + t * (max2 - min2);
+  float result = min2 + t * (max2 - min2);
+
+  // Clamp output
+  if (min2 < max2)
+  {
+    if (result < min2)
+      result = min2;
+    if (result > max2)
+      result = max2;
+  }
+  else
+  {
+    // Handle reversed output ranges
+    if (result < max2)
+      result = max2;
+    if (result > min2)
+      result = min2;
+  }
+
+  return result;
+}
+
+/// @brief Read battery level in mV
+/// @return
+float read_battery()
+{
+  uint32_t voltage = analogReadMilliVolts(D_PIN_BATTERY_LVL);
+  float battery_voltage = voltage * D_BATT_RATIO / 1000; // [V]
+  return battery_voltage;
 }
