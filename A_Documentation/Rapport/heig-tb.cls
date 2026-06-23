@@ -233,7 +233,7 @@
 \RequirePackage{bold-extra}
 \RequirePackage{ifthen}
 \RequirePackage{expkv-cs}
-\RequirePackage[outputdir=build,chapter]{minted}
+\RequirePackage{minted}
 
 \RequirePackage[
   backref=true,

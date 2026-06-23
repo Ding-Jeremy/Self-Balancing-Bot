@@ -1,7 +1,24 @@
 {
-    "latex-workshop.latex.external.build.command": "make",
-    "latex-workshop.latex.outDir": "./build",
-    "files.eol": "\n",
-    "latex-workshop.view.pdf.viewer": "browser",
-    "makefile.configureOnOpen": true,
+"latex-workshop.latex.tools": [
+  {
+    "name": "latexmk",
+    "command": "latexmk",
+    "args": [
+      "-pdf",
+      "-shell-escape",
+      "-synctex=1",
+      "-interaction=nonstopmode",
+      "-use-make",
+      "-outdir=build",
+      "%DOC%"
+    ]
+  }
+],
+
+"latex-workshop.latex.recipes": [
+  {
+    "name": "latexmk (full)",
+    "tools": ["latexmk"]
+  }
+]
 }

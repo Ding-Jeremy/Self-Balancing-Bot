@@ -7,16 +7,16 @@
 \usepackage[nooldvoltagedirection,european,americaninductors]{circuitikz}
 \signature{jding.svg} % Remplacer par votre propre signature vectorielle.
 
-\makenomenclature
+
+\makenomenclature 
 \makeindex
-\makenoidxglossaries
 \addbibresource{bibliography.bib}
 
-
+ 
 \input{nomenclature.tex}
 \input{acronyms.tex}
 \input{glossary.tex}
-\input{meta.tex}
+\input{meta.tex} 
 
 \surroundwithmdframed{minted}
 
@@ -32,24 +32,18 @@
 \authentification
 
 %% Résumé / Résumé publiable / Version abrégée
-\begin{abstract}
-    \input{abstract}
-\end{abstract}
+
 
 %% Sommaire et tables
-{
-    \tableofcontents
-    \let\cleardoublepage\clearpage
-    \listoffigures
-    \let\cleardoublepage\clearpage
-    \listoftables
-    \let\cleardoublepage\clearpage
-    \listoflistings
-}
 
+\tableofcontents
+\listoffigures
+\listoftables
+\listoflistings
 
 \printnomenclature
-\clearemptydoublepage
+\printglossary
+
 \pagenumbering{arabic}
 
 %% Contenu
@@ -101,7 +95,7 @@ Les annexes contiennent généralement :
 \lipsum[1]
 %%fi
 
-\let\cleardoublepage\clearpage
+\let\cleardoublepage\clearpage 
 \backmatter
 
 \label{glossaire}

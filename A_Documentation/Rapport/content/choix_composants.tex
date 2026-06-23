@@ -4,11 +4,12 @@ La première étape de réalisation de ce projet consiste au choix des différen
 Il est important de noter que les critères de choix ne sont pas toujours issus directement du cahier des charges. Cependant, ils permettent une sélection objective des meilleurs composants.
 Les composants soumis à ces choix sont les composants principaux suivants:
 
+Test
 \begin{itemize}
     \item Moteurs
     \item Drivers Moteurs
     \item Microcontrôleur
-    \item Capteur, \ac{imu}
+    \item Capteur, \Gls{imu}
 \end{itemize}
 
 
@@ -83,7 +84,7 @@ Le système de contrôle de ce type de moteur repose sur un pont en H, permettan
 
 La vitesse est régulée par un signal PWM en tension. La position du moteur peut être mesurée à l'aide d'un encodeur placé en sortie.
 
-L'ensemble est généralement intégré dans une boucle de régulation de type \ac{pid} afin d'assurer un contrôle précis de la vitesse et/ou de la position.
+L'ensemble est généralement intégré dans une boucle de régulation de type \Gls{pid} afin d'assurer un contrôle précis de la vitesse et/ou de la position.
 \subsubsection{Résultat Moteur DC}
 
 \begin{table}[H]
@@ -225,8 +226,8 @@ Cette méthode consiste à alimenter deux des trois phases simultanément.
 
 Elle est simple à implémenter, mais génère des variations brusques de couple et est peu performante à basse vitesse.
 
-\paragraph{\ac{foc}}
-La commande \ac{foc} repose sur la décomposition du courant moteur en deux composantes orthogonales via les transformations de Clarke et Park.
+\paragraph{\Gls{foc}}
+La commande \Gls{foc} repose sur la décomposition du courant moteur en deux composantes orthogonales via les transformations de Clarke et Park.
 
 Cette méthode permet :
 \begin{itemize}

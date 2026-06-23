@@ -1,18 +1,31 @@
+
+
 system ("mkdir -p build/figures");
 
 @default_files = ('report.tex');
-@cus_dep_list = (@cus_dep_list, "glo gls 0 makenomenclature");
-sub makenomenclature {
-   system("makeindex $_[0].glo -s nomencl.ist -o $_[0].gls"); }
-@generated_exts = (@generated_exts, 'glo');
+add_cus_dep('glo','gls',0,'makeglossariesrun');
+add_cus_dep('acn','acr',0,'makeglossariesrun');
 
+sub makeglossariesrun {
+    system("makeglossaries $_[0]");
+}
+
+add_cus_dep('glo','gls',0,'makeglo2gls');
+sub makeglo2gls {
+    system("makeglossaries $_[0]");
+}
+add_cus_dep('nlo','nls',0,'makenlo2nls');
 # Custom dependency and function for nomencl package
-  add_cus_dep( 'nlo', 'nls', 0, 'makenlo2nls' );
-  sub makenlo2nls {
-  system( "makeindex -s nomencl.ist -o \"$_[0].nls\" \"$_[0].nlo\"" );
+add_cus_dep('nlo','nls',0,'makenlo2nls');
+
+sub makenlo2nls {
+    my $base = shift;
+    my $cmd = "makeindex -s nomencl.ist -o ${base}.nls ${base}.nlo";
+    system($cmd);
 }
 
 $out_dir = 'build';
+$aux_dir = 'build';
 $pdflatex = 'xelatex --synctex=1 -interaction=nonstopmode --shell-escape';
 $latex = 'latex --synctex=1 -interaction=nonstopmode --shell-escape';
 
