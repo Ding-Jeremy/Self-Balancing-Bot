@@ -46,11 +46,13 @@
 
 #define D_REG_RESTTILT 0
 
-#define D_ANGLE_TIMEOUT 500       // Timeout between angle sents
-#define D_ANGLE_LIMITS {-20, 20}  // Limit angle (degrees)
-#define D_SPEED_LIMITS {-0.1, .1} // Speed limits (when moving) [m/s]
+#define D_ANGLE_TIMEOUT 500            // Timeout between angle sents
+#define D_ANGLE_LIMITS {-20, 20}       // Limit angle (degrees)
+#define D_SPEED_LIMITS {-3, 3}         // Speed limits (when moving) [m/s]
+#define D_ROTATION_SPEED_LIMIT {-5, 5} // Rotation speed limit [°/s]
 
-#define D_WHEEL_RADIUS 0.055 // [m]
+#define D_WHEEL_RADIUS 0.055       // [m]
+#define D_MOTOR_MAX_SPEED 5 * M_PI // [rad/s]
 // WiFi credentials
 #define D_SSID "self-balancing-bot"
 #define D_PASSWORD "123456789"
@@ -59,7 +61,7 @@
 #define D_MAX_RECORDING_SIZE 2000 // (Samples)
 
 #define D_BATTERY_TIMEOUT 5000 // Update battery every x[ms]
-#define D_INNER_LOOP_FREQ 100.0
+#define D_INNER_LOOP_FREQ 500.0
 #define D_INNER_LOOP_PERI 1.0 / D_INNER_LOOP_FREQ
 #define D_OUTER_LOOP_FREQ 20.0
 #define D_OUTER_LOOP_PERI 1.0 / D_OUTER_LOOP_FREQ
@@ -83,7 +85,6 @@ typedef struct
   float time;         // [s]
   float theta;        // [°]
   float theta_target; // [°]
-  float position;     // [m]
   float speed;        // [m/s]
   float speed_target; // [m/s]
 } S_DATA;
@@ -121,10 +122,6 @@ Adafruit_MPU6050 mpu;
 TMC2226 tmc2226_left(0x00);
 TMC2226 tmc2226_right(0x01);
 
-float position = 0.0f;
-float position_target = 0.0f;
-float position_control = 0.0f;
-
 float angleX = 0.0f;
 float angleX_offset = 0.0f;
 
@@ -136,8 +133,11 @@ float motor_speed = 0.0f;
 float outer_loop_cnt = 0.0f;
 float inner_loop_cnt = 0.0f;
 
+float acceleration = 0.0f;
+
 float speed = 0.0f;
 float speed_target = 0.0f;
+float rotation_speed_target = 0.0f;
 
 float theta_target = 0.0f;
 
@@ -159,7 +159,7 @@ uint16_t micro_stepping_value = 0;
 float battery_timer = 0;
 
 // PID controllers
-PIDController speed_PID =
+PIDController acceleration_PID =
     {
         .kp = D_REG_KPV,
         .ki = D_REG_TIV,
@@ -168,8 +168,8 @@ PIDController speed_PID =
         .integral = 0.0f,
         .previousError = 0.0f,
 
-        .outputMin = -10.0f, // max desired tilt [°]
-        .outputMax = 10.0f};
+        .outputMin = -5.0f, // max desired tilt [°]
+        .outputMax = 5.0f};
 
 PIDController tilt_PID =
     {
@@ -180,8 +180,8 @@ PIDController tilt_PID =
         .integral = 0.0f,
         .previousError = 0.0f,
 
-        .outputMin = -5 * M_PI, // Motor speed [rad/s]
-        .outputMax = 5 * M_PI};
+        .outputMin = -10000, // Motor speed [rad/s]
+        .outputMax = 10000};
 
 //-------------- SETUP FUNCTION ---------------
 void setup()
@@ -198,8 +198,8 @@ void setup()
   TMC2226::CHOPCONF chopconf;
 
   chopconf.value = D_TMC_REGDFV_CHOPCONF; // DEFAULT VALUE
-  chopconf.bits.mres = 0b0000;            // Microstepping
-  micro_stepping_value = 256;
+  chopconf.bits.mres = 0b0001;            // Microstepping
+  micro_stepping_value = 128;
 
   tmc2226_left.write_to_register(TMC2226::E_REG_CHOPCONF, chopconf.bytes);
   tmc2226_right.write_to_register(TMC2226::E_REG_CHOPCONF, chopconf.bytes);
@@ -250,7 +250,7 @@ void loop()
     // Update target based on joystick input (position_control)
     float speed_error = -(speed_target - speed);
     // Generate angle theta based on position Error
-    theta_target = PID_update(&speed_PID, speed_error, outer_loop_cnt);
+    theta_target = PID_update(&acceleration_PID, speed_error, outer_loop_cnt);
     outer_loop_cnt = 0;
   }
 
@@ -259,7 +259,8 @@ void loop()
 
   if (inner_loop_cnt > D_INNER_LOOP_PERI)
   {
-    // ANGLE READING
+    // theta_target = speed_target;
+    //  ANGLE READING
     sensors_event_t accel, gyro, temp;
     mpu.getEvent(&accel, &gyro, &temp);
 
@@ -275,27 +276,29 @@ void loop()
     gyroRateX = 0.9f * prev_gyro + 0.1f * gyroRateX;
 
     // Complementary filter
-    angleX = 0.98f * (angleX + gyroRateX * inner_loop_cnt) + 0.02f * accelAngleX;
+    angleX = 0.90f * (angleX + gyroRateX * inner_loop_cnt) + 0.03f * accelAngleX;
 
     // Defines the error from speed (and saved offset)
     float thetaError = theta_target + angleX_offset - angleX;
 
     // Generate motor speed from inner loop
-    float motor_speed =
+    float acceleration =
         PID_update(&tilt_PID, thetaError, inner_loop_cnt);
 
     // Convert rad/s to ustp/stp
+    motor_speed += acceleration * inner_loop_cnt;
+    motor_speed = motor_speed > D_MOTOR_MAX_SPEED ? D_MOTOR_MAX_SPEED : motor_speed < -D_MOTOR_MAX_SPEED ? -D_MOTOR_MAX_SPEED
+                                                                                                         : motor_speed;
+
     us_speed = rad_s_to_ustp_s(motor_speed, micro_stepping_value);
+    float motor_speed_delta = rad_s_to_ustp_s(rotation_speed_target, micro_stepping_value);
 
     // Chariot speed
     speed = motor_speed * D_WHEEL_RADIUS;
 
-    // Compute position
-    position += speed * inner_loop_cnt;
-
     // run motors (standalone speed)
-    tmc2226_left.run_speed((int32_t)us_speed);
-    tmc2226_right.run_speed(-(int32_t)us_speed);
+    tmc2226_left.run_speed((int32_t)us_speed + motor_speed_delta);
+    tmc2226_right.run_speed(-(int32_t)us_speed + motor_speed_delta);
 
     // If currently recording
     if (recording && recording_size < D_MAX_RECORDING_SIZE)
@@ -305,7 +308,6 @@ void loop()
       recording_data[recording_size].speed = speed;
       recording_data[recording_size].theta_target = theta_target;
       recording_data[recording_size].theta = angleX;
-      recording_data[recording_size].position = position;
 
       recording_size++;
     }
@@ -393,7 +395,7 @@ void send_recording()
   float first_time = recording_data[0].time;
   // Send the recording transmit signal
   ws.textAll("{\"id\":\"save_start\"}");
-  ws.textAll("Time [ms],Speed_target [m/s],Speed [m/s],Theta_Target [°], Theta [°], Position [m]");
+  ws.textAll("Time [ms],Speed_target [m/s],Speed [m/s],Theta_Target [°], Theta [°]");
   String chunk;
 
   for (int i = 0; i < recording_size; i++)
@@ -402,8 +404,7 @@ void send_recording()
              String(recording_data[i].speed_target, 3) + "," +
              String(recording_data[i].speed, 3) + "," +
              String(recording_data[i].theta_target, 3) + "," +
-             String(recording_data[i].theta, 3) + "," +
-             String(recording_data[i].position, 3) + "\n";
+             String(recording_data[i].theta, 3) + "\n";
 
     // Send data chunck wise
     if (chunk.length() > 4096)
@@ -583,9 +584,9 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len)
 
         if (msg["velocity"].hasOwnProperty("kp"))
         {
-          speed_PID.kp = (double)msg["velocity"]["kp"];
-          speed_PID.ki = (double)msg["velocity"]["ti"];
-          speed_PID.kd = (double)msg["velocity"]["td"];
+          acceleration_PID.kp = (double)msg["velocity"]["kp"];
+          acceleration_PID.ki = (double)msg["velocity"]["ti"];
+          acceleration_PID.kd = (double)msg["velocity"]["td"];
         }
       }
       else if (msg_id == "pid_request")
@@ -595,9 +596,9 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len)
         json["balance"]["kp"] = tilt_PID.kp;
         json["balance"]["td"] = tilt_PID.kd;
         json["balance"]["ti"] = tilt_PID.ki;
-        json["velocity"]["kp"] = speed_PID.kp;
-        json["velocity"]["td"] = speed_PID.kd;
-        json["velocity"]["ti"] = speed_PID.ki;
+        json["velocity"]["kp"] = acceleration_PID.kp;
+        json["velocity"]["td"] = acceleration_PID.kd;
+        json["velocity"]["ti"] = acceleration_PID.ki;
         String msg = JSON.stringify(json);
         notify_clients(msg);
       }
@@ -605,6 +606,10 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len)
       {
         // Adjust speed target from joystick
         speed_target = map_f((double)msg["y"], -100, 100, speed_control_range[0], speed_control_range[1]);
+      }
+      else if (msg_id == "joystick-right")
+      {
+        rotation_speed_target = map_f((double)msg["x"], -100, 100, speed_control_range[0], speed_control_range[1]);
       }
       else if (msg_id == "record_start")
       {
