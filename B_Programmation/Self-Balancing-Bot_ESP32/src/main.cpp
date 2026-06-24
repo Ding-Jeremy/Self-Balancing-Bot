@@ -29,19 +29,18 @@
 
 // BATTERY MANAGEMENT
 #define D_PIN_BATTERY_LVL 35
-#define D_R1_VAL 51000.0                                // First resistor of the divider bridge
-#define D_R2_VAL 10000.0                                // Second resistor
-#define D_BATT_RATIO ((D_R1_VAL + D_R2_VAL) / D_R2_VAL) // Resistors ratio (Vbat/Vadc)
+#define D_BATT_RATIO 6.022 // Resistors ratio (Vbat/Vadc)
+
 #define D_BATT_MIN_V 14.70
 #define D_BATT_MAX_V 16.00
 // REGULATOR VALUES
 // POSITION
-#define D_REG_KPV 0.0
+#define D_REG_KPV 0.25
 #define D_REG_TDV 0.0
 #define D_REG_TIV 0.0
 
-#define D_REG_KPT 0.0
-#define D_REG_TDT 0.0
+#define D_REG_KPT 10.5
+#define D_REG_TDT 3.75
 #define D_REG_TIT 0.0
 
 #define D_REG_RESTTILT 0
@@ -63,7 +62,7 @@
 #define D_BATTERY_TIMEOUT 5000 // Update battery every x[ms]
 #define D_INNER_LOOP_FREQ 500.0
 #define D_INNER_LOOP_PERI 1.0 / D_INNER_LOOP_FREQ
-#define D_OUTER_LOOP_FREQ 20.0
+#define D_OUTER_LOOP_FREQ 500.0
 #define D_OUTER_LOOP_PERI 1.0 / D_OUTER_LOOP_FREQ
 
 // Stuctures
@@ -180,8 +179,8 @@ PIDController tilt_PID =
         .integral = 0.0f,
         .previousError = 0.0f,
 
-        .outputMin = -10000, // Motor speed [rad/s]
-        .outputMax = 10000};
+        .outputMin = -100, // Motor acceleration [rad/s^2]
+        .outputMax = 100};
 
 //-------------- SETUP FUNCTION ---------------
 void setup()
@@ -317,7 +316,7 @@ void loop()
   // If angle out of safe range.
   if (!is_angle_withing_range())
   {
-    motor_speed = 0;
+
     if (motor_state)
     {
       motor_state = false;
@@ -325,6 +324,10 @@ void loop()
       tmc2226_right.disable();
       send_motor_state(false);
     }
+  }
+  if (!motor_state)
+  {
+    motor_speed = 0;
   }
 
   // Send angle and speed to clients (if not recording)

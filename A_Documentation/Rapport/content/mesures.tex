@@ -1,1 +1,70 @@
-La maquette
+\section{Méthode}
+\subsection{Appareils de mesure}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|l|}
+        \hline
+        \textbf{Type} & \textbf{Marque} & \textbf{Modèle} \\
+        \hline
+        Multimètre numérique & UNI-T & UT61E \\
+        \hline
+    \end{tabular}
+    \caption{Appareils de mesure}
+    \label{tab:appareils_mesure}
+\end{table}
+
+
+\section{Batterie}
+
+Afin de mesurer correctement le niveau de la batterie, un pont diviseur est utilisé, comme expliqué dans le chapitre consacré à la maquette.
+
+Il est important de s'assurer que les résistances utilisées dans le pont diviseur sont correctement reportées dans le code afin de garantir une lecture fidèle de la tension de la batterie.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \textbf{Symbole} & \textbf{Valeur théorique} & \textbf{Valeur mesurée} \\
+        \hline
+        R4 & 10 k$\Omega$ & 10.12 k$\Omega$ \\
+        \hline
+        R3 & 51 k$\Omega$ & 49.50 k$\Omega$ \\
+        \hline
+    \end{tabular}
+    \caption{Mesure du pont diviseur}
+    \label{tab:mesure_pont_diviseur}
+\end{table}
+
+ À l'aide des valeurs mesurées, le nouveau rapport du pont diviseur peut être calculé puis introduit dans le code afin d'affiner la mesure de la tension de la batterie.
+
+Le rapport théorique du pont diviseur est donné par :
+
+$$
+\frac{R_3+R_4}{R_4}
+$$
+
+En utilisant les valeurs mesurées, on obtient :
+
+$$
+\frac{50.82 + 10.12}{10.12}=6.022
+$$
+
+Le rapport théorique valait :
+
+$$
+\frac{51+10}{10}=6.10
+$$
+
+On constate donc un écart d'environ (1\%) entre le rapport théorique et le rapport réel.
+
+Il est alors possible de corriger les constantes utilisées dans le programme en remplaçant les valeurs nominales des résistances par les valeurs mesurées :
+
+
+Le facteur de conversion utilisé pour reconstruire la tension de la batterie devient alors :
+
+$$
+\frac{50820+10120}{10120}=6.022
+$$
+
+Cette correction permet d'améliorer la précision de la mesure de la tension et de réduire l'erreur introduite par les tolérances des résistances du pont diviseur.
