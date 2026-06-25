@@ -9,23 +9,20 @@ Une attention particulière est portée au choix du microcontrôleur, élément 
 
 \subsection{Courant max}
 
-Le courant maximal fourni par le driver est paramétrable via un potentiomètre situé sur la carte. Le calcul du courant efficace est donné par :
-
-\subsection{Courant max}
-
 Le courant efficace fourni par le driver est réglé via un potentiomètre qui fixe la tension de référence $V_{\mathrm{ref}}$. Il est donné par :
 
 \begin{equation}
-I_{\mathrm{RMS}} =
-\frac{0.325}{R_{\mathrm{sense}} + 0.02\,\Omega}
-\cdot \frac{1}{\sqrt{2}}
-\cdot \frac{V_{\mathrm{ref}}}{2.5\,\mathrm{V}}
+    \begin{split}
+        I_{\mathrm{RMS}} =
+        \frac{0.325\,\mathrm{V}}{R_{\mathrm{sense}} + 0.02\,\Omega}
+        \cdot \frac{1}{\sqrt{2}}
+        \cdot \frac{V_{\mathrm{ref}}}{2.5\,\mathrm{V}}
+    \end{split}
 \end{equation}
 
-Avec $R_{\mathrm{sense}} = 150\,\mathrm{m\Omega} = 0.150\,\Omega$, on obtient :
-
+La résistance de mesure $R_{\mathrm{sense}}$ est donnée par le constructeur du module \cite{BigTechTree_TMC2226}. Elle est également vérifiable physiquement sur le PCB et vaut :
 \begin{equation}
-I_{\mathrm{RMS}} \approx 0.540 \, V_{\mathrm{ref}}
+R_{\mathrm{sense}} = 150\,\mathrm{m\Omega} = 0.150\,\Omega
 \end{equation}
 
 Le moteur \cite{42SHD0217_datasheet} supporte un courant maximal de $1.5\,\mathrm{A}$, ce qui donne :
@@ -40,9 +37,22 @@ Ainsi, la plage de fonctionnement admissible est :
 0 \leq V_{\mathrm{ref}} \leq 2.8\,\mathrm{V}
 \end{equation}
 
+Cependant, après test du module BigTechTree \cite{BigTechTree_TMC2226}, le potentiomètre ne permet de régler la tension $V_{\mathrm{ref}}$ que dans une plage d’environ $0$ à $1.75\,\mathrm{V}$, bien que cette limitation ne soit pas explicitement indiquée dans la documentation.
+
+Une tension de consigne $V_{\mathrm{ref}} = 1.5\,\mathrm{V}$ est donc utilisée. Cela correspond à un courant efficace d’environ :
+\begin{equation}
+I_{\mathrm{RMS}} \approx 0.540 \cdot 1.5 \approx 0.81\,\mathrm{A}
+\end{equation}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{assets/figures/tmc_datasheet_rsense.png}
+    \caption{Extrait du datasheet du TMC2226 illustrant la relation entre $V_{\mathrm{ref}}$ et le courant moteur.}
+    \label{fig:tmc2226_datasheet}
+\end{figure}
+
 \section{Microcontrôleur}
 \section{Schéma électrique}
 \section{Breadboard}
 \section{PCB}
-
 
