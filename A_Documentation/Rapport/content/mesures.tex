@@ -1,4 +1,6 @@
-\section{Méthode}
+\section{Conditions de mesures}
+Pour les mesures de tension et de courants, les roues ont été retirées de la maquette. De cette manière, le \Gls{pcb} était facilement accessible.
+
 \subsection{Appareils de mesure}
 
 \begin{table}[H]
@@ -72,6 +74,7 @@ Cette correction permet d'améliorer la précision de la mesure de la tension et
 \section{Tensions, Courants}
 Afin de mesurer la consommation énergétique de la maquette, l'idée est de réaliser une mesure du courant total dans le système.
 Pour ce faire, le multimètre est placé en mode ampèremètre entre le connecteur de la batterie et celui du PCB.
+La notion de moteurs "allumées" indiquent qu'ils tournent à vitesse maximale. (Référence à la partie programmation traitant des micropas...)
 
 \begin{table}[H]
     \centering
@@ -79,34 +82,58 @@ Pour ce faire, le multimètre est placé en mode ampèremètre entre le connecte
         \hline
         \textbf{Grandeur mesurée} & \textbf{Valeur théorique} & \textbf{Valeur mesurée} \\
         \hline
-        $V_{bat}$ & - & 16.48 V \\
+        $V_{bat}$ & - & 16.20 V \\
+        \hline
+        $V_{5V}$ & 5.0 V & 5.00 V \\
         \hline
         $V_{IO}$ & 3.3 V & 3.28 V \\
         \hline
-        $I_{tot}$ & - & 0.5 A \\
-        \hline
-    \end{tabular}
-    \caption{Mesures électriques - Moteurs allumés}
-    \label{tab:moteurs_allumes}
-\end{table}
-
-\begin{table}[H]
-    \centering
-    \begin{tabular}{|l|c|c|}
-        \hline
-        \textbf{Grandeur mesurée} & \textbf{Valeur théorique} & \textbf{Valeur mesurée} \\
-        \hline
-        $V_{bat}$ & - & 16.52 V \\
-        \hline
-        $V_{IO}$ & 3.3 V & 3.28 V \\
-        \hline
-        $I_{tot}$ & - & 0.5 A \\
+        $I_{tot}$ & - & 0.065 A \\
         \hline
     \end{tabular}
     \caption{Mesures électriques - Moteurs éteints}
     \label{tab:moteurs_eteints}
 \end{table}
 
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \textbf{Grandeur mesurée} & \textbf{Valeur théorique} & \textbf{Valeur mesurée} \\
+        \hline
+        $V_{bat}$ & - & 16.17 V \\
+        \hline
+        $V_{5V}$ & 5.0 V & 5.00 V \\
+        \hline
+        $V_{IO}$ & 3.3 V & 3.28 V \\
+        \hline
+        $I_{tot}$ & - & 0.195 A \\
+        \hline
+    \end{tabular}
+    \caption{Mesures électriques - Moteurs allumés, vitesse nulle}
+    \label{tab:moteurs_allumes}
+\end{table}
+
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \textbf{Grandeur mesurée} & \textbf{Valeur théorique} & \textbf{Valeur mesurée} \\
+        \hline
+        $V_{bat}$ & - & 16.14 V \\
+        \hline
+        $V_{5V}$ & 5.0 V & 5.00 V \\
+        \hline
+        $V_{IO}$ & 3.3 V & 3.28 V \\
+        \hline
+        $I_{tot}$ & - & 0.551 A \\
+        \hline
+    \end{tabular}
+    \caption{Mesures électriques - Moteurs allumés vitesse max}
+    \label{tab:moteurs_allumes_maxspeed}
+\end{table}
 \section{Autonomie}
 
 \section{Autonomie}
