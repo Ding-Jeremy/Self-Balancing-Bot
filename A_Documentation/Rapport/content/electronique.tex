@@ -6,10 +6,43 @@ Une attention particulière est portée au choix du microcontrôleur, élément 
 \section{Alimentation}
 \section{Schéma bloc}
 \section{Drivers moteurs}
+
 \subsection{Courant max}
+
+Le courant maximal fourni par le driver est paramétrable via un potentiomètre situé sur la carte. Le calcul du courant efficace est donné par :
+
+\subsection{Courant max}
+
+Le courant efficace fourni par le driver est réglé via un potentiomètre qui fixe la tension de référence $V_{\mathrm{ref}}$. Il est donné par :
+
+\begin{equation}
+I_{\mathrm{RMS}} =
+\frac{0.325}{R_{\mathrm{sense}} + 0.02\,\Omega}
+\cdot \frac{1}{\sqrt{2}}
+\cdot \frac{V_{\mathrm{ref}}}{2.5\,\mathrm{V}}
+\end{equation}
+
+Avec $R_{\mathrm{sense}} = 150\,\mathrm{m\Omega} = 0.150\,\Omega$, on obtient :
+
+\begin{equation}
+I_{\mathrm{RMS}} \approx 0.540 \, V_{\mathrm{ref}}
+\end{equation}
+
+Le moteur \cite{42SHD0217_datasheet} supporte un courant maximal de $1.5\,\mathrm{A}$, ce qui donne :
+
+\begin{equation}
+V_{\mathrm{ref,max}} \approx \frac{1.5}{0.540} \approx 2.8\,\mathrm{V}
+\end{equation}
+
+Ainsi, la plage de fonctionnement admissible est :
+
+\begin{equation}
+0 \leq V_{\mathrm{ref}} \leq 2.8\,\mathrm{V}
+\end{equation}
+
 \section{Microcontrôleur}
 \section{Schéma électrique}
 \section{Breadboard}
-\section{\gls{pcb}}
+\section{PCB}
 
 

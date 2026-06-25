@@ -305,3 +305,109 @@ De plus, la simplicité de mise en oeuvre des drivers pas à pas permet de limit
 
 Ainsi, malgré ses limites en termes de rendement énergétique et de vitesse maximale, le moteur pas à pas est retenu comme solution finale, car il répond le mieux aux exigences de précision, de contrôle et de simplicité imposées par le cahier des charges.
 
+\section{Drivers moteurs}
+\subsection{Critères de choix}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|l|}
+        \hline
+        \textbf{Critère} & \textbf{Justification} \\
+        \hline
+        Microstepping & Permet un réglage fin de la vitesse des moteurs. \\
+        \hline
+        Taille & Étant donné la nature embarquée du système, la taille des modules est un critère important. \\
+        \hline
+        Efficacité énergétique & Le système fonctionnant sur batterie, les modules doivent dissiper le moins d’énergie possible. \\
+        \hline
+        Bruit & Les drivers doivent être silencieux en fonctionnement. \\
+        \hline
+    \end{tabular}
+    \caption{Critères de sélection des drivers moteurs}
+    \label{tab:criteres_drivers}
+\end{table}
+
+\subsection{A4988}
+
+Le A4988 \cite{A4988_datasheet} est un driver de moteur pas à pas couramment utilisé pour des applications embarquées.
+
+\subsubsection{Tensions de fonctionnement}
+
+\begin{itemize}
+    \item Tension moteur : $V_{\mathrm{mot}} \in [8, 35]\,\mathrm{V}$
+    \item Tension logique : $V_{\mathrm{DD}} \in [3, 5.5]\,\mathrm{V}$
+\end{itemize}
+
+\subsubsection{Microstepping}
+
+Le module propose un système de micro-pas permettant les subdivisions suivantes :
+$$
+1,\; \frac{1}{2},\; \frac{1}{4},\; \frac{1}{8},\; \frac{1}{16} \;\; \mu\mathrm{step/step}
+$$
+
+\subsubsection{Taille}
+
+Environ $20 \times 15\,\mathrm{mm}$.
+
+\subsubsection{Consommation}
+
+Il est difficile d’estimer précisément la consommation moyenne de ce module, celle-ci dépendant fortement du mode de fonctionnement et de la charge moteur.
+
+Cependant, le A4988 est un driver simple, peu sophistiqué et peu coûteux, mais dont le rendement énergétique reste limité.
+
+\subsubsection{Bruit}
+
+Le A4988 peut générer un bruit audible relativement important, en particulier à courant élevé et en l’absence d’optimisation du microstepping.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Critère} & \textbf{Note (/10)} \\
+        \hline
+        Tension de fonctionnement & 9/10 \\
+        \hline
+        Microstepping & 6/10 \\
+        \hline
+        Consommation & 4/10 \\
+        \hline
+        Bruit & 3/10 \\
+        \hline
+    \end{tabular}
+    \caption{Résultats critères A4988}
+    \label{tab:a4988_resultats}
+\end{table}
+
+\subsection{TMC2226}
+
+Le TMC2226 \cite{TMC2226_datasheet} est un driver de moteur pas à pas développé par Trinamic, destiné aux applications embarquées nécessitant un fonctionnement silencieux et une bonne efficacité énergétique.
+
+Contrairement à des drivers plus simples tels que le A4988, le TMC2226 intègre des fonctionnalités avancées de contrôle de courant, permettant une réduction significative du bruit acoustique du moteur, ainsi qu'une gestion de consommation. Il propose également des modes de microstepping très fins, améliorant la fluidité et la précision du mouvement.
+Ce dernier est paramètrable via une pin \Gls{uart} bidirectionnelle.
+
+\subsubsection{Tensions de fonctionnement}
+
+\begin{itemize}
+    \item Tension moteur : $V_{\mathrm{mot}} \in [5.5, 29]\,\mathrm{V}$
+    \item Tension logique : $V_{\mathrm{DD}} \in [3.3, 5]\,\mathrm{V}$
+\end{itemize}
+
+\subsubsection{Microstepping}
+
+Le TMC2226 supporte un microstepping très élevé avec interpolation interne, permettant d’atteindre une résolution jusqu’à :
+$$
+1,\; \frac{1}{2},\; \frac{1}{4},\; \frac{1}{8},\; \frac{1}{16},\; \frac{1}{32},\; \frac{1}{64},\; \frac{1}{128},\; \frac{1}{256}
+$$
+
+\subsubsection{Taille}
+
+Environ $9.7 \times 6.4\,\mathrm{mm}$ pour le circuit intégré (selon encapsulation), ou variable selon les modules d’évaluation.
+
+\subsubsection{Consommation}
+
+La consommation du TMC2226 dépend fortement du courant moteur configuré et du mode de fonctionnement.
+
+Grâce à ses algorithmes de contrôle avancés, il permet une optimisation de la consommation énergétique, notamment en charge partielle ou à faible vitesse.
+
+\subsubsection{Bruit}
+
+Le TMC2226 est conçu pour fonctionner de manière très silencieuse, réduisant fortement les vibrations et les nuisances acoustiques, même à bas régime.
