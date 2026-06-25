@@ -1,25 +1,24 @@
 \documentclass[
     iai, % Saisir le nom de l'institut rattaché
-    eem, % Saisir le nom de l'orientation
+    eem, % Saisir le  nom de l'orientation
     %confidential, % Décommentez si le travail est confidentiel
-]{heig-tb}
+]{heig-tb} 
 
 \usepackage[nooldvoltagedirection,european,americaninductors]{circuitikz}
-\signature{jding.svg} % Remplacer par votre propre signature vectorielle.
-
-
-\makenomenclature 
-\makeindex
-\addbibresource{bibliography.bib}
+%% \signature{jding.svg} % Remplacer par votre propre signature vectorielle.
 
   
-\input{nomenclature.tex}
+\makenomenclature
+\makeglossaries
+\makeindex
+\addbibresource{bibliography.bib}   
+  
 \input{acronyms.tex}
 \input{glossary.tex}
 \input{meta.tex} 
 
-\surroundwithmdframed{minted}
-
+\surroundwithmdframed{minted} 
+ 
 %% Début du document
 \begin{document}
 \selectlanguage{french}
@@ -28,8 +27,8 @@
 
 
 %% Requis par les dispositions générales des travaux de Bachelor
-\preamble
-\authentification
+%% \preamble
+%% \authentification
 
 %% Résumé / Résumé publiable / Version abrégée
 
@@ -41,8 +40,9 @@
 \listoftables
 \listoflistings
 
+\input{nomenclature.tex}
 \printnomenclature
-\printglossary
+\printglossary[type=\acronymtype]
 
 \pagenumbering{arabic}
 
@@ -65,8 +65,7 @@
 \input{content/mesures.tex}
 \chapter{Analyse Résultats}
 \include{content/analyse_resultats}
-
-\chapter{Conclusion}
+\chapter{Conclusion} 
 \input{content/conclusion.tex}
 
 \clearpage
@@ -95,11 +94,12 @@ Les annexes contiennent généralement :
 \lipsum[1]
 %%fi
 
-\let\cleardoublepage\clearpage 
+\let\cleardoublepage\clearpage
 \backmatter
 
 \label{glossaire}
-\printnoidxglossary
+\glsaddall[types=main]
+\printglossary
 \label{index}
 \printindex
 
