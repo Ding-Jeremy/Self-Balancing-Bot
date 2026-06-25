@@ -68,3 +68,45 @@ $$
 $$
 
 Cette correction permet d'améliorer la précision de la mesure de la tension et de réduire l'erreur introduite par les tolérances des résistances du pont diviseur.
+
+\section{Tensions, Courants}
+Afin de mesurer la consommation énergétique de la maquette, l'idée est de réaliser une mesure du courant total dans le système.
+Pour ce faire, le multimètre est placé en mode ampèremètre entre le connecteur de la batterie et celui du PCB.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \textbf{Grandeur mesurée} & \textbf{Valeur théorique} & \textbf{Valeur mesurée} \\
+        \hline
+        $V_{bat}$ & - & 16.48 V \\
+        \hline
+        $V_{IO}$ & 3.3 V & 3.28 V \\
+        \hline
+        $I_{tot}$ & - & 0.5 A \\
+        \hline
+    \end{tabular}
+    \caption{Mesures électriques - Moteurs allumés}
+    \label{tab:moteurs_allumes}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \textbf{Grandeur mesurée} & \textbf{Valeur théorique} & \textbf{Valeur mesurée} \\
+        \hline
+        $V_{bat}$ & - & 16.52 V \\
+        \hline
+        $V_{IO}$ & 3.3 V & 3.28 V \\
+        \hline
+        $I_{tot}$ & - & 0.5 A \\
+        \hline
+    \end{tabular}
+    \caption{Mesures électriques - Moteurs éteints}
+    \label{tab:moteurs_eteints}
+\end{table}
+
+\section{Autonomie}
+
+\section{Autonomie}
