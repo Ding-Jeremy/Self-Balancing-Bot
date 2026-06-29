@@ -1,0 +1,46 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.1.2 Chrome/138.0.7204.243 Electron/37.4.0 Safari/537.36" version="28.1.2">
+  <diagram name="Page-1" id="U56Nba71uGPfL3xOMfu1">
+    <mxGraphModel dx="719" dy="432" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="kL86y27E0oy2XuRn3gok-1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="360" y="120" width="120" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="kL86y27E0oy2XuRn3gok-2" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="345" y="260" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="kL86y27E0oy2XuRn3gok-3" value="Roues" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="382.5" y="297.5" width="75" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="kL86y27E0oy2XuRn3gok-4" value="Batterie" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="372.5" y="130" width="95" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="kL86y27E0oy2XuRn3gok-5" value="PCB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="370.5" y="210" width="97" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="kL86y27E0oy2XuRn3gok-9" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="785" y="450" width="175" height="290" as="geometry" />
+        </mxCell>
+        <mxCell id="kL86y27E0oy2XuRn3gok-12" value="Batterie" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="797.5" y="460" width="152.5" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="kL86y27E0oy2XuRn3gok-13" value="PCB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="797.5" y="540" width="150" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="kL86y27E0oy2XuRn3gok-15" value="Roue" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="730" y="610" width="40" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="kL86y27E0oy2XuRn3gok-17" value="Roue" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;flipH=1;flipV=1;" vertex="1" parent="1">
+          <mxGeometry x="975" y="607" width="40" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="kL86y27E0oy2XuRn3gok-18" value="Moteur" style="rounded=0;whiteSpace=wrap;html=1;flipH=1;flipV=1;" vertex="1" parent="1">
+          <mxGeometry x="925" y="642" width="50" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="kL86y27E0oy2XuRn3gok-19" value="Moteur" style="rounded=0;whiteSpace=wrap;html=1;flipH=1;flipV=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="642.5" width="50" height="85" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
