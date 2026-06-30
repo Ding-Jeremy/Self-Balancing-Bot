@@ -8,26 +8,52 @@ Une attention particulière est portée au choix du microcontrôleur, élément 
 Afin de designer correctement le système électrique, il est important de définir les prérequis en terme d'alimentation. Plus précisemment, le but est ici de déterminer les tensions de fonctionnement nécessaires pour les
 différents modules.
 \subsection{ESP-32}
-L'ESP-32 \cite{ESP-32_Series} peut être alimenté de deux manière différentes. Le module utilisé
+L'ESP-32 Devkit V1 \cite{ESP-32-Devkit-V1} peut être alimenté de deux manière différentes. Soit alimenté en 5 V soit en 3.3 V. En effet ce dernier possède un réglateur linéaire,  \gls{ldo} offrant une tension de 3.3 V.
+Ce régulateur sert à générer la tension nécessaire au fonctionnement du chip ESP-32 présent sur la carte de développement mais peut également être utilisé pour alimenter des modules externes pour autant que ces derniers ne consomment pas trop d'énérgie.
+Le \acrshort{ldo} est de type \cite{AMS1117} et offre un courant de 1 A pour une chute de tension de 1.2 V.
+
+\subsection{TMC2226}
+Le driver moteur nécessite deux alimentations distinctes, une alimentation pour la logique, $V_{IO}$, ainsi qu'une alimentation pour les moteurs, $V_{mot}$. Les valeurs de tensions nécessaires ont déjà étées indiquées dans le chapitre \ref{chap:choix_composants}. 
+\begin{itemize}
+    \item Tension moteur : $V_{\mathrm{mot}} \in [5.5, 29]\,\mathrm{V}$
+    \item Tension logique : $V_{\mathrm{DD}} \in [3.3, 5]\,\mathrm{V}$
+\end{itemize}
+
+En ce qui concerne le courant tiré par le module sur l'entrée 3.3V, voici ce que l'on peut trouver dans le datasheet \cite{TMC2226_datasheet}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/figures/tmc2226_consumption.png}
+    \caption{Consommation TMC2226}
+    \label{fig:tmc_2226_consumption}
+\end{figure}
+
+
+\subsection{MPU6050}
+Le module \acrshort{imu} quant à lui nécessite comme indiqué dans le chapitre \ref{chap:choix_composants}
+
+En ce qui concerne le courant tiré par le module sur l'entrée 3.3V, voici ce que l'on peut trouver dans le datasheet \cite{TMC2226_datasheet}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/figures/tmc2226_consumption.png}
+    \caption{Consommation TMC2226}
+    \label{fig:tmc_2226_consumption}
+\end{figure}
+
 \begin{table}[H]
     \centering
-    \begin{tabular}{|c|l|c|}
+       \begin{tabular}{|c|p{6cm}|c|}
         \hline
-        \textbf{Module} & \textbf{Description} & \textbf{Tension de fonctionnement}\\
+        \textbf{Module} & \textbf{Description} & \textbf{Tension}\\
         \hline
         ESP-32 & Microcontrôleur & 5\si{\volt}\\ 
         \hline
-        Précision du contrôle de vitesse & Assure un contrôle fin du balancement et de la stabilité. \\
+        TMC2226 & Driver moteur & 3.3\si{\volt}\\ 
         \hline
-        Synchronisation des moteurs & Évite les rotations parasites du robot. \\
-        \hline
-        Consommation énergétique & Améliore l'autonomie du système embarqué sur batterie. \\
-        \hline
-        Système de contrôle simple & Réduit la complexité électronique et facilite l'implémentation. \\
+        MPU6050 & Accélèromètre & 3.3\si{\volt} \\
         \hline
     \end{tabular}
     \caption{Tableaux tensions}
-    \label{tab:criteres_moteurs}
+    \label{tab:tensions_alimentations}
 \end{table}
 \section{Schéma bloc}
 \section{Drivers moteurs}
@@ -78,6 +104,7 @@ I_{\mathrm{RMS}} \approx 0.540 \cdot 1.5 \approx 0.81\,\mathrm{A}
 
 \section{Microcontrôleur}
 \section{Schéma électrique}
+
 \section{Breadboard}
 \section{PCB}
 

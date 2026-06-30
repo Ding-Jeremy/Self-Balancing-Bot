@@ -600,3 +600,110 @@ $$
 Bien que le Raspberry Pi Pico W présente une meilleure efficacité énergetique et une taille inférieure à l'ESP, il reste limité par l'absence de Bluetooth ainsi que la fréquence d'horloge.
 
 L'ESP-32 DevKit V1 se distingue par une meilleure polyvalence, notamment grâce à la présence du WiFi et du Bluetooth, une fréquence de travail plus élevée.
+
+
+\section{IMU}
+\subsection{Critères de choix}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|l|}
+        \hline
+        \textbf{Critère} & \textbf{Justification} \\
+        \hline
+        Vitesse de lecture & Une lecture rapide des données permet une boucle de régulation plus rapide \\
+        \hline
+        Qualité du signal & Un signal bruité peut causer des problèmes dans la régulation \\
+        \hline
+        Taille & Comme le reste des composants, la taille du capteur doit être minimisée \\
+        \hline
+        Facilitée d'implémentation & Le capteur ne doit pas nécessiter des heures de travail d'implémentation\\
+        \hline
+    \end{tabular}
+    \caption{Critères de sélection de l'IMU}
+    \label{tab:criteres_IMU}
+\end{table}
+\subsection{MPU6050}
+Le premier candidat est le MPU6050, plus précisement la carte de développement GY-521 \cite{GY521_Datasheet}.
+\subsubsection{Vitesse de lecture}
+Le MPU6050 possède une fréquence d'échantillonnage pouvant atteindre 1 kHz pour les applications utilisant le DMP et jusqu'à 8 kHz pour le gyroscope.
+Les données sont accessibles via une interface I\textsuperscript{2}C simple à mettre en oeuvre \cite{MPU6050_Datasheet}.
+
+\subsubsection{Qualité du signal}
+Le capteur intègre un accéléromètre 3 axes et un gyroscope 3 axes 16 bits. 
+Bien que plus ancien que les IMU récentes, il offre une qualité de mesure suffisante pour une estimation fiable de l'angle après application d'un filtre complémentaire software. Il n'intègre cependant pas de
+filtrage de données embarqué.
+
+\subsubsection{Taille}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/figures/mpu6050_dimensions.png}
+    \caption{Dimensions de la carte GY-521 \cite{GY521_Datasheet}}
+    \label{fig:mpu_6050_dimensions}
+\end{figure}
+
+
+\subsubsection{Facilité d'implémentation}
+Le MPU6050 est probablement l'IMU la plus documentée. De nombreuses bibliothèques Arduino et ESP-IDF existent, ce qui réduit fortement le temps de développement. 
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Critère} & \textbf{Note (/10)} \\
+        \hline
+        Fréquence de travail & 9/10 \\
+        \hline
+        Taille & 7/10 \\
+        \hline
+        Efficacité énergétique & 7/10 \\
+        \hline
+        Communication sans fil & 8/10\\
+        \hline
+    \end{tabular}
+    \caption{Résultats critères ESP-32 Devkit V1}
+    \label{tab:esp32_results}
+\end{table}
+
+$$
+\text{Note globale} = \frac{31}{50}
+$$
+\subsection{BMI160}
+
+\subsubsection{Vitesse de lecture}
+
+
+\subsubsection{Qualité du signal}
+
+
+\subsubsection{Taille}
+
+
+
+\subsubsection{Facilité d'implémentation}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Critère} & \textbf{Note (/10)} \\
+        \hline
+        Fréquence de travail & 7/10 \\
+        \hline
+        Taille & 9/10 \\
+        \hline
+        Efficacité énergétique & 8/10 \\
+        \hline
+        Communication sans fil & 6/10 \\
+        \hline
+    \end{tabular}
+    \caption{Résultats critères Raspberry Pi Pico W}
+    \label{tab:pico_results}
+\end{table}
+
+$$
+\text{Note globale} = \frac{30}{50}
+$$
+
+\subsection{Choix final}
+
