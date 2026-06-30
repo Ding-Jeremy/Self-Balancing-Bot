@@ -5,12 +5,17 @@ L'architecture globale du système est d'abord introduite au moyen d'un schéma 
 Une attention particulière est portée au choix du microcontrôleur, élément central du système de commande, ainsi qu'à l'implémentation de l'électronique de puissance associée aux drivers moteurs. Enfin, la réalisation du schéma électrique complet, le prototypage sur breadboard et la conception du \gls{pcb} sont présentés et justifiés.
 
 \section{Alimentation}
-Afin de designer correctement le système électrique, il est important de définir les prérequis en terme d'alimentation. Plus précisemment, le but est ici de déterminer les tensions de fonctionnement nécessaires pour les
+Afin de designer correctement le système électrique, il est important de définir les prérequis en terme d'alimentation. Plus précisemment, le but est ici de déterminer les tensions et courants de fonctionnement nécessaires pour les
 différents modules.
 \subsection{ESP-32}
 L'ESP-32 Devkit V1 \cite{ESP-32-Devkit-V1} peut être alimenté de deux manière différentes. Soit alimenté en 5 V soit en 3.3 V. En effet ce dernier possède un réglateur linéaire,  \gls{ldo} offrant une tension de 3.3 V.
 Ce régulateur sert à générer la tension nécessaire au fonctionnement du chip ESP-32 présent sur la carte de développement mais peut également être utilisé pour alimenter des modules externes pour autant que ces derniers ne consomment pas trop d'énérgie.
 Le \acrshort{ldo} est de type \cite{AMS1117} et offre un courant de 1 A pour une chute de tension de 1.2 V.
+Comme indiqué dans le chapitre \ref{chap:choix_composants}, le courant consommé par l'ESP-32 dépend de son utilisation, dans le pire cas de figure, ce dernier consomme un courant maximale de:
+$$I_{ESP,max} = 0.4 \si\ampere$$
+Cela veut dire que le LDO présent sur la carte de développement peut fournir un courant aux autres modules valant:
+$$I_{LDO,max} = 0.6 \si\ampere$$
+ 
 
 \subsection{TMC2226}
 Le driver moteur nécessite deux alimentations distinctes, une alimentation pour la logique, $V_{IO}$, ainsi qu'une alimentation pour les moteurs, $V_{mot}$. Les valeurs de tensions nécessaires ont déjà étées indiquées dans le chapitre \ref{chap:choix_composants}. 
@@ -29,15 +34,16 @@ En ce qui concerne le courant tiré par le module sur l'entrée 3.3V, voici ce q
 
 
 \subsection{MPU6050}
-Le module \acrshort{imu} quant à lui nécessite comme indiqué dans le chapitre \ref{chap:choix_composants}
-
-En ce qui concerne le courant tiré par le module sur l'entrée 3.3V, voici ce que l'on peut trouver dans le datasheet \cite{TMC2226_datasheet}.
+Le datasheet du module \acrshort{imu} \cite{MPU6050_Datasheet} indique les informations suivantes concernant la consommation d'énergie.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.6\textwidth]{assets/figures/tmc2226_consumption.png}
-    \caption{Consommation TMC2226}
-    \label{fig:tmc_2226_consumption}
+    \includegraphics[width=0.6\textwidth]{assets/figures/mpu_6050_consumption.png}
+    \caption{Consommation MPU6050}
+    \label{fig:mpu_6050_consumption}
 \end{figure}
+
+\subsection{Moteurs}
+
 
 \begin{table}[H]
     \centering
@@ -55,6 +61,8 @@ En ce qui concerne le courant tiré par le module sur l'entrée 3.3V, voici ce q
     \caption{Tableaux tensions}
     \label{tab:tensions_alimentations}
 \end{table}
+\subsection{Batterie}
+Etant donné les besoins du système, 
 \section{Schéma bloc}
 \section{Drivers moteurs}
 
