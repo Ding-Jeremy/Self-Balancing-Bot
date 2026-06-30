@@ -618,6 +618,8 @@ L'ESP-32 DevKit V1 se distingue par une meilleure polyvalence, notamment grâce 
         \hline
         Facilitée d'implémentation & Le capteur ne doit pas nécessiter des heures de travail d'implémentation\\
         \hline
+        Prix & Le coût du capteur doit rester faible afin de limiter le coût total du robot. \\
+        \hline
     \end{tabular}
     \caption{Critères de sélection de l'IMU}
     \label{tab:criteres_IMU}
@@ -625,8 +627,13 @@ L'ESP-32 DevKit V1 se distingue par une meilleure polyvalence, notamment grâce 
 \subsection{MPU6050}
 Le premier candidat est le MPU6050, plus précisement la carte de développement GY-521 \cite{GY521_Datasheet}.
 \subsubsection{Vitesse de lecture}
-Le MPU6050 possède une fréquence d'échantillonnage pouvant atteindre 1 kHz pour les applications utilisant le DMP et jusqu'à 8 kHz pour le gyroscope.
+Les vitesse de lectures se trouvent dans le datasheet aux pages 12 et 13.
+\begin{itemize}
+    \item Fréquence max de lecture accéléromètre: 1 kHz;
+    \item Fréquence max de lecture gyroscope:  8 kHz;
+\end{itemize}
 Les données sont accessibles via une interface I\textsuperscript{2}C simple à mettre en oeuvre \cite{MPU6050_Datasheet}.
+
 
 \subsubsection{Qualité du signal}
 Le capteur intègre un accéléromètre 3 axes et un gyroscope 3 axes 16 bits. 
@@ -638,7 +645,7 @@ filtrage de données embarqué.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{assets/figures/mpu6050_dimensions.png}
-    \caption{Dimensions de la carte GY-521 \cite{GY521_Datasheet}}
+    \caption{Dimensions de la carte GY-521}
     \label{fig:mpu_6050_dimensions}
 \end{figure}
 
@@ -646,64 +653,93 @@ filtrage de données embarqué.
 \subsubsection{Facilité d'implémentation}
 Le MPU6050 est probablement l'IMU la plus documentée. De nombreuses bibliothèques Arduino et ESP-IDF existent, ce qui réduit fortement le temps de développement. 
 
+\subsubsection{Prix}
+Le module GY-521 basé sur le MPU6050 est très répandu et disponible chez de nombreux fournisseurs pour un prix compris entre 3 et 5 CHF. 
+Son faible coût en fait une solution particulièrement intéressante pour les projets étudiants et les prototypes.
 \begin{table}[H]
     \centering
     \begin{tabular}{|l|c|}
         \hline
         \textbf{Critère} & \textbf{Note (/10)} \\
         \hline
-        Fréquence de travail & 9/10 \\
+        Vitesse de lecture & 9/10 \\
         \hline
-        Taille & 7/10 \\
+        Qualité du signal & 8/10 \\
         \hline
-        Efficacité énergétique & 7/10 \\
+        Taille & 8/10 \\
         \hline
-        Communication sans fil & 8/10\\
+        Facilité d'implémentation & 10/10 \\
+        \hline
+        Prix & 10/10 \\
         \hline
     \end{tabular}
-    \caption{Résultats critères ESP-32 Devkit V1}
-    \label{tab:esp32_results}
+    \caption{Évaluation du MPU6050}
+    \label{tab:mpu6050_resultats}
 \end{table}
 
 $$
-\text{Note globale} = \frac{31}{50}
+\text{Note globale}=\frac{45}{50}
 $$
+
+
 \subsection{BMI160}
 
+Le deuxième candidat est le BMI160, de chez Bosch.
 \subsubsection{Vitesse de lecture}
-
+Le BMI160 peut être paramétré afin d'offrir des fréquences de lectures variant de la manière suivante:
+\begin{itemize}
+    \item Gamme de fréquence de lecture accéléromètre: 12.5-1600 Hz;
+    \item Gamme de fréquence de lecture gyroscope: 25-3200 Hz;
+\end{itemize}
+Le paramètrage se fait à l'aide des registres.
 
 \subsubsection{Qualité du signal}
-
+Grâce à une électronique plus récente, le BMI160 présente un bruit de mesure plus faible et une meilleure stabilité thermique que le MPU6050. 
+Les mesures obtenues sont généralement plus précises.
 
 \subsubsection{Taille}
-
-
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/figures/bmi_160_dimensions.png}
+    \caption{Dimensions du BMI160}
+    \label{fig:bmi_160_dimensions}
+\end{figure}
 
 \subsubsection{Facilité d'implémentation}
+Bien que plusieurs bibliothèques soient disponibles, le BMI160 nécessite une configuration plus complexe que le MPU6050. 
+La documentation est également moins abondante au sein de la communauté des makers.
 
+\subsubsection{Prix}
+
+Les cartes de développement basées sur le BMI160 sont généralement vendues entre 6 et 10 CHF, soit environ deux fois plus cher qu'un module GY-521 intégrant le MPU6050.
 \begin{table}[H]
     \centering
     \begin{tabular}{|l|c|}
         \hline
         \textbf{Critère} & \textbf{Note (/10)} \\
         \hline
-        Fréquence de travail & 7/10 \\
+        Vitesse de lecture & 10/10 \\
+        \hline
+        Qualité du signal & 9/10 \\
         \hline
         Taille & 9/10 \\
         \hline
-        Efficacité énergétique & 8/10 \\
+        Facilité d'implémentation & 7/10 \\
         \hline
-        Communication sans fil & 6/10 \\
+        Prix & 6/10 \\
         \hline
     \end{tabular}
-    \caption{Résultats critères Raspberry Pi Pico W}
-    \label{tab:pico_results}
+    \caption{Évaluation du BMI160}
+    \label{tab:bmi160_resultats}
 \end{table}
 
 $$
-\text{Note globale} = \frac{30}{50}
+\text{Note globale}=\frac{41}{50}
 $$
-
 \subsection{Choix final}
 
+Le BMI160 présente de meilleures performances en termes de qualité du signal et bénéficie d'une électronique plus récente. En revanche, ces avantages ne sont pas indispensables dans le cadre d'un robot auto-équilibré. Les performances du MPU6050 sont largement suffisantes pour atteindre la fréquence d'échantillonnage nécessaire et réaliser une estimation fiable de l'angle à l'aide d'un filtre logiciel.
+
+Par ailleurs, le module GY-521 intégrant le MPU6050 est environ deux fois moins cher qu'une carte de développement basée sur le BMI160. Le grand nombre de bibliothèques disponibles et son faible coût permettent également de réduire le temps de développement ainsi que le coût global du projet.
+
+Le choix s'est donc porté sur le \textbf{MPU6050}, qui offre le meilleur compromis entre performances, simplicité d'intégration et coût pour cette application.
