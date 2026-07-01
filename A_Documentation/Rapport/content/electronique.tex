@@ -43,23 +43,108 @@ Le datasheet du module \acrshort{imu} \cite{MPU6050_Datasheet} indique les infor
 \end{figure}
 
 \subsection{Moteurs}
+La puissance consommée par le moteur dépend de son point de fonctionnement.
+À l'arrêt, l'énergie électrique est essentiellement dissipée sous forme de
+pertes Joule dans les enroulements. En revanche, lorsque le moteur fournit un
+couple et entraîne une charge, une partie de cette énergie est convertie en
+puissance mécanique.
 
+La puissance électrique absorbée peut ainsi s'écrire
+
+\begin{equation}
+    P_{\mathrm{elec}}
+    \approx
+    2I^2R
+    +
+    T_{m}\omega,
+\end{equation}
+
+où $I$ est le courant dans les enroulements, $R$ leur résistance, $T_{m}$ le couple
+développé par le moteur et $\omega$ sa vitesse angulaire.
+
+Le moteur étant piloté par un driver TMC2226 fonctionnant en régulation de
+courant, le courant des bobines est maintenu proche de la consigne. En
+revanche, le courant absorbé sur l'alimentation augmente avec la vitesse et le
+couple afin de fournir la puissance mécanique nécessaire.
+
+Le datasheet \cite{42SHD0217_datasheet} indique un courant maximal par bobine de
+$I_{\max}=1.5\,\si{\ampere}$ ainsi qu'une résistance par bobine de
+$R=2.2\,\si{\ohm}$.
+
+À l'arrêt, lorsque les deux phases sont alimentées, la puissance dissipée dans
+les enroulements est donnée par
+
+\begin{equation}
+    P_{\mathrm{Joule}}
+    =2I_{\max}^2R
+    =2\times1.5^2\times2.2
+    =9.9\,\si{\watt}.
+\end{equation}
+
+Lorsque le moteur est en mouvement et fournit un couple, une partie de
+l'énergie électrique est convertie en énergie mécanique. La puissance
+électrique peut alors être estimée par
+
+\begin{equation}
+    P_{\mathrm{elec}}
+    \approx
+    P_{\mathrm{Joule}}
+    +P_{\mathrm{meca}}
+    =
+    2I_{\max}^2R
+    +C\omega,
+\end{equation}
+
+où $T_m$ est le couple développé et $\omega$ la vitesse angulaire.
+
+En prenant une valeur de couple correspond à la moitié du couple disponible pour un moteur, et en prenant une vitesse correspondant à
+1 tour $\si{\per\second}$. (Deux valeurs arbitraires permettant de tester la validité des calculs)
+
+$$
+\omega=2\pi\times1=6.28\,\si{\radian\per\second},
+$$
+
+d'où
+
+\begin{equation}
+    P_{\mathrm{meca}}
+    =T_m\omega
+    =0.2\times6.28
+    =1.26\,\si{\watt}.
+\end{equation}
+
+La puissance électrique totale pour ce cas de figure peut donc être estimée à
+
+\begin{equation}
+    P_{\mathrm{elec}}
+    \approx
+    9.9+1.26
+    =11.2\,\si{\watt}.
+\end{equation}
+
+Dans l'objectif de dimensionner une batterie permettant de satisfaire la consommation du système, la puissance maximale des moteurs sera donc évaluée à 
+$$ P_{max} = 15 W $$
+
+\subsection{Ensemble}
+Voici ci-dessous un récapitulatif des différents modules ainsi que leurs caractéristiques électriques.
 
 \begin{table}[H]
-    \centering
-       \begin{tabular}{|c|p{6cm}|c|}
-        \hline
-        \textbf{Module} & \textbf{Description} & \textbf{Tension}\\
-        \hline
-        ESP-32 & Microcontrôleur & 5\si{\volt}\\ 
-        \hline
-        TMC2226 & Driver moteur & 3.3\si{\volt}\\ 
-        \hline
-        MPU6050 & Accélèromètre & 3.3\si{\volt} \\
-        \hline
-    \end{tabular}
-    \caption{Tableaux tensions}
-    \label{tab:tensions_alimentations}
+\centering
+\begin{tabular}{|c|p{4.2cm}|c|c|c|}
+\hline
+\textbf{Module} & \textbf{Description} & \textbf{Tension} & \textbf{Courant} & \textbf{Puissance} \\
+\hline
+ESP32 DevKit V1 & Microcontrôleur & $5\,\si{\volt}$ & $400\,\si{\milli\ampere}$ (max.) & $2.0\,\si{\watt}$ \\
+\hline
+TMC2226 & Driver moteur (logique) & $3.3\,\si{\volt}$ & $\approx 30\,\si{\micro\ampere}$ & $\approx 99\,\si{\micro\watt}$ \\
+\hline
+MPU6050 & IMU (accéléromètre + gyroscope) & $3.3\,\si{\volt}$ & $\approx 4\,\si{\milli\ampere}$ & $\approx 13.2\,\si{\milli\watt}$ \\
+\hline
+42SHD0217 & Moteur pas à pas (par moteur) & - & - & $\approx 15\,\si{\watt}$ \\
+\hline
+\end{tabular}
+\caption{Caractéristiques électriques des différents modules.}
+\label{tab:tensions_alimentations}
 \end{table}
 \subsection{Batterie}
 Etant donné les besoins du système, 
@@ -67,7 +152,7 @@ Etant donné les besoins du système,
 \section{Drivers moteurs}
 
 \subsection{Courant max}
-
+\label{subsection:courant_max}
 Le courant efficace fourni par le driver est réglé via un potentiomètre qui fixe la tension de référence $V_{\mathrm{ref}}$. Il est donné par :
 
 \begin{equation}
