@@ -48,18 +48,63 @@ La puissance consommée par le moteur dépend de son point de fonctionnement.
 pertes Joule dans les enroulements. En revanche, lorsque le moteur fournit un
 couple et entraîne une charge, une partie de cette énergie est convertie en
 puissance mécanique.
+\subsubsection{Courant max}
+\label{subsubsection:courant_max}
+Le courant efficace fourni par le driver est réglé via un potentiomètre qui fixe la tension de référence $V_{\mathrm{ref}}$. Il est donné par :
 
+\begin{equation}
+    \begin{split}
+        I_{\mathrm{RMS}} =
+        \frac{0.325\,\mathrm{V}}{R_{\mathrm{sense}} + 0.02\,\Omega}
+        \cdot \frac{1}{\sqrt{2}}
+        \cdot \frac{V_{\mathrm{ref}}}{2.5\,\mathrm{V}}
+    \end{split}
+\end{equation}
+
+La résistance de mesure $R_{\mathrm{sense}}$ est donnée par le constructeur du module \cite{BigTechTree_TMC2226}. Elle est également vérifiable physiquement sur le PCB et vaut :
+\begin{equation}
+R_{\mathrm{sense}} = 150\,\mathrm{m\Omega} = 0.150\,\Omega
+\end{equation}
+
+Le moteur \cite{42SHD0217_datasheet} supporte un courant maximal de $1.5\,\mathrm{A}$, ce qui donne :
+
+\begin{equation}
+V_{\mathrm{ref,max}} \approx \frac{1.5}{0.540} \approx 2.8\,\mathrm{V}
+\end{equation}
+
+Ainsi, la plage de fonctionnement admissible est :
+
+\begin{equation}
+0 \leq V_{\mathrm{ref}} \leq 2.8\,\mathrm{V}
+\end{equation}
+
+Cependant, après test du module BigTechTree \cite{BigTechTree_TMC2226}, le potentiomètre ne permet de régler la tension $V_{\mathrm{ref}}$ que dans une plage d’environ $0$ à $1.75\,\mathrm{V}$, bien que cette limitation ne soit pas explicitement indiquée dans la documentation.
+
+Une tension de consigne $V_{\mathrm{ref}} = 1.5\,\mathrm{V}$ est donc utilisée. Cela correspond à un courant efficace d’environ :
+\begin{equation}
+I_{mot,max}=I_{\mathrm{RMS}} \approx 0.540 \cdot 1.5 \approx 0.81\,\mathrm{A}
+\end{equation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{assets/figures/tmc_datasheet_rsense.png}
+    \caption{Extrait du datasheet du TMC2226 illustrant les différentes Rmes}
+    \label{fig:tmc2226_datasheet_rsense}
+\end{figure}
+La figure ci-dessus indique la relation entre les différentes résistances de mesures et les différents type de moteurs.
+Dans le cas actuel, il s'agit d'un moteur de courant de $1.5 A$, qui correspond bien au moteur choisi \cite{42SHD0217_datasheet}.
+\subsubsection{Puissance électrique}
 La puissance électrique absorbée peut ainsi s'écrire
 
 \begin{equation}
     P_{\mathrm{elec}}
     \approx
-    2I^2R
+    2I_{max,mot}^2R_c
     +
     T_{m}\omega,
 \end{equation}
 
-où $I$ est le courant dans les enroulements, $R$ leur résistance, $T_{m}$ le couple
+où $I_{max,mot}$ est le courant dans les bobines, $R_c$ leur résistance, $T_{m}$ le couple
 développé par le moteur et $\omega$ sa vitesse angulaire.
 
 Le moteur étant piloté par un driver TMC2226 fonctionnant en régulation de
@@ -68,7 +113,7 @@ revanche, le courant absorbé sur l'alimentation augmente avec la vitesse et le
 couple afin de fournir la puissance mécanique nécessaire.
 
 Le datasheet \cite{42SHD0217_datasheet} indique un courant maximal par bobine de
-$I_{\max}=1.5\,\si{\ampere}$ ainsi qu'une résistance par bobine de
+$I_{max,mot}=1.5\,\si{\ampere}$ ainsi qu'une résistance par bobine de
 $R=2.2\,\si{\ohm}$.
 
 À l'arrêt, lorsque les deux phases sont alimentées, la puissance dissipée dans
@@ -147,55 +192,15 @@ MPU6050 & IMU (accéléromètre + gyroscope) & $3.3\,\si{\volt}$ & $\approx 4\,\
 \label{tab:tensions_alimentations}
 \end{table}
 \subsection{Batterie}
-Etant donné les besoins du système, 
+\subsubsection{Technologie}
+Etant donné les besoins du système, une batterie \Gls{lipo} est la meilleure solution.
+\subsubsection{Capacité}
+La capacité de la batterie doit être déterminée en fonction de l'autonomie dictée par le cahier des charges ainsi que par la consommation estimée du modèle.
 \section{Schéma bloc}
 \section{Drivers moteurs}
 
-\subsection{Courant max}
-\label{subsection:courant_max}
-Le courant efficace fourni par le driver est réglé via un potentiomètre qui fixe la tension de référence $V_{\mathrm{ref}}$. Il est donné par :
 
-\begin{equation}
-    \begin{split}
-        I_{\mathrm{RMS}} =
-        \frac{0.325\,\mathrm{V}}{R_{\mathrm{sense}} + 0.02\,\Omega}
-        \cdot \frac{1}{\sqrt{2}}
-        \cdot \frac{V_{\mathrm{ref}}}{2.5\,\mathrm{V}}
-    \end{split}
-\end{equation}
 
-La résistance de mesure $R_{\mathrm{sense}}$ est donnée par le constructeur du module \cite{BigTechTree_TMC2226}. Elle est également vérifiable physiquement sur le PCB et vaut :
-\begin{equation}
-R_{\mathrm{sense}} = 150\,\mathrm{m\Omega} = 0.150\,\Omega
-\end{equation}
-
-Le moteur \cite{42SHD0217_datasheet} supporte un courant maximal de $1.5\,\mathrm{A}$, ce qui donne :
-
-\begin{equation}
-V_{\mathrm{ref,max}} \approx \frac{1.5}{0.540} \approx 2.8\,\mathrm{V}
-\end{equation}
-
-Ainsi, la plage de fonctionnement admissible est :
-
-\begin{equation}
-0 \leq V_{\mathrm{ref}} \leq 2.8\,\mathrm{V}
-\end{equation}
-
-Cependant, après test du module BigTechTree \cite{BigTechTree_TMC2226}, le potentiomètre ne permet de régler la tension $V_{\mathrm{ref}}$ que dans une plage d’environ $0$ à $1.75\,\mathrm{V}$, bien que cette limitation ne soit pas explicitement indiquée dans la documentation.
-
-Une tension de consigne $V_{\mathrm{ref}} = 1.5\,\mathrm{V}$ est donc utilisée. Cela correspond à un courant efficace d’environ :
-\begin{equation}
-I_{\mathrm{RMS}} \approx 0.540 \cdot 1.5 \approx 0.81\,\mathrm{A}
-\end{equation}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.7\textwidth]{assets/figures/tmc_datasheet_rsense.png}
-    \caption{Extrait du datasheet du TMC2226 illustrant les différentes Rmes}
-    \label{fig:tmc2226_datasheet_rsense}
-\end{figure}
-
-\section{Microcontrôleur}
 \section{Schéma électrique}
 
 \section{Breadboard}
