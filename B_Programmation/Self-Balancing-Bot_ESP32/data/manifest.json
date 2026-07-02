@@ -1,11 +1,11 @@
 {
-    "name": "Arachnova",
-    "short_name": "Arachnova",
+    "name": "Self-Balancing-Bot",
+    "short_name": "Self-Balancing-Bot",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#000000",
     "theme_color": "#00ffc8",
-    "description": "Control the Arachnova Robot !",
+    "description": "Control Application for the SBB",
     "icons": [
       {
         "src": "/icon-192.png",

@@ -59,7 +59,7 @@ h1 {
   grid-column: 1 / -1; /* <-- key line */
   text-align: center;
   font-size: 3vw;
-  color: #00ffc8;
+  color: #ffffff;
   margin: 3vh 0 2vh 0;
 }
 
@@ -87,8 +87,8 @@ h1 {
 .joystick {
   width: 20vw;
   height: 20vw;
-  border: 0.5vw solid #00ffc8;
-  box-shadow: 0 0 2vw #00ffc888;
+  border: 0.5vw solid #0040ff;
+  box-shadow: 0 0 2vw #0c038ea1;
   border-radius: 100%;
 }
 
@@ -99,7 +99,7 @@ h1 {
   font-size: 2vw;
   color: #aaaaaa;
   text-align: center;
-  text-shadow: 0 0 5px #00ffc8;
+  text-shadow: 0 0 5px #003cff;
 }
 
 .joystick-wrapper.disabled {

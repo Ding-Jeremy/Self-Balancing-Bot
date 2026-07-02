@@ -41,8 +41,6 @@ void TMC2226::init()
     pinMode(D_TMC_PIN_DIR1, OUTPUT);
     pinMode(D_TMC_PIN_EN, OUTPUT);
 
-    // Enable motors
-    enable();
     delay(10);
     uart_config_t uart_config = {
         .baud_rate = D_TMC_BAUDRATE,

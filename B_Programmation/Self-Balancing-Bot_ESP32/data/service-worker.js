@@ -1,4 +1,4 @@
-const cacheName = 'klann-robot-cache-v1';
+const cacheName = 'self-balancing-bot-cache-v1';
 const filesToCache = [
   '/',
   '/index.html',

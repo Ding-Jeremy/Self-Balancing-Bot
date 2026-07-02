@@ -1,13 +1,20 @@
 /*
- *   name:         main.cpp
- *   author:       Ding Jérémy
- *   date:         05.2026
- *   device:       ESP-WROOM-32
+ * File        : main.cpp
+ * Author      : Ding Jérémy
+ * Date        : May 2026
+ * Target      : ESP32-WROOM-32
  *
- *   description:  This code is used to control the "self-balancing-robot" from the bachelor's degree work
- *                 of the same name.
+ * Description :
+ * Firmware for the self-balancing robot developed as part of the
+ * Bachelor's thesis "Self-Balancing Robot".
  *
- *
+ * Features:
+ *  - Dual-loop PID controller (velocity + balance)
+ *  - MPU6050 attitude estimation using a complementary filter
+ *  - TMC2226 stepper motor control
+ *  - Wi-Fi Access Point with WebSocket communication
+ *  - Battery monitoring
+ *  - Data recording for control analysis
  */
 #include <Arduino.h>
 
@@ -33,25 +40,28 @@
 
 #define D_BATT_MIN_V 14.70
 #define D_BATT_MAX_V 16.00
-// REGULATOR VALUES
-// POSITION
-#define D_REG_KPV 0.25
+
+// ---------------- PID Controller Parameters ----------------
+// Velocity controller
+#define D_REG_KPV 0.62
 #define D_REG_TDV 0.0
 #define D_REG_TIV 0.0
 
-#define D_REG_KPT 10.5
-#define D_REG_TDT 3.75
+// Balance controller
+#define D_REG_KPT 3.68
+#define D_REG_TDT 1.10
 #define D_REG_TIT 0.0
 
-#define D_REG_RESTTILT 0
+// Rest Angle
+#define D_BALANCE_ANGLE 2.1 // [°]
 
-#define D_ANGLE_TIMEOUT 500            // Timeout between angle sents
-#define D_ANGLE_LIMITS {-20, 20}       // Limit angle (degrees)
-#define D_SPEED_LIMITS {-3, 3}         // Speed limits (when moving) [m/s]
-#define D_ROTATION_SPEED_LIMIT {-5, 5} // Rotation speed limit [°/s]
+#define D_DATASEND_PERIOD 500      // Data transmission period [ms]
+#define D_ANGLE_LIMITS {-20, 20}   // Limit angles [°]
+#define D_SPEED_CTRL_ANGLE {-3, 3} // Speed control lean angles [°]
 
 #define D_WHEEL_RADIUS 0.055       // [m]
 #define D_MOTOR_MAX_SPEED 5 * M_PI // [rad/s]
+
 // WiFi credentials
 #define D_SSID "self-balancing-bot"
 #define D_PASSWORD "123456789"
@@ -59,7 +69,9 @@
 // File management (data saving)
 #define D_MAX_RECORDING_SIZE 2000 // (Samples)
 
-#define D_BATTERY_TIMEOUT 5000 // Update battery every x[ms]
+#define D_BATTERY_SEND_PERIOD 5000 // Update battery every x [ms]
+
+// Regulation loops frequencies
 #define D_INNER_LOOP_FREQ 500.0
 #define D_INNER_LOOP_PERI 1.0 / D_INNER_LOOP_FREQ
 #define D_OUTER_LOOP_FREQ 500.0
@@ -114,7 +126,7 @@ void send_battery(float battery_voltage);
 AsyncWebServer server(80); // Web server
 AsyncWebSocket ws("/ws");  // WebSocket endpoint
 
-// Mpu unit
+// IMU (MPU6050)
 Adafruit_MPU6050 mpu;
 
 // Motor drivers
@@ -145,9 +157,9 @@ uint32_t angle_timer = 0;
 float prev_gyro = 0.0f;
 
 int8_t angle_limits[2] = D_ANGLE_LIMITS;
-float speed_control_range[2] = D_SPEED_LIMITS;
+float speed_control_range[2] = D_SPEED_CTRL_ANGLE;
 
-bool motor_state = true;
+bool motor_state = false;
 
 S_DATA recording_data[D_MAX_RECORDING_SIZE];
 bool recording = false;
@@ -203,9 +215,6 @@ void setup()
   tmc2226_left.write_to_register(TMC2226::E_REG_CHOPCONF, chopconf.bytes);
   tmc2226_right.write_to_register(TMC2226::E_REG_CHOPCONF, chopconf.bytes);
 
-  // Initialize battery pin
-  pinMode(D_PIN_BATTERY_LVL, INPUT);
-
   // Start MPU
   if (!mpu.begin())
   {
@@ -218,6 +227,9 @@ void setup()
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
   mpu.setGyroRange(MPU6050_RANGE_500_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+
+  // Initialize battery pin
+  pinMode(D_PIN_BATTERY_LVL, INPUT);
 
   // Start WIFI and server
   init_wifi();
@@ -232,6 +244,21 @@ void setup()
   server.serveStatic("/", LittleFS, "/");
 
   server.begin();
+
+  delay(50);
+  // Check if the bot is in a correct position
+  // If angle out of safe range.
+  if (is_angle_withing_range())
+  {
+    motor_state = true;
+    tmc2226_left.enable();
+    tmc2226_right.enable();
+    send_motor_state(true);
+  }
+  else
+  {
+    send_motor_state(false);
+  }
 }
 
 //-------------- MAIN LOOP ---------------
@@ -272,13 +299,13 @@ void loop()
 
     // Gyro rate (Adafruit returns rad/s)
     float gyroRateX = gyro.gyro.x * 180.0f / PI;
-    gyroRateX = 0.9f * prev_gyro + 0.1f * gyroRateX;
+    gyroRateX = /*0.5f * prev_gyro + 0.5f * */ gyroRateX;
 
     // Complementary filter
-    angleX = 0.90f * (angleX + gyroRateX * inner_loop_cnt) + 0.03f * accelAngleX;
-
-    // Defines the error from speed (and saved offset)
-    float thetaError = theta_target + angleX_offset - angleX;
+    angleX = 0.9f * (angleX + gyroRateX * inner_loop_cnt) + 0.1f * accelAngleX;
+    prev_gyro = gyroRateX;
+    // Defines the error from speed (and saved offset + Hard coded offset)
+    float thetaError = D_BALANCE_ANGLE + theta_target + angleX_offset - angleX;
 
     // Generate motor speed from inner loop
     float acceleration =
@@ -333,13 +360,13 @@ void loop()
   // Send angle and speed to clients (if not recording)
   if (!recording)
   {
-    if (millis() - angle_timer > D_ANGLE_TIMEOUT)
+    if (millis() - angle_timer > D_DATASEND_PERIOD)
     {
       angle_timer = millis();
       send_target_angle(theta_target);
       send_angle(angleX);
     }
-    if (millis() - battery_timer > D_BATTERY_TIMEOUT)
+    if (millis() - battery_timer > D_BATTERY_SEND_PERIOD)
     {
       battery_timer = millis();
       send_battery(read_battery());
