@@ -133,11 +133,11 @@
 			(sketchdnponfab yes)
 			(crossoutdnponfab yes)
 			(subtractmaskfromsilk no)
-			(outputformat 1)
+			(outputformat 4)
 			(mirror no)
 			(drillshape 0)
 			(scaleselection 1)
-			(outputdirectory "../Gerbers/")
+			(outputdirectory "../../../../../A_Documentation/Rapport/assets/figures/")
 		)
 	)
 	(net 0 "")
@@ -587,7 +587,7 @@
 		)
 		(path "/3077e01b-0e1a-4196-9dbb-6da234b4bcca")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr through_hole)
 		(fp_rect
 			(start 1.27 1.27)
@@ -790,7 +790,7 @@
 		(property ki_fp_filters "C_*")
 		(path "/a73aaab1-1331-41db-91dd-60e21d34db5f")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -3.41 -2.345563)
@@ -1142,7 +1142,7 @@
 				)
 			)
 		)
-		(property "Value" "R"
+		(property "Value" "61k"
 			(at 0 1.83 90)
 			(layer "F.Fab")
 			(uuid "ec83fe4a-477d-4cf4-aed1-3933a48077c6")
@@ -1180,7 +1180,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/faadebb5-2c3f-437b-80ec-c221d974b65c")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.727064 -0.91)
@@ -1380,7 +1380,7 @@
 		)
 		(path "/5dde9071-0e6b-494a-aa2d-8805744811db")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr through_hole)
 		(fp_line
 			(start 5.207 19.558)
@@ -1920,7 +1920,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/37a11419-b366-4daa-bf5c-198c574a8f9f")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.727064 0.91)
@@ -2120,7 +2120,7 @@
 		)
 		(path "/cadcd324-3d1b-4a95-8e0a-29c64d7bad9b")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr through_hole)
 		(fp_line
 			(start -2.3 -2.3)
@@ -2390,7 +2390,7 @@
 		(property ki_fp_filters "Connector*:*_1x??_*")
 		(path "/88258263-7edb-4388-803b-678c3e58821c")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr through_hole)
 		(fp_line
 			(start -1.38 9)
@@ -2665,7 +2665,7 @@
 		(property ki_fp_filters "Connector*:*_1x??_*")
 		(path "/1f55abf6-c2b0-4718-97d1-6514637e7dc4")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr through_hole)
 		(fp_line
 			(start -1.38 9)
@@ -2941,7 +2941,7 @@
 		)
 		(path "/23cbc9c4-7bd6-4656-8f49-554320efc307")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr through_hole)
 		(fp_line
 			(start 5.207 19.558)
@@ -3482,7 +3482,7 @@
 		)
 		(path "/b0d29374-e816-43ea-8708-3ca0d32e36f5")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr through_hole)
 		(fp_rect
 			(start 1.27 -4.445)
@@ -3993,7 +3993,7 @@
 		(property ki_fp_filters "TerminalBlock*:*")
 		(path "/971a9d2d-1624-4750-9daf-12eb40b96ea2")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr through_hole)
 		(fp_line
 			(start 7.62 -5.32)
@@ -4371,7 +4371,7 @@
 		(property ki_fp_filters "Converter*DCDC*TRACO*TSR1*xxxxE*THT*")
 		(path "/3c579db8-c5d0-4f98-8871-abb502fbd78a")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr through_hole)
 		(fp_line
 			(start -2.4 -3.61)
@@ -4559,7 +4559,7 @@
 				)
 			)
 		)
-		(property "Value" "R"
+		(property "Value" "10k"
 			(at 0 1.83 90)
 			(layer "F.Fab")
 			(uuid "544a43b8-fcdd-4f35-a5af-457eedb580e9")
@@ -4597,7 +4597,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/c002692c-0ac5-4152-9da0-28af117f50cc")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.727064 -0.91)
@@ -4796,7 +4796,7 @@
 		(property ki_fp_filters "C_*")
 		(path "/29cf3fc2-8e1f-4c04-8f10-56f2262b0b7c")
 		(sheetname "/")
-		(sheetfile "Balance_bot_V0.kicad_sch")
+		(sheetfile "Self_Balancing_Bot_V0.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -3.41 -2.345563)
@@ -6017,6 +6017,44 @@
 	(dimension
 		(type orthogonal)
 		(layer "User.1")
+		(uuid "2f073fcc-bb06-4765-a3ae-9684309d51f4")
+		(pts
+			(xy 188 74) (xy 187.75 125)
+		)
+		(height 14.75)
+		(orientation 1)
+		(format
+			(prefix "")
+			(suffix "")
+			(units 3)
+			(units_format 0)
+			(precision 4)
+			(suppress_zeroes yes)
+		)
+		(style
+			(thickness 0.1)
+			(arrow_length 1.27)
+			(text_position_mode 0)
+			(arrow_direction outward)
+			(extension_height 0.58642)
+			(extension_offset 0.5)
+			(keep_text_aligned yes)
+		)
+		(gr_text "51"
+			(at 201.6 99.5 90)
+			(layer "User.1")
+			(uuid "2f073fcc-bb06-4765-a3ae-9684309d51f4")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+	)
+	(dimension
+		(type orthogonal)
+		(layer "User.1")
 		(uuid "476257f3-5313-49ef-a233-5b97609bf303")
 		(pts
 			(xy 192 70) (xy 193.5 129)
@@ -6082,6 +6120,44 @@
 			(at 147 58.85 0)
 			(layer "User.1")
 			(uuid "6b02858c-023e-40e9-9ece-7592bd1d541c")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+	)
+	(dimension
+		(type orthogonal)
+		(layer "User.1")
+		(uuid "ce92dcd9-45f7-4f5a-8f82-9c66da0f1170")
+		(pts
+			(xy 188 74) (xy 106 74)
+		)
+		(height -9.5)
+		(orientation 0)
+		(format
+			(prefix "")
+			(suffix "")
+			(units 3)
+			(units_format 0)
+			(precision 4)
+			(suppress_zeroes yes)
+		)
+		(style
+			(thickness 0.1)
+			(arrow_length 1.27)
+			(text_position_mode 0)
+			(arrow_direction outward)
+			(extension_height 0.58642)
+			(extension_offset 0.5)
+			(keep_text_aligned yes)
+		)
+		(gr_text "82"
+			(at 147 63.35 0)
+			(layer "User.1")
+			(uuid "ce92dcd9-45f7-4f5a-8f82-9c66da0f1170")
 			(effects
 				(font
 					(size 1 1)

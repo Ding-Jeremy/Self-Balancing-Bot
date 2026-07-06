@@ -4,6 +4,12 @@
 	(generator_version "9.0")
 	(uuid "f4e1bb35-ec0a-47e1-be69-4cbcd1359e6b")
 	(paper "A4")
+	(title_block
+		(title "Self_Balancing_Bot_V0")
+		(date "21/04/2026")
+		(rev "V0")
+		(company "Ding Jérémy")
+	)
 	(lib_symbols
 		(symbol "Connector:Conn_01x04_Pin"
 			(pin_names

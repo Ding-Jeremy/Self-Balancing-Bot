@@ -478,7 +478,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "Balance_bot_V0.kicad_pro",
+    "filename": "Self_Balancing_Bot_V0.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -514,7 +514,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "../Gerbers/",
+      "plot": "../../../../../A_Documentation/Rapport/assets/figures/",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "Balance_bot_V0.step",
@@ -625,7 +625,7 @@
     },
     "net_format_name": "",
     "page_layout_descr_file": "",
-    "plot_directory": "",
+    "plot_directory": "../../../../../A_Documentation/Rapport/assets/figures/",
     "space_save_all_events": true,
     "spice_current_sheet_as_root": false,
     "spice_external_command": "spice \"%I\"",

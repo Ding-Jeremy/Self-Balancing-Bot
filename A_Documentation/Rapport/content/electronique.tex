@@ -4,6 +4,25 @@ L'architecture globale du système est d'abord introduite au moyen d'un schéma 
 
 Une attention particulière est portée au choix du microcontrôleur, élément central du système de commande, ainsi qu'à l'implémentation de l'électronique de puissance associée aux drivers moteurs. Enfin, la réalisation du schéma électrique complet, le prototypage sur breadboard et la conception du \gls{pcb} sont présentés et justifiés.
 
+\section{Méthode et outils}
+
+Dans un premier temps, il est important de présenter les différents outils utilisés dans la conception et la réalisation de la partie électronique du projet. Ces outils couvrent à la fois la conception des schémas, le routage des circuits imprimés ainsi que la modélisation des architectures fonctionnelles.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Tâche} & \textbf{Outil utilisé} \\
+\hline
+Conception des schémas électriques et architecture bloc & draw.io (diagrams.net) \\
+\hline
+Conception et routage du PCB & KiCad 9.0 \\
+\hline
+\end{tabular}
+\caption{Outils utilisés dans la réalisation de la partie électronique du projet}
+\label{tab:outils_utilises_electronique}
+\end{table}
+
 \section{Alimentation}
 Afin de designer correctement le système électrique, il est important de définir les prérequis en terme d'alimentation. Plus précisemment, le but est ici de déterminer les tensions et courants de fonctionnement nécessaires pour les
 différents modules.
@@ -63,113 +82,131 @@ Le courant efficace fourni par le driver est réglé via un potentiomètre qui f
 
 La résistance de mesure $R_{\mathrm{sense}}$ est donnée par le constructeur du module \cite{BigTechTree_TMC2226}. Elle est également vérifiable physiquement sur le PCB et vaut :
 \begin{equation}
-R_{\mathrm{sense}} = 150\,\mathrm{m\Omega} = 0.150\,\Omega
+R_{\mathrm{sense}} = 150\,\mathrm{m\Omega} = 0.150\,\Omega.
 \end{equation}
 
-Le moteur \cite{42SHD0217_datasheet} supporte un courant maximal de $1.5\,\mathrm{A}$, ce qui donne :
+Le moteur \cite{42SHD0217_datasheet} supporte un courant maximal de
+$1.5\,\mathrm{A_{RMS}}$, ce qui conduit à
 
 \begin{equation}
-V_{\mathrm{ref,max}} \approx \frac{1.5}{0.540} \approx 2.8\,\mathrm{V}
+V_{\mathrm{ref,max}}
+\approx
+\frac{1.5}{0.540}
+\approx
+2.8\,\mathrm{V}.
 \end{equation}
 
-Ainsi, la plage de fonctionnement admissible est :
+La plage théorique de fonctionnement est donc
 
 \begin{equation}
-0 \leq V_{\mathrm{ref}} \leq 2.8\,\mathrm{V}
+0 \leq V_{\mathrm{ref}} \leq 2.8\,\mathrm{V}.
 \end{equation}
 
-Cependant, après test du module BigTechTree \cite{BigTechTree_TMC2226}, le potentiomètre ne permet de régler la tension $V_{\mathrm{ref}}$ que dans une plage d’environ $0$ à $1.75\,\mathrm{V}$, bien que cette limitation ne soit pas explicitement indiquée dans la documentation.
+Cependant, après essais du module BigTechTree \cite{BigTechTree_TMC2226}, il a été constaté que le potentiomètre ne permet de régler la tension
+$V_{\mathrm{ref}}$ que dans une plage comprise entre environ
+$0\,\mathrm{V}$ et $1.75\,\mathrm{V}$, bien que cette limitation ne soit pas explicitement mentionnée dans la documentation.
 
-Une tension de consigne $V_{\mathrm{ref}} = 1.5\,\mathrm{V}$ est donc utilisée. Cela correspond à un courant efficace d’environ :
+Une tension de référence de
+
 \begin{equation}
-I_{mot,max}=I_{\mathrm{RMS}} \approx 0.540 \cdot 1.5 \approx 0.81\,\mathrm{A}
+V_{\mathrm{ref}} = 1.5\,\mathrm{V}
+\end{equation}
+
+est donc retenue. Elle correspond à un courant efficace dans les enroulements de
+
+\begin{equation}
+I_{\mathrm{RMS}}
+\approx
+0.540 \times 1.5
+=
+0.81\,\mathrm{A}.
 \end{equation}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\textwidth]{assets/figures/tmc_datasheet_rsense.png}
-    \caption{Extrait du datasheet du TMC2226 illustrant les différentes Rmes}
+    \caption{Extrait de la documentation du TMC2226 présentant les différentes valeurs de résistance de mesure ($R_{\mathrm{sense}}$).}
     \label{fig:tmc2226_datasheet_rsense}
 \end{figure}
-La figure ci-dessus indique la relation entre les différentes résistances de mesures et les différents type de moteurs.
-Dans le cas actuel, il s'agit d'un moteur de courant de $1.5 A$, qui correspond bien au moteur choisi \cite{42SHD0217_datasheet}.
+
+La figure~\ref{fig:tmc2226_datasheet_rsense} présente les valeurs recommandées de $R_{\mathrm{sense}}$ en fonction du courant nominal du moteur. Dans le cas présent, le moteur possède un courant nominal de $1.5\,\mathrm{A}$, ce qui correspond bien à la résistance de mesure retenue \cite{42SHD0217_datasheet}.
+
 \subsubsection{Puissance électrique}
-La puissance électrique absorbée peut ainsi s'écrire
+
+La puissance électrique absorbée par le moteur peut être estimée par
 
 \begin{equation}
-    P_{\mathrm{elec}}
-    \approx
-    2I_{max,mot}^2R_c
-    +
-    T_{m}\omega,
+P_{\mathrm{elec}}
+\approx
+2I_{\mathrm{RMS}}^{2}R_c
++
+T_m\omega,
 \end{equation}
 
-où $I_{max,mot}$ est le courant dans les bobines, $R_c$ leur résistance, $T_{m}$ le couple
-développé par le moteur et $\omega$ sa vitesse angulaire.
+où $I_{\mathrm{RMS}}$ est le courant efficace dans chaque enroulement,
+$R_c$ la résistance d'une bobine,
+$T_m$ le couple développé par le moteur et
+$\omega$ sa vitesse angulaire.
 
-Le moteur étant piloté par un driver TMC2226 fonctionnant en régulation de
-courant, le courant des bobines est maintenu proche de la consigne. En
-revanche, le courant absorbé sur l'alimentation augmente avec la vitesse et le
-couple afin de fournir la puissance mécanique nécessaire.
+Afin d'obtenir un ordre de grandeur, on considère un couple correspondant à la moitié du couple maximal du moteur ainsi qu'une vitesse de rotation de
+1 tour/s.
 
-Le datasheet \cite{42SHD0217_datasheet} indique un courant maximal par bobine de
-$I_{max,mot}=1.5\,\si{\ampere}$ ainsi qu'une résistance par bobine de
-$R=2.2\,\si{\ohm}$.
-
-À l'arrêt, lorsque les deux phases sont alimentées, la puissance dissipée dans
-les enroulements est donnée par
+La vitesse angulaire vaut alors
 
 \begin{equation}
-    P_{\mathrm{Joule}}
-    =2I_{\max}^2R
-    =2\times1.5^2\times2.2
-    =9.9\,\si{\watt}.
+\omega
+=
+2\pi\times1
+=
+6.28\,\si{\radian\per\second}.
 \end{equation}
 
-Lorsque le moteur est en mouvement et fournit un couple, une partie de
-l'énergie électrique est convertie en énergie mécanique. La puissance
-électrique peut alors être estimée par
+La puissance mécanique développée est donc
 
 \begin{equation}
-    P_{\mathrm{elec}}
-    \approx
-    P_{\mathrm{Joule}}
-    +P_{\mathrm{meca}}
-    =
-    2I_{\max}^2R
-    +C\omega,
+P_{\mathrm{meca}}
+=
+T_m\omega
+=
+0.2\times6.28
+=
+1.26\,\si{\watt}.
 \end{equation}
 
-où $T_m$ est le couple développé et $\omega$ la vitesse angulaire.
-
-En prenant une valeur de couple correspond à la moitié du couple disponible pour un moteur, et en prenant une vitesse correspondant à
-1 tour $\si{\per\second}$. (Deux valeurs arbitraires permettant de tester la validité des calculs)
-
-$$
-\omega=2\pi\times1=6.28\,\si{\radian\per\second},
-$$
-
-d'où
+En prenant la valeur de résistance donnée par le datasheet du moteur pas à pas, 
+$R_c=2.2\,\Omega$ et le courant efficace précédemment calculé, les pertes Joule valent
 
 \begin{equation}
-    P_{\mathrm{meca}}
-    =T_m\omega
-    =0.2\times6.28
-    =1.26\,\si{\watt}.
+P_{\mathrm{Joule}}
+=
+2I_{\mathrm{RMS}}^2R_c
+=
+2\times0.81^2\times2.2
+\approx
+2.9\,\si{\watt}.
 \end{equation}
 
-La puissance électrique totale pour ce cas de figure peut donc être estimée à
+La puissance électrique totale est alors estimée à
 
 \begin{equation}
-    P_{\mathrm{elec}}
-    \approx
-    9.9+1.26
-    =11.2\,\si{\watt}.
+P_{\mathrm{elec}}
+=
+P_{\mathrm{Joule}}
++
+P_{\mathrm{meca}}
+=
+2.9
++
+1.26
+\approx
+4.16\,\si{\watt}.
 \end{equation}
 
-Dans l'objectif de dimensionner une batterie permettant de satisfaire la consommation du système, la puissance maximale des moteurs sera donc évaluée à 
-$$ P_{max} = 15 W $$
+Afin de conserver une marge de sécurité pour le dimensionnement de la batterie, la puissance maximale consommée par un moteur est fixée à
 
+\begin{equation}
+P_{\mathrm{max}} = 5\,\si{\watt}.
+\end{equation}
 \subsection{Ensemble}
 Voici ci-dessous un récapitulatif des différents modules ainsi que leurs caractéristiques électriques.
 
@@ -185,24 +222,176 @@ TMC2226 & Driver moteur (logique) & $3.3\,\si{\volt}$ & $\approx 30\,\si{\micro\
 \hline
 MPU6050 & IMU (accéléromètre + gyroscope) & $3.3\,\si{\volt}$ & $\approx 4\,\si{\milli\ampere}$ & $\approx 13.2\,\si{\milli\watt}$ \\
 \hline
-42SHD0217 & Moteur pas à pas (par moteur) & - & - & $\approx 15\,\si{\watt}$ \\
+42SHD0217 & Moteur pas à pas (par moteur) & - & - & $\approx 10\,\si{\watt}$ \\
 \hline
 \end{tabular}
 \caption{Caractéristiques électriques des différents modules.}
 \label{tab:tensions_alimentations}
 \end{table}
-\subsection{Batterie}
+\subsection{Convertisseur / Régulateur}
+
+Les modules alimentés en \SI{3.3}{\volt}, à savoir le MPU6050 et les entrées logiques des drivers TMC2226, présentent une consommation très faible. Leur courant total est inférieur à \SI{10}{\milli\ampere}. Cette consommation reste largement inférieure au courant maximal pouvant être fourni par le régulateur linéaire intégré à la carte ESP-32 DevKit V1.
+
+Il est donc possible d'utiliser directement la sortie \SI{3.3}{\volt} de la carte de développement pour alimenter l'ensemble de la partie logique du système, sans qu'un régulateur supplémentaire ne soit nécessaire. Cette solution permet de réduire le nombre de composants, de simplifier le schéma électrique et de limiter les coûts.
+
+En revanche, le système est alimenté par une batterie dont la tension est supérieure à \SI{5}{\volt}. Une conversion de tension est donc nécessaire afin d'alimenter correctement la carte ESP-32 DevKit V1. Pour cette fonction, un convertisseur DC/DC abaisseur (\emph{buck converter}) est retenu plutôt qu'un régulateur linéaire. En effet, un convertisseur à découpage présente un rendement élevé, généralement supérieur à 90\,\%, ce qui limite les pertes d'énergie et l'échauffement du système.
+
+Le convertisseur retenu est le module TSR~1-2450E \cite{TSR1-2450E}. Celui-ci est disponible chez Distrelec et présente les caractéristiques principales suivantes :
+
+\begin{itemize}
+    \item tension d'entrée : $V_{\mathrm{in}} \in [7,36]\,\si{\volt}$ ;
+    \item tension de sortie : $V_{\mathrm{out}} = \SI{5.0}{\volt}$ ;
+    \item courant de sortie maximal : $I_{\mathrm{out,max}} = \SI{1}{\ampere}$ ;
+    \item rendement typique : supérieur à 90\,\%.
+\end{itemize}
+
+Le courant maximal consommé par l'ensemble de l'électronique alimentée en \SI{5}{\volt} est estimé à environ \SI{0.4}{\ampere}, essentiellement dû à l'ESP-32. Le convertisseur dispose donc d'une marge de fonctionnement confortable, garantissant un fonctionnement fiable tout en laissant la possibilité d'ajouter de futurs périphériques.
+
 \subsubsection{Technologie}
-Etant donné les besoins du système, une batterie \Gls{lipo} est la meilleure solution.
+
+Au regard des besoins du système, une batterie \gls{lipo} constitue la solution la plus adaptée. Ce type de batterie offre une densité énergétique élevée, un poids réduit ainsi qu'une capacité à fournir des courants importants, caractéristiques particulièrement intéressantes pour une application robotique mobile.
+
+Par ailleurs, la documentation du driver moteur TMC2226 indique que les performances du moteur, notamment à vitesse élevée, sont améliorées lorsque la tension d'alimentation $V_{\mathrm{mot}}$ est importante. Une tension élevée permet en effet au courant de s'établir plus rapidement dans les enroulements malgré leur inductance, ce qui améliore le maintien du couple à vitesse élevée.
+
+Pour cette raison, une batterie LiPo à quatre cellules (4S) est retenue. Une telle batterie présente une tension nominale de $\SI{14.8}{\volt}$, une tension maximale de $\SI{16.8}{\volt}$ lorsqu'elle est entièrement chargée et une tension minimale d'environ $\SI{12}{\volt}$ avant recharge. Cette plage de fonctionnement est compatible avec la tension d'alimentation admissible du TMC2226.
+
+Le cahier des charges impose une autonomie minimale de
+
+\begin{equation}
+t_{\mathrm{life}}=\SI{30}{\minute}=0.5\,\si{\hour}.
+\end{equation}
+À partir de la consommation électrique estimée de l'ensemble du système, il est alors possible de déterminer la capacité énergétique minimale de la batterie.
+
 \subsubsection{Capacité}
-La capacité de la batterie doit être déterminée en fonction de l'autonomie dictée par le cahier des charges ainsi que par la consommation estimée du modèle.
-\section{Schéma bloc}
-\section{Drivers moteurs}
+
+La capacité de la batterie est déterminée à partir de la puissance maximale consommée par le système ainsi que de l'autonomie imposée par le cahier des charges.
+
+En notant $P_{\mathrm{tot}}$ la puissance totale consommée par le système, l'énergie minimale à fournir est donnée par
+
+\begin{equation}
+E_{\mathrm{bat}}
+=
+P_{\mathrm{tot}}\times t_{\mathrm{life}}
+=
+15\,\si{\watt}
+\times
+0.5\,\si{\hour}
+=
+7.5\,\si{\watt\hour}.
+\end{equation}
+
+La batterie devra donc être capable de fournir au minimum une énergie de
+$\SI{7.5}{\watt\hour}$.
+
+\subsubsection{Choix}
+
+Parmi les batteries disponibles répondant aux critères précédents, le modèle
+SWAY FPV LiPo 4S \cite{SWAY-FPV_LiPo-4S} a été retenu. Ses principales caractéristiques sont résumées dans le tableau~\ref{tab:batterie}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Caractéristique} & \textbf{Valeur} \\
+\hline
+Technologie & LiPo 4S \\
+\hline
+Tension nominale & $\SI{14.8}{\volt}$ \\
+\hline
+Capacité & $\SI{1.3}{\ampere\hour}$ \\
+\hline
+Énergie stockée & $\SI{19.24}{\watt\hour}$ \\
+\hline
+Courant de décharge maximal & $60C$ ($\SI{78}{\ampere}$) \\
+\hline
+Connecteur & XT60 \\
+\hline
+\end{tabular}
+\caption{Caractéristiques de la batterie retenue.}
+\label{tab:batterie}
+\end{table}
+
+L'énergie disponible dans cette batterie est donnée par
+
+\begin{equation}
+E_{\mathrm{bat}}
+=
+V_{\mathrm{nom}}
+\times
+C
+=
+14.8\times1.3
+=
+19.24\,\si{\watt\hour}.
+\end{equation}
+
+En supposant une consommation moyenne de
+$P_{\mathrm{tot}}=\SI{15}{\watt}$, l'autonomie théorique vaut
+
+\begin{equation}
+t_{\mathrm{autonomie}}
+=
+\frac{E_{\mathrm{bat}}}{P_{\mathrm{tot}}}
+=
+\frac{19.24}{15}
+=
+1.28\,\si{\hour}
+\approx
+77\,\si{\minute}.
+\end{equation}
+
+Cette autonomie est largement supérieure à l'exigence minimale de
+30 minutes définie dans le cahier des charges. La batterie retenue offre ainsi une marge confortable permettant de compenser les pertes du convertisseur DC/DC, les variations de consommation des moteurs ainsi que le vieillissement naturel de la batterie.
 
 
+\section{Schéma Bloc}
+Une fois les informations relatives aux composants, à la batterie et à l'architecture générale d'alimentation établies, il est possible d'esquisser un schéma bloc permettant de représenter de manière synthétique les différents modules du système ainsi que leurs interconnexions fonctionnelles.
 
-\section{Schéma électrique}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/schemas/Schema_electronique.drawio.png}
+    \caption{Schéma bloc électrique du système}
+    \label{fig:schema_bloc_electrique}
+\end{figure}
+
+Comme illustré sur la figure~\ref{fig:schema_bloc_electrique}, l'ESP-32 constitue l'élément central du système. Il assure à la fois les fonctions de calcul, de communication et de supervision globale. L'ensemble de l'architecture logicielle, incluant l'algorithme de contrôle et le serveur web embarqué, s'exécute directement sur ce microcontrôleur.
+
+L'ESP-32 interagit avec les différents sous-systèmes selon plusieurs protocoles de communication adaptés à leurs contraintes respectives.
+
+\paragraph{Commande des moteurs}
+Les moteurs pas à pas sont pilotés via des drivers TMC2226. La communication entre l'ESP-32 et ces derniers repose sur une interface UART, utilisée principalement pour la configuration dynamique des registres internes du driver.
+
+En complément, deux lignes \acrshort{gpio} sont utilisées pour la génération des signaux de commande temporelle (notamment STEP et DIR). Ces signaux déterminent respectivement l'avancement des pas moteurs et le sens de rotation.
+
+\paragraph{Acquisition inertielle}
+L'unité de mesure inertielle (IMU) MPU6050 est connectée à l'ESP-32 via le bus I2C, un protocole série synchrone particulièrement adapté aux capteurs embarqués à faible débit. Ce choix permet une communication avec câblage réduit (deux lignes de données uniquement : SDA et SCL).
+
+L'IMU fournit des mesures d'accélération et de vitesse angulaire utilisées pour l'estimation de l'état du système (orientation, stabilité et dynamique du mouvement). Ces données sont ensuite exploitées par l'algorithme de contrôle exécuté sur l'ESP-32.
+
+\paragraph{Supervision et interface utilisateur}
+Le système est supervisé par un serveur web embarqué directement sur l'ESP-32. Ce serveur permet la visualisation des données en temps réel ainsi que l'envoi de commandes utilisateur. Cette solution présente l'avantage de ne nécessiter aucun matériel externe dédié à l'interface homme-machine, tout en permettant une interaction sans fil avec le système via Wi-Fi.
+
+\paragraph{Actionnement}
+Les moteurs (représentés en rouge sur le schéma) constituent les éléments d'action du système. Ils sont contrôlés par les drivers TMC2226.
+
+\paragraph{Synthèse de l'architecture}
+L'ensemble du système repose donc sur une architecture centralisée, dans laquelle l'ESP-32 joue un rôle de contrôleur principal.
+
+
+\section{Schéma Electrique}
+Une fois le schéma bloc dessiner, le schéma électrique complet peut être réalisé.
+
 
 \section{Breadboard}
+Afin de s'assurer que la connectique et la logique indiquée plus haut fonctionne, une série de test est d'abord réalisée sur montage BreadBoard. De cette manière, il est possible de corriger d'éventuelles erreurs
+avant la commande d'un circuit imprimé.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/breadboard.jpg}
+    \caption{Schéma bloc électrique du système}
+    \label{fig:breadboard}
+\end{figure}
+
 \section{PCB}
 
