@@ -8,6 +8,29 @@
 %% \signature{jding.svg} % Remplacer par votre propre signature vectorielle.
 \usepackage{pdflscape}
 \usepackage{pdfpages}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+    language=C++,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    numbers=left,
+    breaklines=true,
+    showstringspaces=false,
+    inputencoding=utf8,
+    extendedchars=true,
+    literate=
+        {é}{{\'e}}1
+        {è}{{\`e}}1
+        {ê}{{\^e}}1
+        {à}{{\`a}}1
+        {â}{{\^a}}1
+        {ç}{{\c{c}}}1
+        {°}{{\textdegree}}1
+}
 \makenomenclature
 \makeglossaries
 \makeindex
@@ -62,8 +85,10 @@
 \include{content/mecanique.tex}
 \chapter{Electronique}
 \include{content/electronique.tex}
-\chapter{Programmation}
-\include{content/programmation.tex}
+\chapter{Développement embarqué}
+\include{content/developpement_embarque.tex}
+\chapter{Interface WEB}
+\include{content/interface_web}
 \chapter{Mesures}
 \input{content/mesures.tex}
 \chapter{Analyse Résultats}
@@ -87,28 +112,28 @@
     pages=-,
     fitpaper=true,
     pagecommand={\thispagestyle{plain}}
-]{assets/figures/Self_Balancing_Bot_V0.pdf}
+]{assets/annexes/Self_Balancing_Bot_V0.pdf}
 
 \includepdf[
     pages=-,
     fitpaper=true,
     pagecommand={\thispagestyle{plain}}
-]{assets/figures/kicad_pcb_fcu.pdf}
+]{assets/annexes/kicad_pcb_fcu.pdf}
 \includepdf[
     pages=-,
     fitpaper=true,
     pagecommand={\thispagestyle{plain}}
-]{assets/figures/kicad_pcb_in1cu.pdf}
+]{assets/annexes/kicad_pcb_in1cu.pdf}
 \includepdf[
     pages=-,
     fitpaper=true,
     pagecommand={\thispagestyle{plain}}
-]{assets/figures/kicad_pcb_in2cu.pdf}
+]{assets/annexes/kicad_pcb_in2cu.pdf}
 \includepdf[
     pages=-,
     fitpaper=true,
     pagecommand={\thispagestyle{plain}}
-]{assets/figures/kicad_pcb_bcu.pdf}
+]{assets/annexes/kicad_pcb_bcu.pdf}
 
 \chapter{Bill Of Material}
 
@@ -117,8 +142,15 @@
     pages=-,
     fitpaper=true,
     pagecommand={\thispagestyle{plain}}
-]{assets/figures/bom.pdf}
+]{assets/annexes/bom.pdf}
 
+\chapter{Code source embarqué}
+\label{annexe:code_source_embarque}
+
+\lstinputlisting[
+    caption={Code source principal du firmware},
+    label={lst:main_cpp}
+]{assets/code/main.cpp}
 
 %%fi
 

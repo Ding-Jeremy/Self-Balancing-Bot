@@ -1,0 +1,111 @@
+
+Une fois le circuit électrique validé par les différents essais réalisés sur breadboard et le \acrshort{pcb} commandé, le développement du logiciel embarqué de l'ESP-32 peut débuter. Ce chapitre présente la conception du programme développé en langage C++ ainsi que les différents outils et bibliothèques utilisés.
+
+Le logiciel embarqué a pour objectif d'assurer la gestion complète du système. Il réalise notamment l'acquisition des données provenant des capteurs, le traitement de ces informations selon l'algorithme de contrôle défini (\acrshort{pid}), ainsi que la commande des différents actionneurs. Il assure également la communication avec l'interface utilisateur.
+
+Le développement est réalisé en plusieurs étapes. Dans un premier temps, l'environnement de développement ainsi que les bibliothèques utilisées sont présentés. Ensuite, l'architecture générale du programme est détaillée afin d'expliquer l'organisation du code et le déroulement de son exécution. Enfin, les différentes fonctions permettant le pilotage des périphériques matériels sont décrites.
+
+L'intégralité du code source est disponible à l'annexe \ref{annexe:code_source_embarque}.
+
+\section{Méthode et outils}
+
+
+\subsection{Visual Studio Code et PlatformIO}
+
+Le développement du logiciel embarqué est réalisé avec l'environnement Visual Studio Code associé à l'extension PlatformIO. Ce choix permet de bénéficier d'un environnement complet dédié aux systèmes embarqués, regroupant la gestion du projet, la compilation, le téléversement du programme ainsi que la gestion des bibliothèques.
+
+PlatformIO agit comme un intermédiaire entre le code source écrit en C++ et le microcontrôleur ESP-32. Lors de la compilation, le code est transformé en un firmware exécutable par l'ESP-32. Celui-ci est ensuite automatiquement transféré dans la mémoire Flash du microcontrôleur via l'interface USB.
+
+L'utilisation de PlatformIO permet également de définir précisément la configuration matérielle utilisée au travers du fichier \texttt{platformio.ini}. Celui-ci contient notamment le modèle de carte, le framework utilisé ainsi que les différentes dépendances nécessaires au projet.
+
+
+\subsection{Bibliothèques Arduino}
+
+Le programme est développé en utilisant le framework Arduino intégré à PlatformIO. Celui-ci fournit une couche d'abstraction permettant de simplifier l'utilisation des périphériques internes de l'ESP-32, notamment la gestion des entrées/sorties numériques, des communications série ou encore des interruptions.
+
+Différentes bibliothèques sont utilisées afin de faciliter l'interaction avec les composants externes. Ces bibliothèques permettent notamment de communiquer avec les drivers moteurs via UART, de récupérer les données provenant de l'\acrshort{imu} via le protocole I2C, ainsi que de gérer les différentes communications nécessaires au fonctionnement du système.
+
+L'utilisation de bibliothèques existantes permet de réduire la complexité du développement tout en conservant un contrôle suffisant sur les paramètres de bas niveau nécessaires au fonctionnement du système.
+
+
+\section{Architecture}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{assets/schemas/schema_bloc_algo_embarque.png}
+    \caption{Machine d'état du système embarqué}
+    \label{fig:machine d'etat embarque}
+\end{figure}
+Le programme développé est organisé autour d'une architecture cyclique classique des systèmes embarqués. Après une phase d'initialisation permettant de configurer les différents composants matériels et logiciels, le microcontrôleur exécute continuellement une boucle principale chargée d'assurer le fonctionnement du système.
+
+La séparation entre l'initialisation et l'exécution permet de structurer le programme et de faciliter sa maintenance. Les différentes fonctionnalités sont regroupées en modules indépendants afin de limiter les interactions entre les parties du code.
+
+
+\subsection{Initialisation}
+
+Au démarrage de l'ESP-32, lors de la mise sous tension du système, une phase d'initialisation est exécutée une unique fois. Cette étape a pour objectif de configurer l'ensemble des ressources matérielles et logicielles nécessaires au fonctionnement du programme.
+
+Les différentes initialisations sont réalisées de manière séquentielle dans l'ordre suivant :
+
+\begin{itemize}
+    \item Initialisation de l'interface série UART1, utilisée pour la communication de débogage avec un ordinateur ;
+    \item Initialisation des drivers moteurs TMC2226. Cette étape comprend notamment la configuration des registres internes nécessaires au fonctionnement des moteurs (voir la section correspondante pour plus de détails) ;
+    \item Initialisation du module \acrshort{imu} MPU6050 via le protocole I2C;
+    \item Configuration du convertisseur analogique-numérique (ADC) utilisé pour mesurer la tension issue du pont diviseur et ainsi estimer le niveau de charge de la batterie ;
+    \item Démarrage de la connexion WiFi permettant les communications avec l'interface utilisateur ;
+    \item Initialisation du système de fichiers LittleFS utilisé pour le stockage des ressources nécessaires au serveur web ;
+    \item Initialisation du serveur WebSocket permettant une communication bidirectionnelle avec l'interface utilisateur ;
+    \item Démarrage du serveur web chargé de fournir les différentes ressources accessibles depuis un navigateur ;
+    \item Attente de $50~ms$ afin de laisser le temps aux différents périphériques de terminer leur démarrage.
+    \item Activation ou Désactivation des moteurs en fonction de la gamme d'angle autorisée.
+\end{itemize}
+
+Cette phase garantit que l'ensemble des composants du système est correctement configuré avant le début de l'exécution cyclique du programme. Une fois cette séquence terminée, l'ESP-32 entre dans sa boucle principale, durant laquelle les acquisitions, les calculs de contrôle et les commandes des actionneurs sont exécutés continuellement.
+
+\subsection{Boucle principale}
+
+Après l'initialisation, l'ESP-32 exécute continuellement la boucle principale du programme. Cette boucle constitue le cycle d'exécution du système et regroupe l'ensemble des opérations nécessaires au contrôle du robot.
+
+Afin de respecter les contraintes temporelles du système de contrôle, certaines opérations ne sont pas exécutées à chaque itération de la boucle principale, mais uniquement lorsque leur période d'exécution respective est atteinte. Cette méthode permet de séparer les différentes tâches selon leur fréquence d'exécution et d'optimiser l'utilisation des ressources du microcontrôleur.
+
+À chaque itération de la boucle principale, les opérations suivantes sont réalisées dans l'ordre :
+
+\begin{itemize}
+    \item Lecture du temps écoulé depuis la dernière exécution des différentes tâches périodiques ;
+    
+    \item Si le temps écoulé dépasse la période d'exécution de la boucle externe $T_{OL}$ (\textit{Outer Loop}), l'algorithme \acrshort{pid} associé à cette boucle est exécuté. Cette boucle permet notamment de déterminer la consigne nécessaire au maintien de la position souhaitée du système ;
+    
+    \item Si le temps écoulé dépasse la période d'exécution de la boucle interne $T_{IL}$ (\textit{Inner Loop}), la mesure de l'angle est acquise depuis le capteur \acrshort{imu}. L'algorithme \acrshort{pid} de la boucle interne est ensuite exécuté afin de calculer la consigne de vitesse appliquée aux moteurs ;
+    
+    \item Si le mode d'enregistrement est activé, les différentes données du système sont sauvegardées. Cette acquisition est réalisée dans la boucle interne afin de conserver une résolution temporelle suffisante pour l'analyse du comportement du système ;
+    
+    \item Si l'angle mesuré par l'\acrshort{imu} dépasse les limites de fonctionnement définies, une sécurité est déclenchée et les moteurs sont désactivés afin d'éviter une perte de contrôle ou un endommagement du système.
+\end{itemize}
+
+Cette organisation permet d'obtenir une architecture de contrôle à plusieurs fréquences d'exécution. La boucle interne, exécutée plus rapidement, assure la stabilisation dynamique du système, tandis que la boucle externe, exécutée à une fréquence plus faible, permet de gérer les consignes globales du robot.
+\subsection{Interruptions}
+
+La boucle principale assure la stabilisation et le maintien de l'équilibre du robot. Cependant, afin de permettre à l'utilisateur d'interagir avec le système et de modifier son comportement en temps réel, des événements externes doivent également pouvoir être pris en compte.
+
+Ces événements sont générés par l'interface de contrôle utilisateur (présentée dans la section correspondante). Les commandes envoyées par l'utilisateur sont transmises à l'ESP-32 via une communication WebSocket. Les données reçues contiennent notamment les informations nécessaires au pilotage du robot, telles que les consignes de déplacement ou les paramètres de fonctionnement.
+
+Lorsqu'une nouvelle donnée est reçue via WebSocket, une fonction de rappel (\textit{callback}) est exécutée afin de traiter l'information reçue. Cette fonction ne réalise pas directement les actions de contrôle, mais met à jour des variables globales accessibles depuis la boucle principale.
+
+Cette séparation permet de conserver une architecture claire : la réception des commandes est gérée de manière asynchrone, tandis que leur application effective reste effectuée dans la boucle principale, qui conserve la maîtrise du déroulement temporel de l'algorithme de contrôle.
+
+Ainsi, les commandes utilisateur peuvent modifier le comportement du robot sans perturber l'exécution des boucles de contrôle temps réel nécessaires au maintien de l'équilibre.
+\section{Pilotage des périphériques}
+
+\subsection{Drivers moteurs}
+\subsection{IMU}
+\subsection{Mesure de la batterie}
+
+\section{Algorithmes de contrôle}
+
+\subsection{Calcul du Rest Angle}
+\subsection{Correcteur PID}
+\subsection{Algorithme d'équilibrage}
+
+\section{Système de fichiers}
+
+\subsection{LittleFS}s

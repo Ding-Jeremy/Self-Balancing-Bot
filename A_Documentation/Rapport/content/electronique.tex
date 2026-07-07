@@ -472,7 +472,7 @@ Le protocole I2C nécessite la présence de résistances de type \textit{pull-up
 \end{figure}
 Afin de pouvoir mesurer le niveau de charge de la batterie avec l'ESP32, un pont diviseur de tension est utilisé. Celui-ci permet de ramener la tension de la batterie dans la plage de mesure admissible par l'entrée analogique (ADC) du microcontrôleur.
 
-Il faut d'abord déterminer la tension maximale susceptible d'être appliquée au pont diviseur. Une batterie LiPo 4S possède une tension nominale de 14,8 V et une tension maximale de 16,8 V lorsqu'elle est complètement chargée \cite{SWAY-FPV_LiPo-4S}. Comme indiqué à la section \ref{subsubsection}, sa tension varie généralement entre 12 V et 16,8 V.
+Il faut d'abord déterminer la tension maximale susceptible d'être appliquée au pont diviseur. Une batterie LiPo 4S possède une tension nominale de 14,8 V et une tension maximale de 16,8 V lorsqu'elle est complètement chargée \cite{SWAY-FPV_LiPo-4S}. Comme indiqué à la section \ref{subsubsection:technologie} sa tension varie généralement entre 12 V et 16,8 V.
 
 Par mesure de sécurité, une tension maximale de 20 V est retenue pour le dimensionnement du pont diviseur.
 
