@@ -247,7 +247,9 @@ Le convertisseur retenu est le module TSR~1-2450E \cite{TSR1-2450E}. Celui-ci es
 
 Le courant maximal consommé par l'ensemble de l'électronique alimentée en \SI{5}{\volt} est estimé à environ \SI{0.4}{\ampere}, essentiellement dû à l'ESP-32. Le convertisseur dispose donc d'une marge de fonctionnement confortable, garantissant un fonctionnement fiable tout en laissant la possibilité d'ajouter de futurs périphériques.
 
+\subsection{Batterie}
 \subsubsection{Technologie}
+\label{subsubsection:technologie}
 
 Au regard des besoins du système, une batterie \gls{lipo} constitue la solution la plus adaptée. Ce type de batterie offre une densité énergétique élevée, un poids réduit ainsi qu'une capacité à fournir des courants importants, caractéristiques particulièrement intéressantes pour une application robotique mobile.
 
@@ -379,8 +381,132 @@ L'ensemble du système repose donc sur une architecture centralisée, dans laque
 
 
 \section{Schéma Electrique}
-Une fois le schéma bloc dessiner, le schéma électrique complet peut être réalisé.
+Le schéma électrique complet se trouve en annexe \ref{annexe:schema_electrique}. Ici, ce dernier est décomposé afin d'expliquer les différentes partie le constituant.
 
+\subsection{ESP-32}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/figures/schema_ESP32.png}
+    \caption{Schema: ESP-32}
+    \label{fig:esp-32}
+\end{figure}
+
+\subsection{TMC2226}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/schema_drivers.png}
+    \caption{Schema: TMC2226}
+    \label{fig:tmc_2226}
+\end{figure}
+
+\subsection{IMU}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.2\textwidth]{assets/figures/schema_imu.png}
+    \caption{Schema: IMU}
+    \label{fig:imu}
+\end{figure}
+
+\subsection{Pont diviseur}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.2\textwidth]{assets/figures/pont_diviseur.png}
+    \caption{Schema: Pont diviseur}
+    \label{fig:pont_diviseur}
+\end{figure}
+Afin de pouvoir mesurer le niveau de charge de la batterie avec l'ESP32, un pont diviseur de tension est utilisé. Celui-ci permet de ramener la tension de la batterie dans la plage de mesure admissible par l'entrée analogique (ADC) du microcontrôleur.
+
+Il faut d'abord déterminer la tension maximale susceptible d'être appliquée au pont diviseur. Une batterie LiPo 4S possède une tension nominale de 14,8 V et une tension maximale de 16,8 V lorsqu'elle est complètement chargée \cite{SWAY-FPV_LiPo-4S}. Comme indiqué à la section \ref{subsubsection}, sa tension varie généralement entre 12 V et 16,8 V.
+
+Par mesure de sécurité, une tension maximale de 20 V est retenue pour le dimensionnement du pont diviseur.
+
+Le pont diviseur est constitué des résistances suivantes :
+
+$$
+R_4 = 10~\mathrm{k}\Omega
+$$
+
+$$
+R_3 = 51~\mathrm{k}\Omega
+$$
+
+La tension appliquée à l'entrée de l'ESP32 est donnée par :
+
+\begin{equation}
+    V_{ESP}=V_{BAT}\times\frac{R_4}{R_3+R_4}  
+\end{equation}
+
+En remplaçant par les valeurs choisies :
+
+$$
+V_{ESP}=V_{BAT}\times\frac{10}{51+10}
+$$
+
+$$
+V_{ESP}=V_{BAT}\times\frac{10}{61}
+$$
+
+$$
+V_{ESP}=V_{BAT}\times0.1639
+$$
+
+Pour la tension maximale retenue de 20 V :
+
+$$
+V_{ESP}=20\times0.1639
+$$
+
+$$
+V_{ESP}=3.28~\mathrm{V}
+$$
+
+Cette valeur reste inférieure à la tension maximale admissible sur l'entrée analogique de l'ESP32 (3.3 V), ce qui garantit un fonctionnement sûr tout en exploitant presque toute la plage de mesure de l'ADC.
+
+Le courant circulant dans le pont diviseur vaut :
+
+$$
+I=\frac{V_{BAT}}{R_3+R_4}
+$$
+
+À la tension maximale de 20 V :
+
+$$
+I=\frac{20}{51,000+10,000}
+$$
+
+$$
+I=\frac{20}{61,000}
+$$
+
+$$
+I=3.28\times10^{-4}~\mathrm{A}
+$$
+
+$$
+I=0.328~\mathrm{mA}
+$$
+
+La puissance totale dissipée par le pont diviseur est alors :
+
+$$
+P_{tot}=V_{BAT}\times I
+$$
+
+$$
+P_{tot}=20\times0.328~\mathrm{mA}
+$$
+
+$$
+P_{tot}=6.56~\mathrm{mW}
+$$
+\section{Connecteurs}
+Les connecteurs utilisés sont des pin header 2.54mm 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/figures/schema_connecteurs.png}
+    \caption{Schema: Connecteurs}
+    \label{fig:connecteurs}
+\end{figure}
 
 \section{Breadboard}
 Afin de s'assurer que la connectique et la logique indiquée plus haut fonctionne, une série de test est d'abord réalisée sur montage BreadBoard. De cette manière, il est possible de corriger d'éventuelles erreurs
