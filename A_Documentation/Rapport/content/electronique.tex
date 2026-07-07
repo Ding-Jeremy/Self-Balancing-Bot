@@ -381,17 +381,41 @@ L'ensemble du système repose donc sur une architecture centralisée, dans laque
 
 
 \section{Schéma Electrique}
-Le schéma électrique complet se trouve en annexe \ref{annexe:schema_electrique}. Ici, ce dernier est décomposé afin d'expliquer les différentes partie le constituant.
+Le schéma électrique complet ainsi que le circuit imprimé se trouvent en annexe \ref{annexe:schema_electrique}. Ici, les différentes parties du schéma sont décomposées afin d'êtres décrites.
+De plus, la liste de pièce complète est également disponible en annexe \ref{annexe:bom}.
 
-\subsection{ESP-32}
+\subsection{ESP-32 Devkit V1}
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{assets/figures/schema_ESP32.png}
     \caption{Schema: ESP-32}
-    \label{fig:esp-32}
+    \label{fig:ESP-32}
 \end{figure}
 
+\begin{figure}[H] 
+    \centering 
+    \includegraphics[width=1\textwidth]{assets/figures/esp32_pinout.png} 
+    \caption{Pinout ESP-32} 
+    \label{fig:pinout ESP-32} 
+\end{figure}
+
+Le choix des pins utilisées repose principalement sur le Pinout présenté à la figure \ref{fig:pinout ESP-32}. Celui-ci permet d'identifier les différentes fonctionnalités disponibles sur chaque broche ainsi que leurs éventuelles limitations.
+
+Cette carte de développement ne nécessite aucun composant externe supplémentaire indispensable à son fonctionnement. En effet, elle intègre déjà les éléments nécessaires tels que le régulateur de tension, le convertisseur USB-UART ainsi que les circuits permettant sa programmation.
+
+Les pins utilisées afin de contrôler l'ensemble des modules sont principalement de simples broches \acrshort{gpio}, configurées soit en entrée soit en sortie numérique selon leur fonction. Ces broches permettent notamment de générer les signaux de commande des drivers moteurs ou encore d'assurer les différentes communications avec les périphériques.
+
+La pin n°35 constitue une exception. Celle-ci est une broche dite "Input Only", c'est-à-dire qu'elle ne peut être utilisée qu'en entrée. Cependant, elle possède également une entrée analogique reliée au convertisseur analogique-numérique (ADC) de l'ESP32. Cette caractéristique la rend adaptée à la mesure de la tension issue du pont diviseur.
+
+Elle est donc utilisée pour effectuer la mesure de la tension de la batterie comme décrit plus bas.
+
+Les broches utilisées pour RX et TX correspondent à l'interface UART2, l'ESP-32 possède en effet plusieurs interfaces UART.
+Les broches utilsées pour SCL et SDA (protocle I2C) sont les broches indiquées par le pinout.
+
+
 \subsection{TMC2226}
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{assets/figures/schema_drivers.png}
@@ -399,13 +423,45 @@ Le schéma électrique complet se trouve en annexe \ref{annexe:schema_electrique
     \label{fig:tmc_2226}
 \end{figure}
 
+Le câblage des modules TMC2226 est réalisé conformément aux recommandations fournies dans le datasheet du composant \cite{TMC2226_datasheet}. Ce driver permet de commander des moteurs pas à pas tout en offrant des fonctionnalités avancées telles que la configuration du courant moteur, la sélection du mode de microstepping ainsi que la communication avec un microcontrôleur via une interface UART.
+
+Afin de permettre l'utilisation d'une communication UART bidirectionnelle, une résistance doit être ajoutée entre les lignes RX et TX du microcontrôleur. Cette résistance permet de réaliser une communication sur une seule ligne de données en partageant le même canal pour l'émission et la réception.
+
+Grâce à cette interface, l'ESP32 peut modifier les registres internes du TMC2226 afin de configurer son comportement, mais également lire ces registres afin de récupérer des informations sur l'état du driver ou vérifier les paramètres appliqués.
+
+Les pins MS1 et MS2 permettent normalement de sélectionner le mode de microstepping du moteur. Cependant, dans le cas d'une communication UART bidirectionnelle, ces mêmes broches permettent également de définir l'adresse du driver. Cette adresse est nécessaire afin d'identifier individuellement chaque module lorsqu'ils sont connectés sur un même bus de communication.
+
+Le réglage du microstepping est donc réalisé directement par logiciel via l'écriture des registres internes du TMC2226. Cette méthode offre davantage de flexibilité puisqu'il est possible de modifier la résolution du mouvement sans modifier le câblage électrique.
+
+La broche M EN (\textit{Motor Enable}) permet l'activation ou la désactivation du moteur. Plus précisément, elle contrôle l'alimentation des bobines du moteur. Lorsque cette entrée est désactivée, le courant dans les bobines est coupé, ce qui permet de réduire la consommation électrique et l'échauffement du moteur lorsque celui-ci n'a pas besoin de maintenir sa position.
+
+Les quatre sorties de puissance OA1, OA2, OB1 et OB2 sont connectées aux deux bobines du moteur pas à pas. Les sorties OA commandent une première bobine tandis que les sorties OB commandent la seconde. Le driver génère ensuite automatiquement les signaux de courant nécessaires au déplacement du moteur en fonction des signaux de commande reçus.
+
+Le datasheet recommande également l'ajout d'une capacité de découplage de valeur $100 \si{\micro\farad}$ à l'entrée de l'alimentation de moteurs $V_{mot}$.
 \subsection{IMU}
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.2\textwidth]{assets/figures/schema_imu.png}
     \caption{Schema: IMU}
     \label{fig:imu}
 \end{figure}
+
+Le câblage de l'\acrshort{imu} dépend du pinout présenté à la figure \ref{fig:pinout MPU6050}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/figures/mpu6050_pinout.jpg}
+    \caption{Pinout MPU6050}
+    \label{fig:pinout MPU6050}
+\end{figure}
+
+
+Seules les pins SCL et SDA sont connectées étant donné qu'elles sont les seules nécessaires à la communication avec le capteur. Ces deux lignes permettent l'échange de données entre l'ESP32 et le MPU6050 via le protocole de communication I2C.
+
+Les autres broches disponibles sur le module, telles que INT, XDA ou XCL, ne sont pas utilisées dans cette application car leurs fonctionnalités ne sont pas nécessaires.
+
+Le protocole I2C nécessite la présence de résistances de type \textit{pull-up} sur les lignes SDA et SCL afin de garantir un fonctionnement correct du bus. Le module MPU6050 utilisé intégrant déjà ces résistances directement sur son circuit imprimé, il n'est donc pas nécessaire d'en ajouter dans le schéma électrique.
 
 \subsection{Pont diviseur}
 \begin{figure}[H]
@@ -499,8 +555,14 @@ $$
 $$
 P_{tot}=6.56~\mathrm{mW}
 $$
+Cette puissance reste très faible devant la capacité énergétique de la batterie et n'a donc qu'un impact négligeable sur l'autonomie du système.
 \section{Connecteurs}
-Les connecteurs utilisés sont des pin header 2.54mm 
+
+Les connecteurs utilisés sur la carte sont principalement des pin headers au pas de 2,54~mm. Ce choix est motivé par leur faible coût, leur grande disponibilité ainsi que leur facilité de soudage.
+
+Les connecteurs destinés aux moteurs peuvent être branchés dans les deux sens. Une inversion ne modifie que le sens de rotation du moteur, lequel peut également être corrigé par logiciel. Il n'est donc pas nécessaire d'utiliser un connecteur détrompé.
+
+Le raccordement de la batterie est réalisé à l'aide d'un bornier à vis. Ce type de connecteur offre une bonne tenue mécanique et permet de connecter ou déconnecter facilement l'alimentation tout en garantissant un bon contact électrique. 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{assets/figures/schema_connecteurs.png}
@@ -508,16 +570,51 @@ Les connecteurs utilisés sont des pin header 2.54mm
     \label{fig:connecteurs}
 \end{figure}
 
-\section{Breadboard}
-Afin de s'assurer que la connectique et la logique indiquée plus haut fonctionne, une série de test est d'abord réalisée sur montage BreadBoard. De cette manière, il est possible de corriger d'éventuelles erreurs
-avant la commande d'un circuit imprimé.
+\section{Alimentation et interrupteur}
 
+L'alimentation des composants fonctionnant sous $5~V$ est assurée par un convertisseur abaisseur TSR1-2450E \cite{TSR1-2450E}. Ce convertisseur accepte directement la tension fournie par la batterie et délivre une tension régulée de $5~V$.
+
+Conformément aux recommandations du constructeur, ce convertisseur ne nécessite aucun composant externe pour fonctionner, ce qui simplifie le schéma électrique et réduit le nombre de composants.
+
+La mise sous tension du système est assurée par un interrupteur coulissant (\textit{slider switch}) placé directement sur la carte électronique. Celui-ci permet de connecter ou de couper l'alimentation principale du système.
+\section{Validation sur breadboard}
+
+Avant la réalisation du circuit imprimé, l'ensemble du système est assemblé sur une breadboard afin de valider le schéma électrique ainsi que les différents branchements.
+
+Cette étape permet de vérifier le bon fonctionnement des communications entre les modules, la commande des moteurs ainsi que la mesure des différents capteurs. Elle permet également d'identifier et de corriger d'éventuelles erreurs de câblage avant la fabrication du PCB.
+
+Les essais réalisés montrent que le système fonctionne conformément aux attentes. Le schéma électrique est donc validé et la conception du circuit imprimé peut être entreprise.
+\section{PCB}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{assets/figures/breadboard.jpg}
-    \caption{Schéma bloc électrique du système}
-    \label{fig:breadboard}
+    \includegraphics[width=0.8\textwidth]{assets/figures/pcb.png}
+    \caption{Circuit imprimé}
+    \label{fig:pcb}
 \end{figure}
-
 \section{PCB}
+
+Le circuit imprimé (\acrshort{pcb}) a été conçu avec KiCad 9.0 conformément à la méthodologie présentée au début de ce chapitre.
+
+Les différents modules sont disposés de manière à limiter les longueurs de pistes tout en facilitant le routage. Une attention particulière est portée à la séparation des pistes de puissance et des pistes de communication afin de limiter les perturbations électromagnétiques.
+
+Certains symboles et empreintes n'étant pas disponibles dans les bibliothèques standard de KiCad, ils ont été créés manuellement afin de correspondre aux composants utilisés.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{N° Référence} & \textbf{Module} \\
+\hline
+U2 & ESP-32 Devkit V1\\
+\hline
+U3 & BigTechTree TMC2226\\
+\hline 
+U1 & GY521 (MPU6055 devboard)\\
+\hline
+\end{tabular}
+\caption{Symboles et empreintes manuellement designées}
+\label{tab:symbole_empreinte}
+\end{table}
+
+Les caractéristiques du PCB, telles que les différentes couches, les dimensions ainsi que les règles de conception retenues, sont détaillées en annexe \ref{annexe:schema_electrique}.
+
 
