@@ -91,12 +91,67 @@ Ces événements sont générés par l'interface de contrôle utilisateur (prés
 
 Lorsqu'une nouvelle donnée est reçue via WebSocket, une fonction de rappel (\textit{callback}) est exécutée afin de traiter l'information reçue. Cette fonction ne réalise pas directement les actions de contrôle, mais met à jour des variables globales accessibles depuis la boucle principale.
 
-Cette séparation permet de conserver une architecture claire : la réception des commandes est gérée de manière asynchrone, tandis que leur application effective reste effectuée dans la boucle principale, qui conserve la maîtrise du déroulement temporel de l'algorithme de contrôle.
+\subsubsection{Commandes WebSocket}
+
+Les commandes WebSocket permettent au client d'envoyer des instructions au serveur embarqué. Chaque commande est identifiée par un identifiant (\texttt{msg\_id}) correspondant à une action spécifique.
+Les messages échangés via WebSocket peuvent être initiés par le client ou par le serveur. La colonne \textit{Direction} indique le sens de communication associé à chaque identifiant de message.
+Ici, le client représente l'utilisateur et le serveur représente l'ESP-32.
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\multicolumn{3}{|c|}{\textbf{Client $\rightarrow$ Serveur}} \\
+\hline
+\textbf{msg\_id} & \textbf{msg} & \textbf{Description} \\
+\hline
+\texttt{motors\_off} & "" & Désactivation des moteurs. \\
+\hline
+\texttt{motors\_on} & "" & Activation des moteurs si les conditions de sécurité sont respectées. \\
+\hline
+\texttt{calibrate} & "" & Sauvegarde de l'angle actuel comme référence d'équilibre. \\
+\hline
+\texttt{pid\_values} & PID & Mise à jour des paramètres des correcteurs PID. \\
+\hline
+\texttt{pid\_request} & "" & Demande des paramètres PID actuels. \\
+\hline
+\texttt{joystick-left} & \texttt{"y"} & Modification de la consigne de vitesse. \\
+\hline
+\texttt{joystick-right} & \texttt{"x"} & Modification de la consigne de rotation. \\
+\hline
+\end{tabularx}
+\caption{Commandes WebSocket reçues par le serveur}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\multicolumn{3}{|c|}{\textbf{Serveur $\rightarrow$ Client}} \\
+\hline
+\textbf{msg\_id} & \textbf{msg} & \textbf{Description} \\
+\hline
+\texttt{motor\_state} & \texttt{"value"} & Indique l'état actuel des moteurs. \\
+\hline
+\texttt{calibration\_angle} & \texttt{"value"} & Retourne l'angle de calibration enregistré. \\
+\hline
+\texttt{pid\_values} & PID & Retourne les paramètres PID actuellement utilisés. \\
+\hline
+\end{tabularx}
+\caption{Informations WebSocket envoyées par le serveur}
+\end{table}
+
+Cette séparation permet de conserver une architecture claire : la réception des commandes est gérée de manière asynchrone, tandis que leur application effective reste effectuée dans la boucle principale. Celle-ci conserve ainsi la maîtrise du déroulement temporel de l'algorithme de contrôle.
 
 Ainsi, les commandes utilisateur peuvent modifier le comportement du robot sans perturber l'exécution des boucles de contrôle temps réel nécessaires au maintien de l'équilibre.
 \section{Pilotage des périphériques}
+Une fois le fonctionnement principal du code embarqué, cette partie va traiter de la manière dont les différents périphériques sont pilotés. 
 
 \subsection{Drivers moteurs}
+Les drivers moteurs, TMC2226 \cite{TMC2226_datasheet} peuvent êtres interfaçés via UART bi-directionnel, comme indiqué plus haut. Une bibliothèque a donc été réalisée de 0 afin de pouvoir communiquer avec les différents registres.
+
+Pour plus d'information concernant les données transmises et reçus, l'ensemble des codes sources est disponibles à l'annexe \ref{annexe:code_source_embarque}.
+
 \subsection{IMU}
 \subsection{Mesure de la batterie}
 

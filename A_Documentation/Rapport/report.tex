@@ -103,8 +103,6 @@
 \appendixpage
 \addappheadtotoc
 
-%%if
-
 \chapter{Schéma, PCB}
 \label{annexe:schema_electrique}
 
@@ -152,7 +150,25 @@
     label={lst:main_cpp}
 ]{assets/code/main.cpp}
 
-%%fi
+\lstinputlisting[
+    caption={Code source principal du firmware},
+    label={lst:main_cpp}
+]{assets/code/tmc2226.h}
+
+\lstinputlisting[
+    caption={Code source principal du firmware},
+    label={lst:main_cpp}
+]{assets/code/tmc2226.cpp}
+
+\chapter{Dépôt Git}
+
+L'ensemble du projet est versionné avec \textit{Git}. Le dépôt regroupe le firmware embarqué, l'interface Web, les schémas électroniques, le présent rapport ainsi que les différents documents administratifs relatifs au projet.
+
+Le dépôt GitHub est accessible à l'adresse suivante :
+
+\begin{center}
+\href{https://github.com/Ding-Jeremy/Self-Balancing-Bot}{github.com/Ding-Jeremy/Self-Balancing-Bot}
+\end{center}
 
 \let\cleardoublepage\clearpage
 \backmatter

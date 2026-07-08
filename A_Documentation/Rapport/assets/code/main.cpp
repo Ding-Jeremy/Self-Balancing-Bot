@@ -204,24 +204,11 @@ void setup()
   // Initializes TMC
   tmc2226_left.init();
   tmc2226_right.init();
-
-  // Set chopper config
-  TMC2226::CHOPCONF chopconf;
-
-  chopconf.value = D_TMC_REGDFV_CHOPCONF; // DEFAULT VALUE
-  chopconf.bits.mres = 0b0001;            // Microstepping
-  micro_stepping_value = 128;
-
-  tmc2226_left.write_to_register(TMC2226::E_REG_CHOPCONF, chopconf.bytes);
-  tmc2226_right.write_to_register(TMC2226::E_REG_CHOPCONF, chopconf.bytes);
+  // Get default microstepping value.
+  micro_stepping_value = D_TMC_DEF_MICROSTP;
 
   // Start MPU
-  if (!mpu.begin())
-  {
-    Serial.println("MPU6050 not found");
-    while (1)
-      ;
-  }
+  mpu.begin();
 
   // Initialize MPU settings
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
@@ -663,10 +650,8 @@ void on_event(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType
   switch (type)
   {
   case WS_EVT_CONNECT:
-    Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
     break;
   case WS_EVT_DISCONNECT:
-    Serial.printf("WebSocket client #%u disconnected\n", client->id());
     break;
   case WS_EVT_DATA:
     handle_websocket_message(arg, data, len);

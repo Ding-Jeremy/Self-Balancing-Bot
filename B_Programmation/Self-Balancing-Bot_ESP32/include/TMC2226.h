@@ -1,9 +1,18 @@
+/**
+ * @file TMC2226.h
+ * @brief TMC2226 UART driver interface.
+ *
+ * Declares the TMC2226 class, register definitions, and data structures
+ * required to communicate with a TMC2226 stepper motor driver over UART.
+ */
 #ifndef TMC2226_H
+#define TMC2226_H
+
 #include <stdint.h>
 #include <Arduino.h>
 #include <driver/uart.h>
 
-// Pining
+// GPIO pin assignments
 #define D_TMC_PIN_STEP0 25
 #define D_TMC_PIN_DIR0 32
 #define D_TMC_PIN_STEP1 26
@@ -17,15 +26,16 @@
 // UART constants
 #define D_TMC_INIT_BYTE 0x05
 #define D_TMC_NODE_ADDRESS 0x00
-#define D_TMC_MASTER_ADRESS 0xFF
+#define D_TMC_MASTER_ADDRESS 0xFF
 #define D_TMC_FRAME_LENGTH 8 // bytes
 #define D_TMC_DATA_LENGTH 4
 #define D_TMC_BAUDRATE 500000
 
-// Registers default values
+// Default register values
 #define D_TMC_REGDFV_CHOPCONF 0x15010053
 #define D_TMC_REGDFV_GCONF 0x101
-
+#define D_TMC_DEF_MRES 0b0010 // Datasheet value
+#define D_TMC_DEF_MICROSTP 64 // Microstep/stp
 // Class
 class TMC2226
 {
@@ -38,7 +48,7 @@ public:
         E_REG_VACTUAL = 0x22,
         E_REG_CHOPCONF = 0x6C
     };
-    // Registers Unions
+    // Registers data structures
     union CHOPCONF
     {
         struct
@@ -84,10 +94,9 @@ public:
         int32_t value;
         uint8_t bytes[4];
     };
-    // Attributs
+
     uint8_t node_address;
-    // Functions
-    // Constructor
+
     TMC2226(uint8_t nd_addr);
 
     void init();
@@ -109,4 +118,3 @@ private:
 };
 
 #endif
-#define TMC2226_H

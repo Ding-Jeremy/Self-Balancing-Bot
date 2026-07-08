@@ -1,20 +1,32 @@
+/**
+ * @file TMC2226.cpp
+ * @brief Implementation of the TMC2226 UART driver.
+ *
+ * This file implements the TMC2226 class, which provides methods for
+ * configuring and controlling a TMC2226 stepper motor driver over UART.
+ * It includes functions for driver initialization, register read/write
+ * operations, CRC calculation, and motor control.
+ *
+ * @author Ding Jérémy
+ * @date 05/2026
+ */
 #include "TMC2226.h"
 
-/// @brief TMC2226 class, pass module adress in parameters
+/// @brief TMC2226 class, pass module address in parameters
 /// @param node_address
 TMC2226::TMC2226(uint8_t nd_addr)
 {
     node_address = nd_addr;
 }
 
-/// @brief Sends a frame to a TMC2226
-/// @param frame
-/// @param length
-/// @param adress
+/// @brief Sends a UART frame to the TMC2226.
+/// @param frame Pointer to the frame to transmit.
+/// @param frame_length Number of bytes to send.
 void TMC2226::send_frame(uint8_t *frame, uint8_t frame_length)
 {
-    // Send a wait until the end of sending
-    uart_flush_input(UART_NUM_2); // Flush input
+    // Clear the receive buffer before transmitting.
+    // Wait until the transmission is complete.
+    uart_flush_input(UART_NUM_2);
     uart_write_bytes(UART_NUM_2, frame, frame_length);
     uart_wait_tx_done(UART_NUM_2, pdMS_TO_TICKS(10));
     vTaskDelay(pdMS_TO_TICKS(1));
@@ -26,15 +38,16 @@ void TMC2226::enable()
     digitalWrite(D_TMC_PIN_EN, LOW);
 }
 
-/// @brief Enables the motors
+/// @brief Disables the motors
 void TMC2226::disable()
 {
     digitalWrite(D_TMC_PIN_EN, HIGH);
 }
 
-/// @brief Initializes TMC modules
+/// @brief Initializes the TMC2226 driver and configures UART communication.
 void TMC2226::init()
 {
+    // Set pins output
     pinMode(D_TMC_PIN_STEP0, OUTPUT);
     pinMode(D_TMC_PIN_STEP1, OUTPUT);
     pinMode(D_TMC_PIN_DIR0, OUTPUT);
@@ -60,22 +73,28 @@ void TMC2226::init()
     err = uart_driver_install(UART_NUM_2, 256, 256, 0, NULL, 0);
     printf("driver_install = %s\n", esp_err_to_name(err));
 
-    // Send config (use uart pin)
+    // Configure the driver to use UART communication.
     GCONF gconf;
-    // Set all to 0
+    CHOPCONF chopconf;
+
+    // Clear all configuration bits.
     gconf.value = 0;
-    // Disable pdn (enable uart)
+    // Disable PDN mode to enable UART communication.
     gconf.bits.pdn_disable = 1;      // Enable uart communication
     gconf.bits.mstep_reg_select = 1; // Microstepping from register
     gconf.bits.scale_analog = 1;     // Vref a sense
     gconf.bits.multistep_filt = 1;   // Activate multistep filtering
-    // Write config to device
+
+    chopconf.value = D_TMC_REGDFV_CHOPCONF; // DEFAULT VALUE
+    chopconf.bits.mres = D_TMC_DEF_MRES;    // Microstepping
+    // Write the configuration to the GCONF register.
     write_to_register(Register::E_REG_GCONF, gconf.bytes);
+    write_to_register(Register::E_REG_CHOPCONF, chopconf.bytes);
 }
 
-/// @brief Computes the CRC, last byte of transmission.
-/// @param frame
-/// @param framelength
+/// @brief Computes the CRC and stores it in the last byte of the frame.
+/// @param frame Frame buffer.
+/// @param frame_length Total frame length in bytes.
 void TMC2226::calculate_crc(uint8_t *frame, uint8_t frame_length)
 {
     int i, j;
@@ -101,18 +120,17 @@ void TMC2226::calculate_crc(uint8_t *frame, uint8_t frame_length)
     frame[frame_length - 1] = crc;
 }
 
-/// @brief Writes data to a specified register
-/// @param reg_address
-/// @param data
-/// @param length
+/// @brief Writes a 32-bit value to the specified register.
+/// @param reg_address Register to write.
+/// @param data Pointer to the 4-byte data payload.
 void TMC2226::write_to_register(Register reg_address, uint8_t *data)
 {
     // Prepare frame
-    uint8_t frame[D_TMC_FRAME_LENGTH]; // Add space for init, chip adress, CRC
+    uint8_t frame[D_TMC_FRAME_LENGTH]; // Add space for init, chip address, CRC
 
-    frame[0] = D_TMC_INIT_BYTE;    // Init
+    frame[0] = D_TMC_INIT_BYTE;    // Synchronization byte.
     frame[1] = node_address;       // Chip address
-    frame[2] = reg_address | 0x80; // Reg address + W
+    frame[2] = reg_address | 0x80; // Register address with the write bit set.
 
     for (uint8_t i = 0; i < 4; i++)
     {
@@ -123,7 +141,7 @@ void TMC2226::write_to_register(Register reg_address, uint8_t *data)
     send_frame(frame, D_TMC_FRAME_LENGTH);
 }
 
-/// @brief Invert bytes order
+/// @brief Reverses the byte order of a 32-bit data buffer.
 /// @param frame
 void TMC2226::invert_bytes(uint8_t frame[D_TMC_DATA_LENGTH])
 {
@@ -134,14 +152,14 @@ void TMC2226::invert_bytes(uint8_t frame[D_TMC_DATA_LENGTH])
         frame[i] = new_frame[i];
 }
 
-/// @brief Reads a register 32 bit content.
-/// @param reg_address
-/// @param rx
+/// @brief Reads the 32-bit value stored in a register.
+/// @param reg_address Register to read.
+/// @return Register contents.
 uint32_t TMC2226::read_register(Register reg_address)
 {
     // Write the register and read the response
     // Prepare frame
-    uint8_t frame[D_TMC_FRAME_LENGTH - 4]; // Add space for init, chip adress, CRC
+    uint8_t frame[D_TMC_FRAME_LENGTH - 4]; // Add space for init, chip address, CRC
 
     frame[0] = D_TMC_INIT_BYTE; // Init
     frame[1] = node_address;    // Chip address
@@ -160,11 +178,10 @@ uint32_t TMC2226::read_register(Register reg_address)
         D_TMC_FRAME_LENGTH + 4,
         pdMS_TO_TICKS(50));
 
-    // Check master's adress and register validity
-    if (rx_buffer[4] != D_TMC_INIT_BYTE || rx_buffer[5] != D_TMC_MASTER_ADRESS || rx_buffer[6] != reg_address)
+    // Check master's address and register validity
+    if (rx_buffer[4] != D_TMC_INIT_BYTE || rx_buffer[5] != D_TMC_MASTER_ADDRESS || rx_buffer[6] != reg_address)
     {
         Serial.println("ERR_COM_TMC");
-        // return 0;
     }
     // Save only payload (32 bit data response)
     // order bit correctly (MSB frs)
