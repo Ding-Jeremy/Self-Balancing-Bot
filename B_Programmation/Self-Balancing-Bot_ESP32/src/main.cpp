@@ -211,9 +211,9 @@ void setup()
   mpu.begin();
 
   // Initialize MPU settings
-  mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
+  mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
   mpu.setGyroRange(MPU6050_RANGE_500_DEG);
-  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+  mpu.setFilterBandwidth(MPU6050_BAND_260_HZ);
 
   // Initialize battery pin
   pinMode(D_PIN_BATTERY_LVL, INPUT);
@@ -286,11 +286,9 @@ void loop()
 
     // Gyro rate (Adafruit returns rad/s)
     float gyroRateX = gyro.gyro.x * 180.0f / PI;
-    gyroRateX = /*0.5f * prev_gyro + 0.5f * */ gyroRateX;
 
     // Complementary filter
     angleX = 0.9f * (angleX + gyroRateX * inner_loop_cnt) + 0.1f * accelAngleX;
-    prev_gyro = gyroRateX;
     // Defines the error from speed (and saved offset + Hard coded offset)
     float thetaError = D_BALANCE_ANGLE + theta_target + angleX_offset - angleX;
 

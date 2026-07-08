@@ -7,32 +7,62 @@ html, body {
   background: linear-gradient(135deg, #0f0f0f, #010000);
   color: #e0e0e0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  display: block;
+}
+
+
+/* Persistent header */
+#app-header {
+  height: 20px;
+  text-align: center;
+  padding: 5px 0;
+  box-sizing: border-box;
+}
+#title-container {
+  display: flex;
+  flex-direction: column;
 
   align-items: center;
+  justify-content: center;
 
+  flex: 1;
 }
 
+
+#title-container h1 {
+  margin: 0;
+
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+}
+
+
+/* Pages */
 .page {
   position: absolute;
-  inset: 0;
+
+  top: 80px;       /* height of header */
+  left: 0;
+  right: 0;
+  bottom: 0;
+
   overflow-y: auto;
   display: none;
+
   padding: 2vh 2vw;
 }
+
 
 .page.active {
   display: block;
 }
+
+
 #control-page {
-    height: 100vh;
-    overflow: hidden;
+  overflow: hidden;
 }
 
+
 #pid-page {
-    height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* Heading */
@@ -87,7 +117,7 @@ h1 {
 .joystick {
   width: 20vw;
   height: 20vw;
-  border: 0.5vw solid #0040ff;
+  border: 0.5vw solid #0b5ed7;
   box-shadow: 0 0 2vw #0c038ea1;
   border-radius: 100%;
 }
@@ -99,7 +129,7 @@ h1 {
   font-size: 2vw;
   color: #aaaaaa;
   text-align: center;
-  text-shadow: 0 0 5px #003cff;
+  text-shadow: 0 0 5px #0b5ed7;
 }
 
 .joystick-wrapper.disabled {
@@ -115,6 +145,7 @@ h1 {
   justify-content: center;
   flex-wrap: wrap;
   gap: 3vw;
+  transition: 0.3s ease;
 }
 
 .buttons button {
@@ -150,17 +181,23 @@ h1 {
 /* Battery indicator area */
 #battery-indicator {
   position: fixed;
+  width: 20vw;
   top: 2vh;
-  right: 2vw;
+  right: -3vw;
   display: flex;
   align-items: center;
   gap: 1vw;
   z-index: 1000;
 }
 
+#battery-icon {
+  width: 10vw;
+  
+  transition: width 0.5s ease-in-out;
+}
+
 #battery-level {
   width: 0%;
-  height: 16px;
   transition: width 0.5s ease-in-out;
 }
 
@@ -191,40 +228,7 @@ h1 {
   z-index: 1000;
 }
 
-/* Styled color picker button */
-.color-picker-button {
-  position: relative;
-  font-size: 2.5vw;
-  border: none;
-  border-radius: 2vw;
-  color: white;
-  cursor: pointer;
-  min-width: 20vw;
-  max-width: 30vw;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.3s;
-  background-color: #00ffc8; /* default color */
-}
-
-/* Remove hover effect since background changes */
-.color-picker-button:hover {
-  filter: brightness(1.1);
-}
-
-/* Invisible color input fills the button */
-.color-picker-button input[type="color"] {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-#angle-indicator {
+#target-angle-indicator {
  display: flex;
   flex-direction: column;
   align-items: center;
@@ -236,26 +240,58 @@ h1 {
   padding: 1vh 1vw;
   border-radius: 2vw;
 
-  background: rgba(0, 255, 200, 0.08);
-  border: 2px solid rgba(0, 255, 200, 0.4);
-  box-shadow: 0 0 2vw rgba(0, 255, 200, 0.25);
+  background: rgba(36, 15, 123, 0.08);
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 2vw rgba(0, 0, 0, 0.25);
+  transition: 0.3s ease;
 }
 
 #angle-text {
-  font-size: 4vw;
+  font-size: 6vw;
   font-weight: 300;
-  color: #00ffc8;
+  color: #0b5ed7;
 
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   letter-spacing: 0.2vw;
 
-  text-shadow: 0 0 1vw rgba(0, 255, 200, 0.6);
+  text-shadow: 0 0 1vw #0b5ed7;
  
   font-variant-numeric: tabular-nums;
   /* or */
   font-family: monospace;
+  transition: 0.3s ease;
 
 }
+
+/* Responsive connection badge */
+#connection_status {
+  display: inline-block;
+
+  padding: 3px 14px;
+  margin-top: 3px;
+
+  border-radius: 20px;
+
+  font-size: clamp(0.7rem, 1.5vw, 1rem);
+  font-weight: bold;
+
+  white-space: nowrap;
+
+  transition: 0.3s ease;
+}
+
+
+#connection_status.connected {
+  background-color: limegreen;
+  color: black;
+}
+
+
+#connection_status.disconnected {
+  background-color: red;
+  color: white;
+}
+
 
 #calibration-angle-text {
   font-size: 2vw;
@@ -275,14 +311,14 @@ h1 {
 
 
 #target-angle-text{
-  font-size: 4vw;
+  font-size: 2vw;
   font-weight: 300;
-  color: #00ffc8;
+  color: #ffffff;
 
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   letter-spacing: 0.2vw;
 
-  text-shadow: 0 0 1vw rgba(0, 255, 200, 0.6);
+  text-shadow: 0 0 1vw rgba(255, 255, 255, 0.6);
  
   font-variant-numeric: tabular-nums;
   /* or */
@@ -301,9 +337,9 @@ h1 {
   padding: 0.5vh 0.5vw;
   border-radius: 2vw;
 
-  background: rgba(0, 255, 200, 0.08);
-  border: 2px solid rgba(0, 255, 200, 0.4);
-  box-shadow: 0 0 2vw rgba(0, 255, 200, 0.25);
+  background: rgba(14, 8, 29, 0.08);
+  border: 2px solid rgba(38, 0, 255, 0.4);
+  box-shadow: 0 0 2vw rgba(17, 0, 255, 0.604);
   
   backdrop-filter: blur(6px);
 }
@@ -311,13 +347,12 @@ h1 {
 .slider-container {
     width: 80%;
     max-width: 600px;
-    margin: 15px auto;
+    margin: auto;
 }
 
 .slider-container label {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 5px;
 }
 
 .slider-container input {

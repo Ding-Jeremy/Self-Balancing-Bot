@@ -50,6 +50,7 @@ function initWebSocket() {
     console.log("WebSocket connected");
     setJoystickEnabled(true);
     setButtonEnabled(true);
+    updateConnectionStatus(true);
   };
 
   websocket.onclose = () => {
@@ -58,6 +59,8 @@ function initWebSocket() {
     setButtonEnabled(false);
     updateBatteryInfo(null);
     updateAngleInfo(null);
+    updateTargetAngleInfo(null);
+    updateConnectionStatus(false);
     setTimeout(initWebSocket, 2000); // Retry connection
   };
   
@@ -148,8 +151,8 @@ function createJoystick(containerId, idPrefix) {
   joysticks[idPrefix] = joystick;
   joystick.enabled = false; // Add manual enabled flag
 
-  // Limit the packet to each 20 ms
-  const sendInterval = 200; // ms
+  // Limit the packet to each 100 ms (10Hz)
+  const sendInterval = 100; // ms
   let lastX = null;
   let lastY = null;
   lastSent = 0;
@@ -262,8 +265,20 @@ function updateTargetAngleInfo(message) {
     speed_text.textContent = formatted;
 
   } else {
-    speed_text.textContent = "---.-- m/s";
+    speed_text.textContent = "---.-°";
   }
+}
+
+function updateConnectionStatus(connected) {
+    const status = document.getElementById("connection_status");
+
+    if (connected) {
+        status.textContent = "Connected";
+        status.className = "connected";
+    } else {
+        status.textContent = "Disconnected";
+        status.className = "disconnected";
+    }
 }
 
 function update_motors_button(state){

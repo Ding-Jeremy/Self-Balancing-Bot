@@ -10,18 +10,52 @@
     <meta name="theme-color" content="#000000" />
 
   </head>
+  
+
   <body>
-    <div id="control-page"class="page">
-    <h1>Self-Balancing-Bot</h1>
-    
-    <!-- Logo Image -->
+    <header id="app-header">
+      <!-- Logo Image -->
     <img
       src="/heig_vd_logo.png"
       id="heig_icon"
       alt="HEIG-VD Logo"
       class="logo"
     />
+      <div id="title-container">
+        <h1>Self-Balancing-Bot</h1>
+        <div id="connection_status">Disconnected</div>
+      </div>
 
+      <div id="battery-indicator">
+    <div id="battery-icon">
+      <svg
+        id="battery-svg"
+        viewBox="0 0 60 30"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <rect x="1" y="5" width="50" height="20" rx="4" ry="4"
+              fill="#222" stroke="#c4c4c4" stroke-width="2"/>
+
+        <rect id="battery-level" x="3" y="7" width="0" height="16"
+              rx="2" ry="2" fill="limegreen"/>
+
+        <rect x="53" y="11" width="6" height="8" rx="1" ry="1"
+              fill="#c4c4c4"/>
+      </svg>
+    </div>
+
+    <div id="battery-text">
+      <span id="battery-percentage">--- %</span>
+      <span id="battery-voltage">-.- V</span>
+    </div>
+    
+
+  </div>
+    </header>
+    <div id="control-page"class="page">
+    
+    
+    
     <!-- Joystick Container -->
     <div class="main-content">
       <div class="joystick-wrapper">
@@ -35,11 +69,10 @@
       <div id="telemetry">
         <div id="angle-indicator">
           <span id="angle-text">---.-°</span>
-          <span id="calibration-angle-text">---.-°</span>
         </div>
-
         <div id="target-angle-indicator">
-          <span id="target-angle-text">+0.00 °</span>
+          <span id="target-angle-text">---.-°</span>
+          <span id="calibration-angle-text">---.-°</span>
         </div>
       </div>
       <div class="joystick-wrapper">
@@ -51,30 +84,6 @@
     </div>
     
 
-    <!-- Battery Indicator -->
-    <div id="battery-indicator">
-      <div id="battery-icon">
-        <svg
-          id="battery-svg"
-          viewBox="0 0 60 30"
-          preserveAspectRatio="xMidYMid meet"
-          style="width: 10vw; height: auto;"
-        >
-          <!-- Battery body -->
-          <rect x="1" y="5" width="50" height="20" rx="4" ry="4" fill="#222" stroke="#c4c4c4" stroke-width="2"/>
-          
-          <!-- Battery level -->
-          <rect id="battery-level" x="3" y="7" width="0" height="16" rx="2" ry="2" fill="limegreen"/>
-    
-          <!-- Positive terminal -->
-          <rect x="53" y="11" width="6" height="8" rx="1" ry="1" fill="#c4c4c4"/>
-        </svg>
-      </div>
-      <div id="battery-text">
-        <span id="battery-percentage">--- %</span>
-        <span id="battery-voltage">-.- V</span>
-      </div>
-    </div>
 
     <!-- Buttons -->
     <div class="buttons">
@@ -90,7 +99,6 @@
     <div id="pid-page"class="page" style="display:none;">
   
       <!-- PID PAGE-->
-    <h1>PID Configuration</h1>
     <div class="pid-grid">
     <div class="pid-group">
       <h2 class="pid-title">Balance</h2>
