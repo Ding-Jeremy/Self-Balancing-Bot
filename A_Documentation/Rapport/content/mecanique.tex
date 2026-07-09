@@ -1,0 +1,105 @@
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/meca_raytracing.png}
+    \caption{Maquette 3D, raytracée}
+    \label{fig:meca_raytraced}
+\end{figure}
+
+Une fois le principe physique expliquée, il est temps de réaliser la maquette. Le but ici est de tenir compte des reflexions faites durant la partie théorique.
+
+Dans ce chapitre, l'entiereté de la conception mécanique de la maquette sera traitée en commençant par les outils utilisés, en traitant ensuite des contraintes mécaniques connues.
+
+Finalement, une rapide instruction de montage sera présentée.
+
+L'ensemble des dessins mécanique se trouvent à l'annexe \ref{annexe:dessins_mecaniques}. De plus, les fichiers 3D des pièces se trouvent également sur le Git indiqué en annexe \ref{annexe:git}.
+
+\section{Méthode et outils}
+\subsection{Logiciels}
+
+La conception mécanique du robot a été réalisée à l'aide du logiciel Fusion360 de Autocad. Cette étape a permis de modéliser l'ensemble des composants du robot avant leur fabrication, de vérifier leur intégration ainsi que d'anticiper les éventuels problèmes d'assemblage.
+
+L'utilisation d'un modèle tridimensionnel présente plusieurs avantages. Elle permet notamment de contrôler les dimensions de l'ensemble, de vérifier les interfaces entre les différents composants, d'optimiser la répartition des masses et de préparer la fabrication des différentes pièces.
+
+Le PCB ayant été réalisé en premier, ce deriner a été importé dans le modèle afin de pouvoir l'intégrer directement au dessin 3D.
+\subsection{Outillage}
+Essentiellement, le robot est constitué de pièces imprimées en 3D ainsi que découpées au laser.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{N° Pièce} & \textbf{Matériau} & \textbf{Machine} \\
+\hline
+1 & PVC & Graveuse laser \\
+\hline
+2,3 & TPU & Bambu-Lab V1 \\
+\hline
+4 & Aluminium & CNC 3 axes \\
+\hline
+5,6,7 & PLA & Prusa core One \\
+\hline
+\end{tabular}
+\caption{Liste pièces mécaniques, matériau et machine}
+\label{tab:pieces_mecaniques}
+\end{table}
+
+
+
+\section{Contraintes mécaniques}
+
+Avant de débuter la conception du châssis, plusieurs contraintes mécaniques ont été identifiées. Ces contraintes découlent directement du principe de fonctionnement d'un robot auto-équilibrant ainsi que des caractéristiques des composants sélectionnés.
+
+Les principales contraintes sont les suivantes :
+
+\begin{itemize}
+    \item assurer une rigidité suffisante afin de limiter les déformations du châssis ;
+    \item assurer un positionnement du centre de gravité "variable" ;
+    \item limiter la masse totale du robot ; 
+    \item garantir un encombrement réduit tout en conservant un accès aisé aux composants ;
+    \item permettre un montage et un démontage simples des différents éléments ;
+    \item prévoir un passage des câbles limitant les risques d'arrachement ou de frottement avec les parties mobiles.
+\end{itemize}
+
+Ces contraintes ont servi de fil conducteur durant toute la phase de conception mécanique.
+
+
+\subsection{Centre de gravité}
+
+Le centre de gravité constitue un élément essentiel dans la conception d'un robot auto-équilibrant. Contrairement à un robot classique, la stabilité dépend directement de la position de la masse par rapport à l'axe des roues.
+
+Un centre de gravité situé plus haut augmente le bras de levier entre la masse et les roues. Le robot bascule alors plus lentement, ce qui laisse davantage de temps au correcteur pour réagir. En revanche, cette configuration nécessite un déplacement plus important des roues pour maintenir l'équilibre.
+
+À l'inverse, un centre de gravité trop bas rend le système beaucoup plus réactif mais également plus difficile à stabiliser, les variations d'angle étant plus rapides.
+
+C'est pour cette raison que plusieurs perçage ont été réalisés sur les plaques en PVC se situant sur les côtés, de cette manière, la batterie peut être déplacée afin de modifier les caractéristiques du robot.
+
+\subsection{Rigidité}
+
+Le châssis doit présenter une rigidité suffisante afin que les mouvements du robot correspondent fidèlement aux mesures fournies par l'unité de mesure inertielle (IMU).
+
+Une structure trop flexible pourrait engendrer des vibrations ou des déformations susceptibles de perturber les mesures d'accélération et de vitesse angulaire, ce qui dégraderait les performances du système d'équilibrage.
+\subsection{Masse}
+
+La masse du robot influence directement le couple que doivent fournir les moteurs ainsi que la consommation électrique.
+
+Dans cette optique, les matériaux utilisés dans la fabrication du châssis ne sont pas massique.
+
+\subsection{Encombrement}
+
+Les dimensions du robot ont été définies afin d'obtenir une structure aussi compacte que possible tout en laissant un espace suffisant pour intégrer l'ensemble des composants électroniques.
+
+L'implantation des différents modules a également été étudiée afin de faciliter l'assemblage, la maintenance ainsi que le passage des câbles. Une attention particulière a été portée à l'accessibilité des principaux éléments, notamment la batterie, le microcontrôleur et les connecteurs.
+
+\subsection{Roues}
+
+Le choix des roues joue un rôle important dans le comportement dynamique du robot. Leur diamètre détermine notamment la vitesse linéaire obtenue pour une vitesse de rotation donnée des moteurs, tandis que leur masse influence directement leur moment d'inertie.
+
+Une roue présentant un moment d'inertie élevé nécessite davantage de couple pour accélérer ou ralentir. Cette caractéristique peut modifier la réactivité du système d'équilibrage et influencer les performances de la régulation.
+
+Afin d'évaluer expérimentalement cet effet, deux jeux de roues de géométrie identique ont été réalisés : un premier en aluminium et un second en plastique PLA. Les roues peuvent être interchangeées sans modification de la structure du robot, ce qui permet de comparer directement l'influence de leur masse et de leur moment d'inertie sur le comportement du système.
+
+\section{Assemblage}
+Le chassis est assemblé moyennant des vis, écrous et inserts M3.
+
+\section{Caractéristiques}
+Les caractéristiques ont été obtenues par le biaie soit de mesure de masse (balance), soit par analyse Fusion360.

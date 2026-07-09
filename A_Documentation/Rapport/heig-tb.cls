@@ -203,7 +203,7 @@
 \ProcessOptions
 
 
-\RequirePackage[fleqn]{amsmath}
+\RequirePackage{amsmath}
 \RequirePackage[small,bf,textfont=it]{caption}
 \RequirePackage{appendix}
 \RequirePackage{cellspace}
