@@ -32,7 +32,7 @@ L'utilisation de bibliothèques existantes permet de réduire la complexité du 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{assets/schemas/schema_bloc_algo_embarque.png}
+    \includegraphics[width=0.8\textwidth]{assets/schemas/schema_bloc_algo_embarque.png}
     \caption{Machine d'état du système embarqué}
     \label{fig:machine d'etat embarque}
 \end{figure}
@@ -49,7 +49,7 @@ Les différentes initialisations sont réalisées de manière séquentielle dans
 
 \begin{itemize}
     \item Initialisation de l'interface série UART1, utilisée pour la communication de débogage avec un ordinateur ;
-    \item Initialisation des drivers moteurs TMC2226. Cette étape comprend notamment la configuration des registres internes nécessaires au fonctionnement des moteurs (voir la section correspondante pour plus de détails) ;
+    \item Initialisation des drivers moteurs TMC2226. Cette étape comprend notamment la configuration des registres internes nécessaires au fonctionnement des moteurs (voir \ref{subsection:drivers_moteurs}) ;
     \item Initialisation du module \acrshort{imu} MPU6050 via le protocole I2C;
     \item Configuration du convertisseur analogique-numérique (ADC) utilisé pour mesurer la tension issue du pont diviseur et ainsi estimer le niveau de charge de la batterie ;
     \item Démarrage de la connexion WiFi permettant les communications avec l'interface utilisateur ;
@@ -80,6 +80,9 @@ Afin de respecter les contraintes temporelles du système de contrôle, certaine
     \item Si le mode d'enregistrement est activé, les différentes données du système sont sauvegardées. Cette acquisition est réalisée dans la boucle interne afin de conserver une résolution temporelle suffisante pour l'analyse du comportement du système ;
     
     \item Si l'angle mesuré par l'\acrshort{imu} dépasse les limites de fonctionnement définies, une sécurité est déclenchée et les moteurs sont désactivés afin d'éviter une perte de contrôle ou un endommagement du système.
+
+    \item Si le temps écoulé dépasse la période de transmission des données mesuré $T_{TX}$, le serveur (ESP32) transmet au client des informations relatives aux différentes grandeurs (\texttt{batterie,angle,target\_angle}), il faut noter qu'il existe en réalité un compteur pour chacun des éléments à transmettre.
+
 \end{itemize}
 
 Cette organisation permet d'obtenir une architecture de contrôle à plusieurs fréquences d'exécution. La boucle interne, exécutée plus rapidement, assure la stabilisation dynamique du système, tandis que la boucle externe, exécutée à une fréquence plus faible, permet de gérer les consignes globales du robot.
@@ -92,7 +95,7 @@ Ces événements sont générés par l'interface de contrôle utilisateur (prés
 Lorsqu'une nouvelle donnée est reçue via WebSocket, une fonction de rappel (\textit{callback}) est exécutée afin de traiter l'information reçue. Cette fonction ne réalise pas directement les actions de contrôle, mais met à jour des variables globales accessibles depuis la boucle principale.
 
 \subsubsection{Commandes WebSocket}
-
+\label{subsubsection:web_socket}
 Les commandes WebSocket permettent au client d'envoyer des instructions au serveur embarqué. Chaque commande est identifiée par un identifiant (\texttt{msg\_id}) correspondant à une action spécifique.
 Les messages échangés via WebSocket peuvent être initiés par le client ou par le serveur. La colonne \textit{Direction} indique le sens de communication associé à chaque identifiant de message.
 Ici, le client représente l'utilisateur et le serveur représente l'ESP-32.
@@ -153,9 +156,10 @@ Ainsi, les commandes utilisateur peuvent modifier le comportement du robot sans 
 
 Les commandes suivantes: \texttt{battery, target\_angle, angle} sont transmises par le serveur périodiquement. La période d'envoi est réglée par des defines.
 \section{Pilotage des périphériques}
-Une fois le fonctionnement principal du code embarqué, cette partie va traiter de la manière dont les différents périphériques sont pilotés. 
+Une fois le fonctionnement principal du code embarqué décrit, il est possible d'aller dans les détails concernant la manière dont les différents périphériques sont pilotés. 
 
 \subsection{Drivers moteurs}
+\label{subsection:drivers_moteurs}
 Les drivers moteurs, TMC2226 \cite{TMC2226_datasheet} peuvent êtres interfaçés via UART bi-directionnel, comme indiqué plus haut. Une bibliothèque a donc été réalisée de 0 afin de pouvoir communiquer avec les différents registres.
 
 La bibliothèque inclue la création d'une classe TMC2226, la gestion de l'UART bi-directionnel.

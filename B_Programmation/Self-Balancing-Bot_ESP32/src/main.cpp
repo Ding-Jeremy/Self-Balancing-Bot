@@ -133,8 +133,8 @@ Adafruit_MPU6050 mpu;
 TMC2226 tmc2226_left(0x00);
 TMC2226 tmc2226_right(0x01);
 
-float angleX = 0.0f;
-float angleX_offset = 0.0f;
+float theta_measured = 0.0f;
+float theta_offset = 0.0f;
 
 unsigned long lastMicros = 0;
 
@@ -288,13 +288,13 @@ void loop()
     float gyroRateX = gyro.gyro.x * 180.0f / PI;
 
     // Complementary filter
-    angleX = 0.9f * (angleX + gyroRateX * inner_loop_cnt) + 0.1f * accelAngleX;
+    theta_measured = 0.9f * (theta_measured + gyroRateX * inner_loop_cnt) + 0.1f * accelAngleX;
     // Defines the error from speed (and saved offset + Hard coded offset)
-    float thetaError = D_BALANCE_ANGLE + theta_target + angleX_offset - angleX;
+    float theta_error = D_BALANCE_ANGLE + theta_target + theta_offset - theta_measured;
 
     // Generate motor speed from inner loop
     float acceleration =
-        PID_update(&tilt_PID, thetaError, inner_loop_cnt);
+        PID_update(&tilt_PID, theta_error, inner_loop_cnt);
 
     // Convert rad/s to ustp/stp
     motor_speed += acceleration * inner_loop_cnt;
@@ -318,7 +318,7 @@ void loop()
       recording_data[recording_size].speed_target = speed_target;
       recording_data[recording_size].speed = speed;
       recording_data[recording_size].theta_target = theta_target;
-      recording_data[recording_size].theta = angleX;
+      recording_data[recording_size].theta = theta_measured;
 
       recording_size++;
     }
@@ -349,7 +349,7 @@ void loop()
     {
       angle_timer = millis();
       send_target_angle(theta_target);
-      send_angle(angleX);
+      send_angle(theta_measured);
     }
     if (millis() - battery_timer > D_BATTERY_SEND_PERIOD)
     {
@@ -378,7 +378,7 @@ float rad_s_to_ustp_s(float rad_s, uint16_t micro_stepping_value)
 /// @return
 bool is_angle_withing_range()
 {
-  return (angleX > angle_limits[0] && angleX < angle_limits[1]);
+  return (theta_measured > angle_limits[0] && theta_measured < angle_limits[1]);
 }
 /// @brief Send the state of the motor to the clients
 /// @param state
@@ -578,12 +578,12 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len)
       else if (msg_id == "calibrate")
       {
         // Save angle offset
-        angleX_offset = angleX;
+        theta_offset = theta_measured;
 
         // Transmit saved angle to server
         JSONVar json;
         json["id"] = "calibration_angle";
-        json["value"] = angleX_offset;
+        json["value"] = theta_offset;
         String msg = JSON.stringify(json);
         notify_clients(msg);
       }
