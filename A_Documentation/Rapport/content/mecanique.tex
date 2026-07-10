@@ -23,35 +23,36 @@ L'utilisation d'un modèle tridimensionnel présente plusieurs avantages. Elle p
 
 Le PCB ayant été réalisé en premier, ce deriner a été importé dans le modèle afin de pouvoir l'intégrer directement au dessin 3D.
 \subsection{Outillage}
-Essentiellement, le robot est constitué de pièces imprimées en 3D ainsi que découpées au laser.
+
+Essentiellement, le robot est constitué de pièces imprimées en 3D ainsi que de pièces découpées au laser. Divers éléments d'assemblage (vis, colonnettes, écrous, etc.) proviennent du MakeLab ou de l'atelier mécanique.
+
+Le tableau \ref{tab:machines} répertorie l'ensemble des machines utilisées pour la fabrication de la maquette.
+
 \begin{table}[H]
 \centering
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|c|p{6cm}|c|}
 \hline
-\textbf{N° Pièce} & \textbf{Matériau} & \textbf{Machine} \\
+\textbf{Machine} & \textbf{Emplacement} & \textbf{Technologie} \\
 \hline
-1 & PVC & Graveuse laser \\
+Prusa Core One & MakeLab & \acrshort{fdm} \\
 \hline
-2,3 & TPU & Bambu-Lab V1 \\
+CNC 3 axes & Centre de formation des polymécaniciens, Payerne & Usinage CNC \\
 \hline
-4 & Aluminium & CNC 3 axes \\
-\hline
-5,6,7 & PLA & Prusa core One \\
+Découpeuse laser & MakeLab & Découpe laser \\
 \hline
 \end{tabular}
-\caption{Liste pièces mécaniques, matériau et machine}
-\label{tab:pieces_mecaniques}
+\caption{Machines utilisées pour la fabrication de la maquette}
+\label{tab:machines}
 \end{table}
-
-
 
 \section{Contraintes mécaniques}
 
-Avant de débuter la conception du châssis, plusieurs contraintes mécaniques ont été identifiées. Ces contraintes découlent directement du principe de fonctionnement d'un robot auto-équilibrant ainsi que des caractéristiques des composants sélectionnés.
+Avant de débuter la conception du châssis, plusieurs contraintes mécaniques ont été identifiées soit par le cahier des charges, soit par le chapitre \ref{chap:principe_physique}.
 
 Les principales contraintes sont les suivantes :
 
 \begin{itemize}
+    
     \item assurer une rigidité suffisante afin de limiter les déformations du châssis ;
     \item assurer un positionnement du centre de gravité "variable" ;
     \item limiter la masse totale du robot ; 
@@ -82,15 +83,18 @@ Une structure trop flexible pourrait engendrer des vibrations ou des déformatio
 
 La masse du robot influence directement le couple que doivent fournir les moteurs ainsi que la consommation électrique.
 
-Dans cette optique, les matériaux utilisés dans la fabrication du châssis ne sont pas massique.
+Dans cette optique, les matériaux utilisés dans la fabrication du châssis ne sont pas massique, à l'exception des roues, (voir\ref{subsection:roues}).
 
 \subsection{Encombrement}
 
-Les dimensions du robot ont été définies afin d'obtenir une structure aussi compacte que possible tout en laissant un espace suffisant pour intégrer l'ensemble des composants électroniques.
+Les dimensions du robot ayant été indiquées par le cahier des charges, voici les dimensions obtenues.
 
-L'implantation des différents modules a également été étudiée afin de faciliter l'assemblage, la maintenance ainsi que le passage des câbles. Une attention particulière a été portée à l'accessibilité des principaux éléments, notamment la batterie, le microcontrôleur et les connecteurs.
+156x143x248mm
+
+L'implantation des différents modules a également été étudiée afin de faciliter l'assemblage, la maintenance ainsi que le passage des câbles. Une attention particulière a été portée à l'accessibilité des principaux éléments, notamment la batterie, le switch d'alimentation et les connecteurs.
 
 \subsection{Roues}
+\label{subsection:roues}
 
 Le choix des roues joue un rôle important dans le comportement dynamique du robot. Leur diamètre détermine notamment la vitesse linéaire obtenue pour une vitesse de rotation donnée des moteurs, tandis que leur masse influence directement leur moment d'inertie.
 
@@ -102,4 +106,84 @@ Afin d'évaluer expérimentalement cet effet, deux jeux de roues de géométrie 
 Le chassis est assemblé moyennant des vis, écrous et inserts M3.
 
 \section{Caractéristiques}
-Les caractéristiques ont été obtenues par le biaie soit de mesure de masse (balance), soit par analyse Fusion360.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/figures/all_pieces.jpg}
+    \caption{Ensemble des pièces composant la maquette}
+    \label{fig:all_pieces}
+\end{figure}
+
+Le tableau \ref{tab:masse_pieces} présente les masses individuelles des composants identifiés sur la figure \ref{fig:all_pieces}. Les masses des vis, écrous et inserts M3 sont négligées dans les calculs, leur contribution étant faible devant la masse totale de la maquette.
+Les résultats sont donnés en \si{\kilogram}.
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|p{6cm}|c|c|c|}
+\hline
+\textbf{Pièce} & \textbf{Désignation} & \textbf{Mesure} & \textbf{Fusion360} & \textbf{Unité} \\
+\hline
+6 & Protection anti-chute & $0.010$ & -- & \si{\kilogram} \\
+\hline
+7 & Pneu & $0.013$ & $0.014$ & \si{\kilogram} \\
+\hline
+8 & Jante PLA & $0.035$ & $0.030$ & \si{\kilogram} \\
+\hline
+9 & Jante ALU & $0.163$ & 0.163& \si{\kilogram} \\
+\hline
+10 & Coupleur avec vis de montage & $0.013$ & $0.010$ & \si{\kilogram} \\
+\hline
+11 & Support PCB & $0.047$ & $0.047$ & \si{\kilogram} \\
+\hline 
+12 & Support batterie& $0.018$ & $0.018$ & \si{\kilogram} \\
+\hline
+13 & Plaque latérale & $0.065$ & $0.065$ & \si{\kilogram} \\
+\hline
+14 & Câble d'alimentation & $0.016$ & $-$ & \si{\kilogram} \\
+\hline
+15 & Câble moteur & $0.000$ & $-$ & \si{\kilogram} \\
+\hline
+16 & Moteur pas à pas & $0.281$ & 0.281 & \si{\kilogram} \\
+\hline
+17 & PCB & $0.045$ & 0.045& \si{\kilogram} \\
+\hline
+18 & Batterie & $0.150$ & 0.150 & \si{\kilogram} \\
+\hline
+\end{tabular}
+\caption{Masses des différentes pièces composant la maquette.}
+\end{table}
+\label{tab:masse_pieces}
+
+A partir des masses individuelles et des propriétés géométriques obtenues par Fusion360, les paramètres mécaniques nécessaires à la modélisation dynamique (voir \ref{chap:principe_physique}) sont déterminés.
+
+La masse totale des sous-ensembles est obtenue à l'aide d'une nouvelle mesure.
+
+Les moments d'inertie sont directement extraits de Fusion360 à partir de l'outil d'analyse des propriétés de masse. Le calcul est effectué autour du centre de masse du sous-ensemble considéré et selon l'axe de rotation correspondant. Pour les roues, le moment d'inertie $J_w$ est calculé autour de l'axe de rotation de la roue. Pour le châssis, le moment $J_b$ correspond au moment d'inertie autour de l'axe des roues, après exclusion des masses tournantes.
+
+La distance $l$ entre l'axe des roues et le centre de masse est également déterminée à partir de la position du centre de gravité calculée par Fusion360.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|p{5.2cm}|c|c|}
+\hline
+\textbf{Symbole} & \textbf{Origine} & \textbf{Définition} & \textbf{Valeur} & \textbf{Unité} \\
+\hline
+$m_b$ & Mesure & Masse du châssis & $1.018$ & \si{\kilogram} \\
+\hline
+$m_w$ & Mesure & Masse d'une roue complète (coupleur, jante ALU et pneu) & $0.195$ & \si{\kilogram} \\
+\hline
+$-$ & Mesure & Masse d'une roue complète (coupleur, jante PLA et pneu) & $0.083$ & \si{\kilogram} \\
+\hline
+$l$ & Fusion360 & Distance entre l'axe des roues et le centre de masse & $0.0344$ & \si{\metre} \\
+\hline
+$r$ & Mesure & Rayon de la roue & $0.055$ & \si{\metre} \\
+\hline
+$J_w$ & Fusion360 & Moment d'inertie d'une roue (ALU) autour de son axe de rotation & $2.522\times10^{-4}$ & \si{\kilogram\metre\squared} \\
+\hline
+$-$ & Fusion360 & Moment d'inertie d'une roue (PLA) autour de son axe de rotation & $7.615\times10^{-5}$ & \si{\kilogram\metre\squared} \\
+\hline
+$J_b$ & Fusion360 & Moment d'inertie du châssis (sans les roues) autour de l'axe des roues & $4.021\times10^{-3}$ & \si{\kilogram\metre\squared} \\
+\hline
+\end{tabular}
+\caption{Caractéristiques mécaniques de la maquette utilisées dans la modélisation.}
+\label{tab:caracteristiques_mecaniques}
+\end{table}

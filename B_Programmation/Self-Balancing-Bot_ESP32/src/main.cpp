@@ -135,6 +135,7 @@ TMC2226 tmc2226_right(0x01);
 
 float theta_measured = 0.0f;
 float theta_offset = 0.0f;
+float theta_target = 0.0f;
 
 unsigned long lastMicros = 0;
 
@@ -148,13 +149,7 @@ float acceleration = 0.0f;
 
 float speed = 0.0f;
 float speed_target = 0.0f;
-float rotation_speed_target = 0.0f;
-
-float theta_target = 0.0f;
-
-uint32_t angle_timer = 0;
-
-float prev_gyro = 0.0f;
+float pivot_speed = 0.0f;
 
 int8_t angle_limits[2] = D_ANGLE_LIMITS;
 float speed_control_range[2] = D_SPEED_CTRL_ANGLE;
@@ -167,7 +162,8 @@ uint16_t recording_size = 0;
 
 uint16_t micro_stepping_value = 0;
 
-float battery_timer = 0;
+uint32_t angle_timer = 0;
+uint32_t battery_timer = 0;
 
 // PID controllers
 PIDController acceleration_PID =
@@ -302,7 +298,7 @@ void loop()
                                                                                                          : motor_speed;
 
     us_speed = rad_s_to_ustp_s(motor_speed, micro_stepping_value);
-    float motor_speed_delta = rad_s_to_ustp_s(rotation_speed_target, micro_stepping_value);
+    float motor_speed_delta = rad_s_to_ustp_s(pivot_speed, micro_stepping_value);
 
     // Chariot speed
     speed = motor_speed * D_WHEEL_RADIUS;
@@ -624,7 +620,7 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len)
       }
       else if (msg_id == "joystick-right")
       {
-        rotation_speed_target = map_f((double)msg["x"], -100, 100, speed_control_range[0], speed_control_range[1]);
+        pivot_speed = map_f((double)msg["x"], -100, 100, speed_control_range[0], speed_control_range[1]);
       }
       else if (msg_id == "record_start")
       {
