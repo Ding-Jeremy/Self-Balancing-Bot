@@ -385,7 +385,7 @@ Ainsi, si la sortie du PID est déjà à sa valeur maximale et que l'erreur cont
 
 Enfin, la sortie du contrôleur est limitée entre \texttt{outputMin} et \texttt{outputMax} afin de respecter les contraintes physiques du système. Cette limitation est particulièrement importante pour la commande des moteurs, dont la vitesse maximale est définie par les caractéristiques mécaniques et électriques du robot.
 
-\subsection{Calcul de \texttt{theta\_target}}
+\subsection{Calcul de la consigne d'inclinaison}
 
 Afin de permettre au robot de se déplacer, il n'est pas suffisant de maintenir un angle nul. En effet, un robot auto-équilibré avance uniquement lorsqu'il s'incline légèrement dans la direction du mouvement souhaité. Cet angle d'inclinaison nécessaire est appelé \texttt{theta\_target} ou \textit{angle à atteindre}.
 
@@ -402,9 +402,9 @@ theta_target = PID_update(&acceleration_PID,
 
 La sortie de ce correcteur correspond directement à l'angle souhaité $\theta_{target}$ transmis à la boucle interne. Si le robot est trop lent par rapport à la consigne, le contrôleur augmente l'angle demandé afin d'accélérer dans la direction souhaitée. Inversement, si la vitesse est trop élevée, l'angle demandé est réduit afin de ralentir le robot.
 
-\subsection{Algorithme d'équilibrage}
+\subsection{Boucle de régulation d'équilibre}
 
-L'algorithme d'équilibrage est basé sur une boucle de contrôle rapide exécutée périodiquement. À chaque itération, l'angle du robot est mesuré à l'aide du MPU6050. L'estimation de l'angle est obtenue grâce au filtre complémentaire combinant l'accéléromètre et le gyroscope :
+La boucle de régulation d'équilibre une boucle rapide exécutée périodiquement. À chaque itération, l'angle du robot est mesuré à l'aide du MPU6050. L'estimation de l'angle est obtenue grâce au filtre complémentaire combinant l'accéléromètre et le gyroscope :
 
 \begin{lstlisting}[language=C++]
 angleX = 0.9f * (angleX + gyroRateX * inner_loop_cnt)
