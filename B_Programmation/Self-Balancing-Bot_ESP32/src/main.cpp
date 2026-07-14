@@ -55,9 +55,9 @@
 // Rest Angle
 #define D_BALANCE_ANGLE 2.1 // [°]
 
-#define D_DATASEND_PERIOD 500      // Data transmission period [ms]
-#define D_ANGLE_LIMITS {-20, 20}   // Limit angles [°]
-#define D_SPEED_CTRL_ANGLE {-3, 3} // Speed control lean angles [°]
+#define D_DATASEND_PERIOD 500        // Data transmission period [ms]
+#define D_ANGLE_LIMITS {-20, 20}     // Limit angles [°]
+#define D_SPEED_CTRL_ANGLE {-10, 10} // Speed control lean angles [°]
 
 #define D_WHEEL_RADIUS 0.055       // [m]
 #define D_MOTOR_MAX_SPEED 5 * M_PI // [rad/s]
@@ -148,8 +148,10 @@ float inner_loop_cnt = 0.0f;
 float acceleration = 0.0f;
 
 float speed = 0.0f;
+float speed_average = 0.0f;
 float speed_target = 0.0f;
 float pivot_speed = 0.0f;
+float speed_update = 0;
 
 int8_t angle_limits[2] = D_ANGLE_LIMITS;
 float speed_control_range[2] = D_SPEED_CTRL_ANGLE;
@@ -164,6 +166,25 @@ uint16_t micro_stepping_value = 0;
 
 uint32_t angle_timer = 0;
 uint32_t battery_timer = 0;
+
+bool bidirectional = true;
+float current_dir = 1;
+
+bool step_enable = false;
+float step_speed_value = 2.0f; // m/s
+uint32_t step_start_time = 0;
+uint32_t step_speed_period = 10000; // ms
+uint32_t step_speed_ton = 3000;     // ms
+uint32_t step_counter = 0;          // ms
+
+bool trap_enable = true;
+float trap_peak = .2f; // m/s
+uint32_t trap_start_time = 0;
+uint32_t trap_speed_period = 5000; // ms
+uint32_t trap_speed_trise = 1500;  // ms
+uint32_t trap_counter = 0;         // ms
+uint32_t t_rise = min(trap_speed_trise, trap_speed_period / 2);
+uint32_t t_flat = trap_speed_period - 2 * t_rise;
 
 // PID controllers
 PIDController acceleration_PID =
@@ -208,7 +229,7 @@ void setup()
 
   // Initialize MPU settings
   mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
-  mpu.setGyroRange(MPU6050_RANGE_500_DEG);
+  mpu.setGyroRange(MPU6050_RANGE_250_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_260_HZ);
 
   // Initialize battery pin
@@ -247,20 +268,77 @@ void setup()
 //-------------- MAIN LOOP ---------------
 void loop()
 {
+
   // Time reading
   unsigned long now = micros();
   float dt = (now - lastMicros) * 1e-6f;
   lastMicros = now;
 
+  // Speed STEP
+  if (step_enable)
+  {
+    uint32_t elapsed = millis() - step_start_time;
+
+    if (elapsed < step_speed_ton)
+      speed_target = step_speed_value;
+    else
+      speed_target = 0;
+
+    if (elapsed >= step_speed_period)
+      step_start_time = millis();
+  }
+
+  if (trap_enable)
+  {
+
+    uint32_t elapsed = millis() - trap_start_time;
+
+    uint32_t t_rise = trap_speed_trise;
+    uint32_t t_flat = trap_speed_period - 2 * t_rise;
+
+    if (elapsed < t_rise)
+    {
+      // Ramp up
+      speed_target = current_dir * trap_peak * ((float)elapsed / t_rise);
+    }
+    else if (elapsed < (t_rise + t_flat))
+    {
+      // Constant speed
+      speed_target = current_dir * trap_peak;
+    }
+    else if (elapsed < trap_speed_period)
+    {
+      // Ramp down
+      uint32_t t = elapsed - (t_rise + t_flat);
+      speed_target = current_dir * trap_peak * (1.0f - (float)t / t_rise);
+    }
+    else
+    {
+      if (bidirectional)
+        if (current_dir == 1)
+          current_dir = -1;
+        else
+          current_dir = 1;
+      speed_target = 0.0f;
+      trap_start_time = millis(); // Repeat
+    }
+  }
+
   // OUTER LOOP
   outer_loop_cnt += dt;
   if (outer_loop_cnt > D_OUTER_LOOP_PERI)
   {
+    if (speed_update > 0)
+      speed_average /= speed_update;
+    else
+      speed_average = 0;
     // Update target based on joystick input (position_control)
-    float speed_error = -(speed_target - speed);
+    float speed_error = speed_average - speed_target;
     // Generate angle theta based on position Error
     theta_target = PID_update(&acceleration_PID, speed_error, outer_loop_cnt);
     outer_loop_cnt = 0;
+    speed_average = 0;
+    speed_update = 0;
   }
 
   // INNER LOOP
@@ -286,7 +364,7 @@ void loop()
     // Complementary filter
     theta_measured = 0.9f * (theta_measured + gyroRateX * inner_loop_cnt) + 0.1f * accelAngleX;
     // Defines the error from speed (and saved offset + Hard coded offset)
-    float theta_error = D_BALANCE_ANGLE + theta_target + theta_offset - theta_measured;
+    float theta_error = theta_target - (theta_measured - D_BALANCE_ANGLE - theta_offset);
 
     // Generate motor speed from inner loop
     float acceleration =
@@ -302,6 +380,8 @@ void loop()
 
     // Chariot speed
     speed = motor_speed * D_WHEEL_RADIUS;
+    speed_average += speed;
+    speed_update++;
 
     // run motors (standalone speed)
     tmc2226_left.run_speed((int32_t)us_speed + motor_speed_delta);
@@ -314,7 +394,7 @@ void loop()
       recording_data[recording_size].speed_target = speed_target;
       recording_data[recording_size].speed = speed;
       recording_data[recording_size].theta_target = theta_target;
-      recording_data[recording_size].theta = theta_measured;
+      recording_data[recording_size].theta = theta_measured - D_BALANCE_ANGLE;
 
       recording_size++;
     }

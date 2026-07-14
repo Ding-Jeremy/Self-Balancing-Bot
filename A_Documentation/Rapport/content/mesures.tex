@@ -17,8 +17,12 @@ Pour les mesures de tension et de courants, les roues ont été retirées de la 
 \end{table}
 
 
-\section{Batterie}
+\section{Modèle physique}
+\subsubsection{Régulation}
+\subsubsection{Déplacement trapezoïdal}
 
+\section{Electriques}
+\subsection{Batterie}
 Afin de mesurer correctement le niveau de la batterie, un pont diviseur est utilisé, comme expliqué dans le chapitre consacré à la maquette.
 
 Il est important de s'assurer que les résistances utilisées dans le pont diviseur sont correctement reportées dans le code afin de garantir une lecture fidèle de la tension de la batterie.
@@ -71,7 +75,7 @@ $$
 
 Cette correction permet d'améliorer la précision de la mesure de la tension et de réduire l'erreur introduite par les tolérances des résistances du pont diviseur.
 
-\section{Tensions, Courants}
+\subsection{Tensions, Courants}
 Afin de mesurer la consommation énergétique de la maquette, l'idée est de réaliser une mesure du courant total dans le système.
 Pour ce faire, le multimètre est placé en mode ampèremètre entre le connecteur de la batterie et celui du PCB.
 La notion de moteurs "allumées" indiquent qu'ils tournent à vitesse maximale. (Référence à la partie programmation traitant des micropas...)
@@ -135,5 +139,7 @@ La notion de moteurs "allumées" indiquent qu'ils tournent à vitesse maximale. 
     \label{tab:moteurs_allumes_maxspeed}
 \end{table}
 
-\section{Autonomie}
+\subsection{Autonomie}
+Afin de réaliser cette mesure d'autonomie, la maquette est enclenchée puis laissée en situation de régulation d'angle $\theta$ jusqu'à ce que la batterie atteigne un seuil critique de 5\%.
 
+Le niveau de la batterie est mesuré toute les 5 min en utilisant l'interface Web.

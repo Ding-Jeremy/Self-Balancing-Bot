@@ -1,4 +1,4 @@
-
+\label{chap:mecanique}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{assets/figures/meca_raytracing.png}
@@ -26,6 +26,8 @@ Le PCB ayant été réalisé en premier, ce deriner a été importé dans le mod
 
 Essentiellement, le robot est constitué de pièces imprimées en 3D ainsi que de pièces découpées au laser. Divers éléments d'assemblage (vis, colonnettes, écrous, etc.) proviennent du MakeLab ou de l'atelier mécanique.
 
+Les pneus ainsi que les protections anti-chutes ont été imprimé en TPU, un filament flexible afin d'améliorer l'adhérance et amortir l'impact d'une éventuelle chute.
+
 Le tableau \ref{tab:machines} répertorie l'ensemble des machines utilisées pour la fabrication de la maquette.
 
 \begin{table}[H]
@@ -39,6 +41,8 @@ Prusa Core One & MakeLab & \acrshort{fdm} \\
 CNC 3 axes & Centre de formation des polymécaniciens, Payerne & Usinage CNC \\
 \hline
 Découpeuse laser & MakeLab & Découpe laser \\
+\hline
+BambuLab V1 & MakeLab & \acrshort{fdm}, TPU \\
 \hline
 \end{tabular}
 \caption{Machines utilisées pour la fabrication de la maquette}
@@ -187,3 +191,15 @@ $J_b$ & Fusion360 & Moment d'inertie du châssis (sans les roues) autour de l'ax
 \caption{Caractéristiques mécaniques de la maquette utilisées dans la modélisation.}
 \label{tab:caracteristiques_mecaniques}
 \end{table}
+
+L'analyse du modèle CAO réalisée sous Fusion 360 permet de déterminer avec précision la position de l'\acrshort{imu} par rapport à l'axe de rotation des roues. Cette information est nécessaire pour tenir compte des accélérations linéaires mesurées par le capteur lors des mouvements du robot.
+
+La position de l'\acrshort{imu} est exprimée en coordonnées polaires, définies par la distance $\rho$ entre le capteur et l'axe de rotation, ainsi que par l'angle $\phi$ :
+
+$$
+\phi = -0.373~\mathrm{rad}
+$$
+
+$$
+\rho = 51.13~\mathrm{mm}
+$$

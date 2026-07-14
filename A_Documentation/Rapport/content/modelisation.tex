@@ -3,17 +3,200 @@ Les caractéristiques mécaniques du châssis connus, il est à présent possibl
 
 \section{Méthode et outils}
 Les outils principaux utilisés dans le but de créer, de simuler ce système sont: Matlab, Simulink, Python.
-
 \section{Système à régler}
-Cette partie consiste à déterminer le système à régler, pour ce faire 
-\subsection{Pendule inverse}
-\subsection{Pendule inversé, chariot mobile}
-\subsection{Modèle avec moteurs et roues}
+
+Cette section a pour objectif de définir le système à régler ainsi que les éléments influençant son comportement dynamique.
+Comme présenté au chapitre \ref{chap:principe_physique}, les équations \ref{eq:ddtheta} et \ref{eq:ddx} décrivent le comportement physique du système.
+
+Il existe cependant des différence avec la réalité qu'il est important d'expliquer.
+
+
+\subsection{Moteur pas à pas}
+
+Les équations de mouvement régissant le système admettent comme paramètre d'entrée le couple moteur. Cependant, le sytème réel utilise des moteurs pas à pas, ces derniers ne fournissent pas un couple continu.
+Cependant, grâce à l'utilisation d'un réglage micro-pas fin ainsi que du lissage (voir \ref{subsection:drivers_moteurs}), le couple développé peut être considéré comme quasi continu. Le moteur est donc modélisé comme un actionneur continu, ce qui simplifie l'étude et la synthèse du régulateur.
+
+\subsection{Modélisation de l'\acrshort{imu}}
+
+Afin de reproduire fidèlement le comportement du robot réel, le modèle intègre une représentation simplifiée de l'\acrshort{imu}. Celle-ci ne se limite pas à la mesure de l'angle d'inclinaison, mais prend également en compte les caractéristiques physiques du capteur ainsi que son traitement numérique interne.
+
+La modélisation repose sur trois éléments principaux :
+\begin{itemize}
+\item la position de l'\acrshort{imu} par rapport à l'axe de rotation des roues ;
+\item la modélisation des mesures de l'accéléromètre et du gyroscope ;
+\item le filtrage numérique permettant l'estimation de l'angle.
+\end{itemize}
+
+\subsubsection{Position de l'\acrshort{imu}}
+
+L'analyse du modèle CAO réalisée sous Fusion 360 a permis de déterminer avec précision la position de l'\acrshort{imu} par rapport à l'axe de rotation des roues (\ref{chap:mecanique}). Cette position est exprimée en coordonnées polaires par une distance $\rho$ et un angle $\phi$.
+
+Le déport du capteur par rapport à l'axe de rotation induit des accélérations supplémentaires lors des mouvements du robot. En plus de l'accélération de translation du châssis, l'accéléromètre est soumis à une accélération tangentielle, proportionnelle à l'accélération angulaire $\ddot{\theta}$, ainsi qu'à une accélération centripète, proportionnelle au carré de la vitesse angulaire $\dot{\theta}$.
+
+Les accélérations mesurées par l'accéléromètre sont ainsi obtenues en combinant :
+\begin{itemize}
+\item la projection de la gravité selon l'orientation du robot ;
+\item l'accélération de translation du robot ;
+\item les accélérations tangentielle et centripète dues au déport de l'\acrshort{imu}.
+\end{itemize}
+
+L'angle estimé à partir de l'accéléromètre est ensuite calculé à l'aide de la fonction $\mathrm{atan2}$.
+
+\subsubsection{Modélisation du gyroscope}
+
+Le gyroscope mesure directement la vitesse angulaire du robot autour de l'axe d'équilibrage. Dans le modèle, la mesure est supposée idéale et correspond directement à la vitesse angulaire issue du modèle dynamique :
+
+$$
+\omega = \dot{\theta}
+$$
+
+Les effets tels que le bruit de mesure ou la dérive du gyroscope ne sont pas pris en compte.
+
+\subsubsection{Filtre complémentaire}
+
+L'angle utilisé par le régulateur n'est pas directement issu de l'accéléromètre ou du gyroscope. Comme sur le robot réel, ces deux mesures sont fusionnées à l'aide d'un filtre complémentaire exécuté à une fréquence de 500~Hz, soit une période d'échantillonnage de $T_s = 2~\mathrm{ms}$.
+
+À chaque période d'échantillonnage, la vitesse angulaire mesurée par le gyroscope est intégrée afin de prédire la nouvelle orientation du robot. Cette estimation est ensuite corrigée à l'aide de l'angle obtenu par l'accéléromètre selon la relation :
+$$
+\theta_{\mathrm{mes}}(k)
+=
+\alpha
+\left(
+\theta_{\mathrm{mes}}(k-1)
++
+\omega(k)T_s
+\right)
++
+(1-\alpha)\theta_{\mathrm{acc}}(k)
+$$
+
+où $\alpha = 0.9$.
+
+Ce filtre permet de combiner les avantages des deux capteurs : le gyroscope fournit une excellente estimation des variations rapides de l'orientation, tandis que l'accéléromètre assure la correction de la dérive à basse fréquence grâce à la mesure de la gravité.
+
+La modélisation de cette chaîne de mesure permet ainsi de reproduire de manière réaliste le comportement de l'\acrshort{imu} utilisée sur le robot, notamment lors des phases d'accélération où les mesures de l'accéléromètre sont perturbées par les accélérations linéaires du châssis.
+
+\subsection{Numérisation}
+Le système à régler est contrôlé par régulation numérique dont la fréquence dépend de la programmation.
 
 \section{Régulation}
-\subsection{Régulateur PID}
+\subsection{Structure de régulation retenue}
+
+Dans une architecture classique de commande mécanique, la grandeur de commande appliquée aux actionneurs est généralement le couple moteur. Le régulateur calcule alors directement le couple nécessaire afin de modifier la dynamique du système. Cependant, cette approche n'est pas directement applicable au système étudié.
+
+Le robot utilise des moteurs pas à pas dont la commande ne repose pas sur une régulation de couple. Les moteurs sont pilotés par des consignes de déplacement générées sous forme d'impulsions, la fréquence des impulsions définissant la vitesse de rotation et leur variation définissant l'accélération imposée aux roues.
+
+De plus, le principe physique d'équilibrage du robot repose sur la génération d'une accélération horizontale du châssis. En effet, une inclinaison du robot crée un moment gravitationnel autour de l'axe des roues. Afin de compenser ce moment, le déplacement du centre de masse doit être corrigé par une accélération appropriée des roues. L'accélération constitue donc la grandeur intermédiaire la plus pertinente pour commander le système.
+
+La stratégie de régulation retenue est une structure en cascade composée de deux boucles :
+
+\begin{itemize}
+    \item une boucle externe de régulation de vitesse, dont l'objectif est de contrôler la vitesse linéaire du châssis ;
+    \item une boucle interne de régulation d'angle, dont l'objectif est de maintenir l'inclinaison du robot à la valeur demandée.
+\end{itemize}
+
+La boucle externe compare la vitesse linéaire mesurée du robot avec la consigne de vitesse :
+
+\[
+e_v = v_{\mathrm{ref}} - v
+\]
+
+Cette erreur est appliquée à un régulateur permettant de déterminer l'angle d'inclinaison souhaité :
+
+\[
+\theta_{\mathrm{ref}} = C_v(e_v)
+\]
+
+L'inclinaison demandée représente alors une consigne d'accélération indirecte. En effet, pour accélérer dans une direction donnée, le robot doit volontairement s'incliner afin de créer une composante du poids permettant de générer le mouvement.
+
+La boucle interne compare ensuite l'angle désiré avec l'angle mesuré par l'\acrshort{imu} :
+
+\[
+e_{\theta} = \theta_{\mathrm{ref}}-\theta
+\]
+
+Le régulateur d'angle calcule l'accélération nécessaire des roues :
+
+\[
+a_{\mathrm{roues}} = C_{\theta}(e_{\theta})
+\]
+
+Cette accélération est ensuite intégrée et transmise sous forme de vitesse aux drivers moteurs.
+
+La structure complète de commande est donc :
+
+\[
+v_{\mathrm{ref}}
+\rightarrow
+(v_{\mathrm{ref}}-v)
+\rightarrow
+\theta_{\mathrm{ref}}
+\rightarrow
+(\theta_{\mathrm{ref}}-\theta)
+\rightarrow
+a_{\mathrm{roues}}
+\rightarrow
+\text{moteurs pas à pas}
+\]
+
+Cette architecture présente l'avantage de découpler la dynamique de déplacement et la dynamique d'équilibrage. La boucle interne, plus rapide, garantit la stabilité du robot tandis que la boucle externe impose le comportement global en vitesse.
+\subsection{Calcul du couple moteur équivalent}
+
+Le modèle dynamique obtenu précédemment permet d'établir la relation entre le couple moteur appliqué aux roues et l'accélération du châssis. Bien que la commande réelle du robot soit réalisée en accélération par l'intermédiaire des moteurs pas à pas, le calcul du couple équivalent permet de vérifier la cohérence physique de la commande.
+
+L'équation dynamique selon l'axe horizontal est donnée par :
+
+\[
+\ddot{x} =
+\frac{1}{d_1}
+\left(
+aI_O\dot{\theta}^2\sin(\theta)
+-
+a^2g\sin(\theta)\cos(\theta)
++
+T
+\left(
+\frac{I_O}{r}+a\cos(\theta)
+\right)
+\right)
+\]
+
+avec :
+
+\[
+d_1=I_Om_O-a^2\cos^2(\theta)
+\]
+
+Le couple moteur peut être obtenu en isolant le terme associé à l'actionneur :
+
+\[
+T=
+\frac{
+d_1\ddot{x}
+-
+aI_O\dot{\theta}^2\sin(\theta)
++
+a^2g\sin(\theta)\cos(\theta)
+}
+{
+\frac{I_O}{r}+a\cos(\theta)
+}
+\]
+
+Cette expression met en évidence les différentes contributions nécessaires à la génération du couple moteur :
+
+\begin{itemize}
+    \item le terme $d_1\ddot{x}$ correspond au couple nécessaire pour produire l'accélération du châssis ;
+    \item le terme $aI_O\dot{\theta}^2\sin(\theta)$ représente les effets dynamiques liés au mouvement angulaire du corps ;
+    \item le terme $a^2g\sin(\theta)\cos(\theta)$ correspond à la compensation du moment gravitationnel dû à l'inclinaison du robot.
+\end{itemize}
+
+Le couple calculé représente donc l'effort mécanique instantané nécessaire pour suivre une consigne d'accélération. Dans le système réel, cette accélération est convertie en consigne de mouvement pour les moteurs pas à pas, dont la commande ne permet pas un asservissement direct en couple.\subsection{Régulateur PID}
+
 \subsection{Régulation angle}
+
 \subsection{Régulation vitesse, angle}
+
 
 \section{Modèle final}
 \section{Simulations}

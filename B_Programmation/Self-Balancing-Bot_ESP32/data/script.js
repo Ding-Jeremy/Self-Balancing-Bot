@@ -151,8 +151,8 @@ function createJoystick(containerId, idPrefix) {
   joysticks[idPrefix] = joystick;
   joystick.enabled = false; // Add manual enabled flag
 
-  // Limit the packet to each 100 ms (10Hz)
-  const sendInterval = 100; // ms
+  // Limit the packet to each 50 ms (20Hz)
+  const sendInterval = 50; // ms
   let lastX = null;
   let lastY = null;
   lastSent = 0;

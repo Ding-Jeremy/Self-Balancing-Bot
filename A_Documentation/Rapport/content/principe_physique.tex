@@ -148,16 +148,17 @@ Les équations obtenues sont les suivantes :
 =
 \frac{1}{d_1}
 \left(
-m_p l \dot{\theta}^{2}\sin(\theta)
+a I_O \dot{\theta}^{2}\sin(\theta)
 -
-a_2 g \sin(\theta)\cos(\theta)
+a^2 g \sin(\theta)\cos(\theta)
 +
 T
 \left(
-\frac{I_0}{r}
+\frac{I_O}{r}
 +
 a\cos(\theta)
 \right)
+\label{eq:ddx}
 \right)
 \end{equation}
 
@@ -166,17 +167,18 @@ a\cos(\theta)
 =
 \frac{1}{d_1}
 \left(
--a_2 \dot{\theta}^{2}\sin(\theta)\cos(\theta)
+-a^2 \dot{\theta}^{2}\sin(\theta)\cos(\theta)
 +
-a m_0 g\sin(\theta)
+a m_O g\sin(\theta)
 -
 T
 \left(
-m_0
+m_O
 +
 \frac{a}{r}\cos(\theta)
 \right)
 \right)
+\label{eq:ddtheta}
 \end{equation}
 
 où $\ddot{x}$ représente l'accélération horizontale du robot et $\ddot{\theta}$ l'accélération angulaire du châssis par rapport à la verticale. Le terme $T$ correspond au couple appliqué par les moteurs sur les roues. Celui-ci constitue l'entrée de commande du système et permet d'agir sur l'équilibre du robot.
@@ -200,3 +202,7 @@ Le paramètre $r$ représente le rayon des roues. Le terme $\frac{J_w}{r^2}$ per
 Le terme $d_1$ représente le dénominateur commun des équations du mouvement et traduit le couplage entre les différents éléments mécaniques du système. Sa dépendance en fonction de $\theta$ montre que la dynamique du robot varie en fonction de son inclinaison.
 
 Ce modèle fournit ainsi une représentation plus fidèle du comportement du robot réel. Il permet notamment d'étudier l'influence des paramètres mécaniques sur la dynamique du système et constitue une base pour le développement de la loi de commande.
+
+La différence principale entre le modèle incluant les roues et les autres est l'effet du couple sur la réguation d'angle. 
+
+Le couple généré est bénefique à la régulation.
