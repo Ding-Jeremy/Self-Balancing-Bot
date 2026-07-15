@@ -43,21 +43,22 @@
 
 // ---------------- PID Controller Parameters ----------------
 // Velocity controller
-#define D_REG_KPV 0.62
+#define D_REG_KPV 13.0
 #define D_REG_TDV 0.0
 #define D_REG_TIV 0.0
 
 // Balance controller
-#define D_REG_KPT 3.68
-#define D_REG_TDT 1.10
+#define D_REG_KPT 2.21
+#define D_REG_TDT 0.65
 #define D_REG_TIT 0.0
 
 // Rest Angle
 #define D_BALANCE_ANGLE 2.1 // [°]
 
-#define D_DATASEND_PERIOD 500        // Data transmission period [ms]
-#define D_ANGLE_LIMITS {-20, 20}     // Limit angles [°]
-#define D_SPEED_CTRL_ANGLE {-10, 10} // Speed control lean angles [°]
+#define D_DATASEND_PERIOD 500            // Data transmission period [ms]
+#define D_ANGLE_LIMITS {-30, 30}         // Limit angles [°]
+#define D_SPEED_CTRL_RANGE {-0.7, 0.7}   // Speed control lean angles [m/s]
+#define D_SPEED_DELTA_CTRL_RANGE {-2, 2} // Max pivot speed [rad/s]
 
 #define D_WHEEL_RADIUS 0.055       // [m]
 #define D_MOTOR_MAX_SPEED 5 * M_PI // [rad/s]
@@ -67,7 +68,7 @@
 #define D_PASSWORD "123456789"
 
 // File management (data saving)
-#define D_MAX_RECORDING_SIZE 3000 // (Samples)
+#define D_MAX_RECORDING_SIZE 2000 // (Samples)
 
 #define D_BATTERY_SEND_PERIOD 5000 // Update battery every x [ms]
 
@@ -94,6 +95,7 @@ typedef struct PIDController
 typedef struct
 {
   float time;         // [s]
+  float acceleration; // [rad/s^2]
   float theta;        // [°]
   float theta_target; // [°]
   float speed;        // [m/s]
@@ -118,7 +120,6 @@ void send_motor_state(bool state);
 
 bool is_angle_withing_range();
 float map_f(float value, float min1, float max1, float min2, float max2);
-float rad_s_to_ustp_s(float rad_s, uint16_t micro_stepping_value);
 void send_recording();
 float read_battery();
 void send_battery(float battery_voltage);
@@ -156,7 +157,8 @@ float speed_update = 0;
 float position = 0.0f;
 
 int8_t angle_limits[2] = D_ANGLE_LIMITS;
-float speed_control_range[2] = D_SPEED_CTRL_ANGLE;
+float speed_control_range[2] = D_SPEED_CTRL_RANGE;
+float speed_delta_control_range[2] = D_SPEED_DELTA_CTRL_RANGE;
 
 bool motor_state = false;
 
@@ -183,7 +185,7 @@ uint32_t step_speed_period = 10000; // ms
 uint32_t step_speed_ton = 3000;     // ms
 uint32_t step_counter = 0;          // ms
 
-bool trap_enable = true;
+bool trap_enable = false;
 float trap_peak = .2f; // m/s
 uint32_t trap_start_time = 0;
 uint32_t trap_speed_period = 5000; // ms
@@ -214,8 +216,8 @@ PIDController tilt_PID =
         .integral = 0.0f,
         .previousError = 0.0f,
 
-        .outputMin = -100, // Motor acceleration [rad/s^2]
-        .outputMax = 100};
+        .outputMin = -200, // Motor acceleration [rad/s^2]
+        .outputMax = 200};
 
 //-------------- SETUP FUNCTION ---------------
 void setup()
@@ -256,8 +258,10 @@ void setup()
   server.begin();
 
   delay(50);
+
   // Check if the bot is in a correct position
   // If angle out of safe range.
+
   if (is_angle_withing_range())
   {
     motor_state = true;
@@ -395,20 +399,18 @@ void loop()
     motor_speed += acceleration * inner_loop_cnt;
     motor_speed = motor_speed > D_MOTOR_MAX_SPEED ? D_MOTOR_MAX_SPEED : motor_speed < -D_MOTOR_MAX_SPEED ? -D_MOTOR_MAX_SPEED
                                                                                                          : motor_speed;
-    us_speed = rad_s_to_ustp_s(motor_speed, micro_stepping_value);
-    float motor_speed_delta = rad_s_to_ustp_s(pivot_speed, micro_stepping_value);
-
     // Chariot speed
     speed = motor_speed * D_WHEEL_RADIUS;
 
     // run motors (standalone speed)
-    tmc2226_left.run_speed(-(int32_t)us_speed + motor_speed_delta);
-    tmc2226_right.run_speed((int32_t)us_speed + motor_speed_delta);
+    tmc2226_left.run_speed(-(int32_t)motor_speed + pivot_speed);
+    tmc2226_right.run_speed((int32_t)motor_speed + pivot_speed);
 
     // If currently recording
     if (recording && recording_size < D_MAX_RECORDING_SIZE)
     {
       recording_data[recording_size].time = millis();
+      recording_data[recording_size].acceleration = acceleration;
       recording_data[recording_size].speed_target = speed_target;
       recording_data[recording_size].speed = speed;
       recording_data[recording_size].theta_target = theta_target;
@@ -456,19 +458,6 @@ void loop()
 
 //-------------- FUNCTION IMPLEMENTATIONS ---------------
 
-/// @brief Transforms rad/s to microstep/s
-/// @param rad_s
-/// @param micro_stepping_value
-/// @return
-float rad_s_to_ustp_s(float rad_s, uint16_t micro_stepping_value)
-{
-  const float steps_per_rev = 200.0f; // typical stepper motor (1.8°)
-
-  float rev_per_sec = rad_s / (2.0f * M_PI);
-  float steps_per_sec = rev_per_sec * steps_per_rev;
-
-  return steps_per_sec * micro_stepping_value;
-}
 /// @brief Reads current angleX and assess if in the range
 /// @return
 bool is_angle_withing_range()
@@ -505,12 +494,13 @@ void send_recording()
   float first_time = recording_data[0].time;
   // Send the recording transmit signal
   ws.textAll("{\"id\":\"save_start\"}");
-  ws.textAll("Time [ms],Speed_target [m/s],Speed [m/s],Theta_Target [deg], Theta [deg],Position [m]");
+  ws.textAll("Time [ms],Acceleration [m/s^2],Speed_target [m/s],Speed [m/s],Theta_Target [deg],Theta [deg],Position [m]\n");
   String chunk;
 
   for (int i = 0; i < recording_size; i++)
   {
     chunk += String(recording_data[i].time - first_time, 3) + "," +
+             String(recording_data[i].acceleration, 3) + "," +
              String(recording_data[i].speed_target, 3) + "," +
              String(recording_data[i].speed, 3) + "," +
              String(recording_data[i].theta_target, 3) + "," +
@@ -518,7 +508,7 @@ void send_recording()
              String(recording_data[i].position, 1) + "\n";
 
     // Send data chunck wise
-    if (chunk.length() > 4096)
+    if (chunk.length() > 4095)
     {
       ws.textAll(chunk);
 
@@ -720,7 +710,7 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len)
       }
       else if (msg_id == "joystick-right")
       {
-        pivot_speed = map_f((double)msg["x"], -100, 100, speed_control_range[0], speed_control_range[1]);
+        pivot_speed = -map_f((double)msg["x"], -100, 100, speed_delta_control_range[0], speed_delta_control_range[1]);
       }
       else if (msg_id == "record_start")
       {

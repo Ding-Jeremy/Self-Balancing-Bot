@@ -34,8 +34,12 @@
 // Default register values
 #define D_TMC_REGDFV_CHOPCONF 0x15010053
 #define D_TMC_REGDFV_GCONF 0x101
-#define D_TMC_DEF_MRES 0b0010 // Datasheet value
-#define D_TMC_DEF_MICROSTP 64 // Microstep/stp
+#define D_TMC_DEF_MRES 0b0000          // Datasheet value
+#define D_TMC_DEF_MICROSTP 256         // Microstep/stp
+#define D_TMC_CLKFRQ 11.7e6f           // Hz
+#define D_TMC_VACTUALSCALE 16777216.0f //(2^24)
+#define D_TMC_VACTUAL_CONVERSION D_TMC_VACTUALSCALE / D_TMC_CLKFRQ
+#define D_TMC_STPPERREV 200
 // Class
 class TMC2226
 {
@@ -104,10 +108,11 @@ public:
     void enable();
     void disable();
 
-    void run_speed(int32_t speed);
+    void run_speed(float rad_s);
 
     void write_to_register(Register reg_address, uint8_t *data);
     uint32_t read_register(Register reg_address);
+    int32_t rad_s_to_vactual(float rad_s);
 
 private:
     uint8_t m_nodeAddress;

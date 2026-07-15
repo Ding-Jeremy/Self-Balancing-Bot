@@ -76,7 +76,7 @@ function initWebSocket() {
       return;
     }
 
-    csv_data += event.data + "\n";
+    csv_data += event.data;
     return;
   }
 
@@ -424,6 +424,7 @@ function requestPID(){
   websocket.send(JSON.stringify({"id":"pid_request"}));
 }
 
+
 function savePID() {
 
     const pidValues = {
@@ -463,8 +464,6 @@ function saveCsv(data) {
   document.body.appendChild(a);
 
   a.click();
-
   a.remove();
-
   URL.revokeObjectURL(url);
 }

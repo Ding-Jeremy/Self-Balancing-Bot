@@ -83,7 +83,7 @@ void TMC2226::init()
     gconf.bits.pdn_disable = 1;      // Enable uart communication
     gconf.bits.mstep_reg_select = 1; // Microstepping from register
     gconf.bits.scale_analog = 1;     // Vref a sense
-    gconf.bits.multistep_filt = 1;   // Activate multistep filtering
+    gconf.bits.multistep_filt = 0;   // Activate multistep filtering
 
     chopconf.value = D_TMC_REGDFV_CHOPCONF; // DEFAULT VALUE
     chopconf.bits.mres = D_TMC_DEF_MRES;    // Microstepping
@@ -197,9 +197,23 @@ uint32_t TMC2226::read_register(Register reg_address)
 /// @brief Runs a motor to a desired speed (automatic)
 /// @param node_addr
 /// @param speed
-void TMC2226::run_speed(int32_t speed)
+void TMC2226::run_speed(float rad_s)
 {
     TMC2226::VACTUAL vactual;
-    vactual.value = speed;
+    vactual.value = rad_s_to_vactual(rad_s);
     write_to_register(Register::E_REG_VACTUAL, vactual.bytes);
+}
+/// @brief Converts rad/s to vactual value
+/// @param rad_s
+/// @param microsteps
+/// @return
+int32_t TMC2226::rad_s_to_vactual(float rad_s)
+{
+    float microsteps_per_sec =
+        (rad_s / (2.0f * M_PI)) *
+        (float)D_TMC_STPPERREV *
+        (float)D_TMC_DEF_MICROSTP;
+
+    return static_cast<int32_t>(
+        microsteps_per_sec * D_TMC_VACTUAL_CONVERSION);
 }
