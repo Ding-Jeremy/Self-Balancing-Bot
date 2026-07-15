@@ -67,7 +67,7 @@
 #define D_PASSWORD "123456789"
 
 // File management (data saving)
-#define D_MAX_RECORDING_SIZE 2000 // (Samples)
+#define D_MAX_RECORDING_SIZE 3000 // (Samples)
 
 #define D_BATTERY_SEND_PERIOD 5000 // Update battery every x [ms]
 
@@ -98,6 +98,7 @@ typedef struct
   float theta_target; // [°]
   float speed;        // [m/s]
   float speed_target; // [m/s]
+  float position;     // [mm]
 } S_DATA;
 
 //-------------- FUNCTION PROTOTYPES ---------------
@@ -148,10 +149,11 @@ float inner_loop_cnt = 0.0f;
 float acceleration = 0.0f;
 
 float speed = 0.0f;
-float speed_average = 0.0f;
 float speed_target = 0.0f;
 float pivot_speed = 0.0f;
 float speed_update = 0;
+
+float position = 0.0f;
 
 int8_t angle_limits[2] = D_ANGLE_LIMITS;
 float speed_control_range[2] = D_SPEED_CTRL_ANGLE;
@@ -166,6 +168,10 @@ uint16_t micro_stepping_value = 0;
 
 uint32_t angle_timer = 0;
 uint32_t battery_timer = 0;
+
+uint32_t move_wait_time = 1500; // ms
+bool waiting = false;
+uint32_t wait_start_time = 0;
 
 bool bidirectional = true;
 float current_dir = 1;
@@ -290,37 +296,51 @@ void loop()
 
   if (trap_enable)
   {
-
-    uint32_t elapsed = millis() - trap_start_time;
-
-    uint32_t t_rise = trap_speed_trise;
-    uint32_t t_flat = trap_speed_period - 2 * t_rise;
-
-    if (elapsed < t_rise)
+    // Waiting between moves
+    if (waiting)
     {
-      // Ramp up
-      speed_target = current_dir * trap_peak * ((float)elapsed / t_rise);
-    }
-    else if (elapsed < (t_rise + t_flat))
-    {
-      // Constant speed
-      speed_target = current_dir * trap_peak;
-    }
-    else if (elapsed < trap_speed_period)
-    {
-      // Ramp down
-      uint32_t t = elapsed - (t_rise + t_flat);
-      speed_target = current_dir * trap_peak * (1.0f - (float)t / t_rise);
+      speed_target = 0.0f;
+
+      if (millis() - wait_start_time >= move_wait_time)
+      {
+        waiting = false;
+        trap_start_time = millis(); // Start next move
+      }
     }
     else
     {
-      if (bidirectional)
-        if (current_dir == 1)
-          current_dir = -1;
-        else
-          current_dir = 1;
-      speed_target = 0.0f;
-      trap_start_time = millis(); // Repeat
+      uint32_t elapsed = millis() - trap_start_time;
+
+      uint32_t t_rise = trap_speed_trise;
+      uint32_t t_flat = trap_speed_period - 2 * t_rise;
+
+      if (elapsed < t_rise)
+      {
+        // Ramp up
+        speed_target = current_dir * trap_peak * ((float)elapsed / t_rise);
+      }
+      else if (elapsed < (t_rise + t_flat))
+      {
+        // Constant speed
+        speed_target = current_dir * trap_peak;
+      }
+      else if (elapsed < trap_speed_period)
+      {
+        // Ramp down
+        uint32_t t = elapsed - (t_rise + t_flat);
+        speed_target = current_dir * trap_peak * (1.0f - (float)t / t_rise);
+      }
+      else
+      {
+        // Motion finished
+        speed_target = 0.0f;
+
+        if (bidirectional)
+          current_dir = -current_dir;
+
+        waiting = true;
+        wait_start_time = millis();
+      }
     }
   }
 
@@ -328,16 +348,12 @@ void loop()
   outer_loop_cnt += dt;
   if (outer_loop_cnt > D_OUTER_LOOP_PERI)
   {
-    if (speed_update > 0)
-      speed_average /= speed_update;
-    else
-      speed_average = 0;
+
     // Update target based on joystick input (position_control)
-    float speed_error = speed_average - speed_target;
+    float speed_error = speed_target - speed;
     // Generate angle theta based on position Error
     theta_target = PID_update(&acceleration_PID, speed_error, outer_loop_cnt);
     outer_loop_cnt = 0;
-    speed_average = 0;
     speed_update = 0;
   }
 
@@ -346,9 +362,12 @@ void loop()
 
   if (inner_loop_cnt > D_INNER_LOOP_PERI)
   {
+    // Update position with current speeed
+    position += D_INNER_LOOP_PERI * speed;
     // theta_target = speed_target;
     //  ANGLE READING
-    sensors_event_t accel, gyro, temp;
+    sensors_event_t accel,
+        gyro, temp;
     mpu.getEvent(&accel, &gyro, &temp);
 
     // Accelerometer angle
@@ -370,22 +389,21 @@ void loop()
     float acceleration =
         PID_update(&tilt_PID, theta_error, inner_loop_cnt);
 
+    // Invert acceleration
+    acceleration *= -1;
     // Convert rad/s to ustp/stp
     motor_speed += acceleration * inner_loop_cnt;
     motor_speed = motor_speed > D_MOTOR_MAX_SPEED ? D_MOTOR_MAX_SPEED : motor_speed < -D_MOTOR_MAX_SPEED ? -D_MOTOR_MAX_SPEED
                                                                                                          : motor_speed;
-
     us_speed = rad_s_to_ustp_s(motor_speed, micro_stepping_value);
     float motor_speed_delta = rad_s_to_ustp_s(pivot_speed, micro_stepping_value);
 
     // Chariot speed
     speed = motor_speed * D_WHEEL_RADIUS;
-    speed_average += speed;
-    speed_update++;
 
     // run motors (standalone speed)
-    tmc2226_left.run_speed((int32_t)us_speed + motor_speed_delta);
-    tmc2226_right.run_speed(-(int32_t)us_speed + motor_speed_delta);
+    tmc2226_left.run_speed(-(int32_t)us_speed + motor_speed_delta);
+    tmc2226_right.run_speed((int32_t)us_speed + motor_speed_delta);
 
     // If currently recording
     if (recording && recording_size < D_MAX_RECORDING_SIZE)
@@ -395,6 +413,7 @@ void loop()
       recording_data[recording_size].speed = speed;
       recording_data[recording_size].theta_target = theta_target;
       recording_data[recording_size].theta = theta_measured - D_BALANCE_ANGLE;
+      recording_data[recording_size].position = position * 1000; // mm
 
       recording_size++;
     }
@@ -486,7 +505,7 @@ void send_recording()
   float first_time = recording_data[0].time;
   // Send the recording transmit signal
   ws.textAll("{\"id\":\"save_start\"}");
-  ws.textAll("Time [ms],Speed_target [m/s],Speed [m/s],Theta_Target [°], Theta [°]");
+  ws.textAll("Time [ms],Speed_target [m/s],Speed [m/s],Theta_Target [deg], Theta [deg],Position [m]");
   String chunk;
 
   for (int i = 0; i < recording_size; i++)
@@ -495,7 +514,8 @@ void send_recording()
              String(recording_data[i].speed_target, 3) + "," +
              String(recording_data[i].speed, 3) + "," +
              String(recording_data[i].theta_target, 3) + "," +
-             String(recording_data[i].theta, 3) + "\n";
+             String(recording_data[i].theta, 3) + "," +
+             String(recording_data[i].position, 1) + "\n";
 
     // Send data chunck wise
     if (chunk.length() > 4096)

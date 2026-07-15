@@ -18,18 +18,18 @@ m_O=m_tot+J_w/r^2;
 
 %IMU position (from wheel axis).
 rho = 0.05113; % distance [m]
-phi = -0.373;   % angle [rad]
+phi = 0;   % angle [rad]
 
 % Sampling period
 T_s = 0.002; % 500 Hz
 
 % Regulator (Inner Loop)
-Kp_t = -3.68;
-Td_t = -1.10;
+Kp_t = 3.68;
+Td_t = 1.10;
 Ti_t = 0;
 
 % Regulator (Outer Loop)
-Kp_v = 6.16;
+Kp_v = 0;
 Td_v = 0;
 Ti_v = 0;
 
