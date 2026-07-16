@@ -24,12 +24,12 @@ phi = -0.373;   % angle [rad]
 T_s = 0.002; % 500 Hz
 
 % Regulator (Inner Loop)
-Kp_t = 2.21;
-Td_t = 0.65;
+Kp_t = 1.53;
+Td_t = 0.38;
 Ti_t = 0;
 
 % Regulator (Outer Loop)
-Kp_v = 13.0;
+Kp_v = 26.76;
 Td_v = 0;
 Ti_v = 0;
 

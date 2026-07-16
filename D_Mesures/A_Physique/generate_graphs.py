@@ -30,99 +30,56 @@ def save_values(
     plt.close()
 
 
-df = pd.read_csv("side_hit_neg.csv")
+df = pd.read_csv("hold_nofilt.csv")
 
 # Plot column 4 vs column 0
 save_values(
     df,
     x_col=0,
-    y_col=4,
-    filename="graphs/side_hit_neg.pdf",
-    label=r"$\theta$",
-    title=r"$\theta = f(t)$",
-    ylabel=r"$\theta[°]$",
+    y_col=[2, 3],
+    filename="graphs/hold_nofilt.pdf",
+    title="Régulation de maintient",
+    ylabel=r"$v [m/s]$",
 )
 
-df = pd.read_csv("side_hit_pos.csv")
+df = pd.read_csv("trapezoidal_move_pos_nofilt.csv")
 
 # Plot column 4 vs column 0
 save_values(
     df,
     x_col=0,
-    y_col=4,
-    filename="graphs/side_hit_pos.pdf",
-    label=r"$\theta$",
-    title=r"$\theta = f(t)$",
-    ylabel=r"$\theta[°]$",
-)
-
-df = pd.read_csv("trapezoidal_move.csv")
-
-# Plot column 4 vs column 0
-save_values(
-    df,
-    x_col=0,
-    y_col=[1, 2],
-    filename="graphs/trapezoidal_move_speed.pdf",
+    y_col=[2, 3],
+    filename="graphs/trapezoidal_move_pos_nofilt_speeds.pdf",
     title=r"Consigne de vitesse: Trapèze",
     ylabel=r"$[m/s]$",
 )
 
-
-df = pd.read_csv("maintient_choc.csv")
-
-plt.figure(figsize=(6, 4))
-plt.xlabel(df.columns[0])
-plt.ylabel("vitesse")
-plt.plot(
-    df.iloc[:, 0],
-    df.iloc[:, [1, 2]],
-    label=df.columns[[1, 2]],
+save_values(
+    df,
+    x_col=0,
+    y_col=6,
+    filename="graphs/trapezoidal_move_pos_nofilt_position.pdf",
+    title=r"Consigne de vitesse: Trapèze",
+    ylabel=r"$x [m]$",
 )
-plt.legend()
-plt.grid(True)
-plt.show()
 
-plt.figure(figsize=(6, 4))
-plt.xlabel(df.columns[0])
-plt.ylabel("vitesse")
-plt.plot(
-    df.iloc[:, 0],
-    df.iloc[:, [3, 4]],
-    label=df.columns[[3, 4]],
+df = pd.read_csv("trapezoidal_move_neg_nofilt.csv")
+
+# Plot column 4 vs column 0
+save_values(
+    df,
+    x_col=0,
+    y_col=[2, 3],
+    filename="graphs/trapezoidal_move_neg_nofilt_speeds.pdf",
+    title=r"Consigne de vitesse: Trapèze",
+    ylabel=r"$[m/s]$",
 )
-plt.legend()
-plt.grid(True)
-plt.show()
 
-plt.figure(figsize=(6, 4))
-plt.xlabel(df.columns[0])
-plt.ylabel("vitesse")
-plt.plot(
-    df.iloc[:, 0],
-    df.iloc[:, 5],
-    label=df.columns[5],
+save_values(
+    df,
+    x_col=0,
+    y_col=6,
+    filename="graphs/trapezoidal_move_neg_nofilt_position.pdf",
+    title=r"Consigne de vitesse: Trapèze",
+    ylabel=r"$x [m]$",
 )
-plt.legend()
-plt.grid(True)
-plt.show()
-"""
-time = df["Time [ms]"].to_numpy()
-
-Ts = np.mean(np.diff(time)) / 1000
-angle = df["Theta [deg]"].to_numpy()
-angle = angle - np.mean(angle)
-
-N = len(angle)
-
-freq = np.fft.fftshift(np.fft.fftfreq(N, Ts))
-
-X = np.fft.fftshift(np.fft.fft(angle))
-
-plt.figure()
-plt.plot(freq, np.abs(X))
-plt.xlabel("Frequency [Hz]")
-plt.ylabel("Magnitude")
-plt.grid(True)
-plt.show()
-"""

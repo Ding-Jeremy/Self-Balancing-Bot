@@ -34,8 +34,8 @@
 // Default register values
 #define D_TMC_REGDFV_CHOPCONF 0x15010053
 #define D_TMC_REGDFV_GCONF 0x101
-#define D_TMC_DEF_MRES 0b0000          // Datasheet value
-#define D_TMC_DEF_MICROSTP 256         // Microstep/stp
+#define D_TMC_DEF_MRES 0b0010          // Datasheet value
+#define D_TMC_DEF_MICROSTP 64          // Microstep/stp
 #define D_TMC_CLKFRQ 11.7e6f           // Hz
 #define D_TMC_VACTUALSCALE 16777216.0f //(2^24)
 #define D_TMC_VACTUAL_CONVERSION D_TMC_VACTUALSCALE / D_TMC_CLKFRQ

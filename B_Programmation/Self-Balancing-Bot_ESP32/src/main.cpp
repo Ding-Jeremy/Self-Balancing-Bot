@@ -69,6 +69,7 @@
 
 // File management (data saving)
 #define D_MAX_RECORDING_SIZE 2000 // (Samples)
+#define D_RECORDING_PERIOD 20     // ms
 
 #define D_BATTERY_SEND_PERIOD 5000 // Update battery every x [ms]
 
@@ -94,7 +95,7 @@ typedef struct PIDController
 
 typedef struct
 {
-  float time;         // [s]
+  float time;         // [ms]
   float acceleration; // [rad/s^2]
   float theta;        // [°]
   float theta_target; // [°]
@@ -165,6 +166,7 @@ bool motor_state = false;
 S_DATA recording_data[D_MAX_RECORDING_SIZE];
 bool recording = false;
 uint16_t recording_size = 0;
+uint32_t recording_last_time = 0;
 
 uint16_t micro_stepping_value = 0;
 
@@ -185,11 +187,11 @@ uint32_t step_speed_period = 10000; // ms
 uint32_t step_speed_ton = 3000;     // ms
 uint32_t step_counter = 0;          // ms
 
-bool trap_enable = false;
-float trap_peak = .2f; // m/s
+bool trap_enable = true;
+float trap_peak = .7f; // m/s
 uint32_t trap_start_time = 0;
 uint32_t trap_speed_period = 5000; // ms
-uint32_t trap_speed_trise = 1500;  // ms
+uint32_t trap_speed_trise = 2000;  // ms
 uint32_t trap_counter = 0;         // ms
 uint32_t t_rise = min(trap_speed_trise, trap_speed_period / 2);
 uint32_t t_flat = trap_speed_period - 2 * t_rise;
@@ -367,7 +369,7 @@ void loop()
   if (inner_loop_cnt > D_INNER_LOOP_PERI)
   {
     // Update position with current speeed
-    position += D_INNER_LOOP_PERI * speed;
+    position += inner_loop_cnt * speed;
     // theta_target = speed_target;
     //  ANGLE READING
     sensors_event_t accel,
@@ -390,12 +392,11 @@ void loop()
     float theta_error = theta_target - (theta_measured - D_BALANCE_ANGLE - theta_offset);
 
     // Generate motor speed from inner loop
-    float acceleration =
+    acceleration =
         PID_update(&tilt_PID, theta_error, inner_loop_cnt);
 
     // Invert acceleration
     acceleration *= -1;
-    // Convert rad/s to ustp/stp
     motor_speed += acceleration * inner_loop_cnt;
     motor_speed = motor_speed > D_MOTOR_MAX_SPEED ? D_MOTOR_MAX_SPEED : motor_speed < -D_MOTOR_MAX_SPEED ? -D_MOTOR_MAX_SPEED
                                                                                                          : motor_speed;
@@ -403,22 +404,9 @@ void loop()
     speed = motor_speed * D_WHEEL_RADIUS;
 
     // run motors (standalone speed)
-    tmc2226_left.run_speed(-(int32_t)motor_speed + pivot_speed);
-    tmc2226_right.run_speed((int32_t)motor_speed + pivot_speed);
+    tmc2226_left.run_speed(-motor_speed + pivot_speed);
+    tmc2226_right.run_speed(motor_speed + pivot_speed);
 
-    // If currently recording
-    if (recording && recording_size < D_MAX_RECORDING_SIZE)
-    {
-      recording_data[recording_size].time = millis();
-      recording_data[recording_size].acceleration = acceleration;
-      recording_data[recording_size].speed_target = speed_target;
-      recording_data[recording_size].speed = speed;
-      recording_data[recording_size].theta_target = theta_target;
-      recording_data[recording_size].theta = theta_measured - D_BALANCE_ANGLE;
-      recording_data[recording_size].position = position * 1000; // mm
-
-      recording_size++;
-    }
     inner_loop_cnt = 0;
   }
 
@@ -454,8 +442,27 @@ void loop()
       send_battery(read_battery());
     }
   }
-}
+  else // Currently recording
+  {
+    uint32_t now = millis();
 
+    if (recording_size < D_MAX_RECORDING_SIZE &&
+        now - recording_last_time >= D_RECORDING_PERIOD)
+    {
+      recording_last_time = now;
+
+      recording_data[recording_size].time = now;
+      recording_data[recording_size].acceleration = acceleration;
+      recording_data[recording_size].speed_target = speed_target;
+      recording_data[recording_size].speed = speed;
+      recording_data[recording_size].theta_target = theta_target;
+      recording_data[recording_size].theta = theta_measured - D_BALANCE_ANGLE;
+      recording_data[recording_size].position = position * 1000.0f;
+
+      recording_size++;
+    }
+  }
+}
 //-------------- FUNCTION IMPLEMENTATIONS ---------------
 
 /// @brief Reads current angleX and assess if in the range

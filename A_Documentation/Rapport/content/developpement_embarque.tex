@@ -167,9 +167,8 @@ La bibliothèque inclue la création d'une classe TMC2226, la gestion de l'UART 
 
 Avant de pouvoir piloter les moteurs, chaque driver TMC2226 doit être correctement initialisé. Cette étape consiste tout d'abord à configurer l'interface UART de l'ESP32 avec les paramètres imposés par le datasheet UART 500000 Baud 8N1.
 
-Une fois la liaison série opérationnelle, plusieurs registres de configuration du TMC2226 sont initialisés. Le registre \texttt{GCONF} est configuré afin de désactiver le mode \texttt{PDN} (\texttt{pdn\_disable = 1}), permettant ainsi d'utiliser l'interface UART comme moyen principal de communication. Le bit \texttt{mstep\_reg\_select} est également activé afin que la résolution de micro-pas soit définie par le registre \texttt{CHOPCONF} plutôt que par les broches matérielles. Les options \texttt{scale\_analog} et \texttt{multistep\_filt} sont également activées afin d'utiliser la référence analogique du courant moteur et d'améliorer la fluidité du mouvement grâce au filtrage des micro-pas.
+Une fois la liaison série opérationnelle, plusieurs registres de configuration du TMC2226 sont initialisés. Le registre \texttt{GCONF} est configuré afin de désactiver le mode \texttt{PDN} (\texttt{pdn\_disable = 1}), permettant ainsi d'utiliser l'interface UART comme moyen principal de communication. Le bit \texttt{mstep\_reg\_select} est également activé afin que la résolution de micro-pas soit définie par le registre \texttt{CHOPCONF} plutôt que par les broches matérielles. Les options \texttt{scale\_analog} et \texttt{multistep\_filt} sont également activées afin d'utiliser la référence analogique du courant moteur $V_{ref}$ et d'améliorer la fluidité du mouvement grâce au filtrage des micro-pas.
 Le courant est donc séléctionné par le potentiomètre et pas le registre correspondant.
-Le registre \texttt{CHOPCONF} est ensuite initialisé à sa valeur par défaut, puis modifié pour définir la résolution de micro-pas utilisée par le moteur. Cette configuration est réalisée une seule fois lors du démarrage du système avant le début du pilotage des moteurs.
 
 Enfin, chaque driver est identifié par une adresse UART. Le protocole de communication du TMC2226 permet de distinguer plusieurs circuits connectés sur un même bus grâce à une adresse codée sur deux bits. Cette adresse est définie matériellement à l'aide des broches \texttt{MS1} et \texttt{MS2}, qui servent à la fois à sélectionner la résolution des micro-pas au démarrage et l'adresse UART du composant. Dans le cadre de ce projet, deux adresses différentes ont été utilisées (\texttt{0b00} et \texttt{0b01}) afin de pouvoir communiquer indépendamment avec plusieurs drivers partageant la même ligne UART. La bibliothèque développée prend en charge cette adresse lors de la construction de chaque instance de la classe \texttt{TMC2226}, permettant ainsi d'envoyer les commandes au driver concerné sans conflit avec les autres périphériques présents sur le bus.
 
@@ -188,7 +187,44 @@ Ce dernier permet donc de contrôler les moteurs directement par l'intermédiair
 Cette méthode présente plusieurs avantages dans le cadre de ce projet. D'une part, elle réduit significativement la charge de calcul du microcontrôleur, qui n'a plus à générer des trains d'impulsions précis pour chaque moteur. D'autre part, elle simplifie l'architecture logicielle en permettant de piloter l'ensemble des paramètres du driver via une unique interface de communication.
 
 Le contrôle des moteurs a donc été implémenté en utilisant ce registre plutôt que les entrées \texttt{STEP} et \texttt{DIR}.
-EXPLICATION DE LA CORRECTION, EQUATION VACTUAL.
+
+La valeur à écrire dans le registre \texttt{V\_actual} est obtenue à partir de la vitesse angulaire de consigne selon les relations suivantes :
+
+$$
+f_{\mu step}=\frac{\omega}{2\pi}\times N_{step}\times N_{\mu}
+$$
+
+$$
+V_{actual}=\frac{f_{\mu step}\times2^{24}}{f_{CLK}}
+$$
+
+En combinant les deux expressions, on obtient :
+
+\begin{equation}
+\begin{aligned}
+V_{actual}=
+\frac{\omega}{2\pi}
+\times
+N_{step}
+\times
+N_{\mu}
+\times
+\frac{2^{24}}{f_{CLK}}
+\end{aligned}
+\end{equation}
+
+où :
+\begin{itemize}
+\item $\omega$ est la vitesse angulaire en \si{rad.s^{-1}} ;
+\item $N_{step}$ est le nombre de pas par tour du moteur ;
+\item $N_{\mu}$ est le nombre de micro-pas par pas ;
+\item $f_{CLK}$ est la fréquence d'horloge du driver.
+\end{itemize}
+
+Les paramètres $N_{step}$, $N_{\mu}$ et $f_{CLK}$ sont définis dans le fichier \texttt{TMC2226.h}, ce qui permet d'adapter facilement la conversion à un autre moteur ou à une autre configuration de micro-pas.
+
+Après des essais expérimentaux consistant à commander une vitesse de \SI{1}{tour.s^{-1}} pendant \SI{10}{s}, les moteurs réalisaient environ 9,75 tours avec la fréquence nominale de \SI{12}{MHz}. Afin d'obtenir une correspondance entre la vitesse commandée et la vitesse réelle, la fréquence d'horloge utilisée dans le calcul a été ajustée à \SI{11.7}{MHz}. Cette valeur est utilisée pour les deux drivers et permet d'obtenir une erreur de vitesse négligeable sur les essais réalisés.
+
 
 \subsection{IMU}
 
