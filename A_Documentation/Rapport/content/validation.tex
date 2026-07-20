@@ -1,6 +1,7 @@
 \section{Conditions de mesures}
 Pour les mesures de tension et de courants, les roues ont été retirées de la maquette. De cette manière, le \Gls{pcb} était facilement accessible.
 
+Pour les mesures embarquées, la période de mesure $T_{mes}$ du module est fixée à 20 ms.
 \subsection{Appareils de mesure}
 
 \begin{table}[H]
@@ -16,52 +17,259 @@ Pour les mesures de tension et de courants, les roues ont été retirées de la 
     \label{tab:appareils_mesure}
 \end{table}
 
-
 \section{Modèle physique}
-Dans cette section: ...
+
+Configuration PID : $K_{pv}=26$, $K_{pt}=1.53$, $T_{dt}=0.38$.
+
+Les paramètres $K_{pv}$ et $K_{pt}$ correspondent respectivement aux gains proportionnels de la boucle de vitesse et de la boucle d'inclinaison, tandis que $T_{dt}$ représente la constante du terme dérivé utilisée pour améliorer l'amortissement de la réponse.
+
+Afin de valider le modèle physique développé précédemment, plusieurs essais expérimentaux ont été réalisés puis comparés aux résultats obtenus par simulation. Les essais portent sur les principaux phénomènes dynamiques intervenant lors du fonctionnement du système : la chute libre, les limitations de vitesse et d'angle, la régulation de maintien, le suivi d'une trajectoire trapézoïdale ainsi que l'influence des mesures issues de l'IMU.
+
+L'objectif est de vérifier que le modèle reproduit fidèlement le comportement réel du système et que les hypothèses retenues sont suffisantes pour représenter sa dynamique.
+
+
 \subsection{Chute libre}
+
+La phase de chute libre correspond à la période durant laquelle le système n'est soumis qu'à l'action de la gravité. Cette phase permet entre autre d'observer l'effet de l'IMU dans la mesure d'angle.
+
+Les figures \ref{fig:chute_libre_positif} et \ref{fig:chute_libre_negatif} présentent l'évolution des grandeurs cinématiques lors d'une chute libre pour deux orientations initiales différentes : un angle positif et un angle négatif.
+
+Dans le cas d'un angle positif (figure \ref{fig:chute_libre_positif}), le système présente une évolution correspondant au mouvement attendu sous l'effet de la gravité. La vitesse angulaire augmente à mesure que le châssis "tombe", tandis que l'orientation évolue selon le mouvement de rotation induit par la configuration initiale.
+
+Les conditions initiales utilisées pour les simulations de chute libre sont définies par le vecteur d'état suivant :
+
+$$
+\vec{X} = (x,\dot{x},\theta,\dot{\theta})
+$$
+
+où $x$ représente la position, $\dot{x}$ la vitesse de déplacement, $\theta$ l'angle d'inclinaison et $\dot{\theta}$ la vitesse angulaire initiale.
+
+Pour les deux cas étudiés, les conditions initiales sont les suivantes :
+
+Cas positif :
+$$
+\vec{X}_0 = (0,0,0.03^\circ,0)
+$$
+
+Cas négatif :
+$$
+\vec{X}_0 = (0,0,-0.015^\circ,0)
+$$
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/figures/graphs/free_fall_positive.pdf}
-    \caption{Chute libre,angle positif}
+    \caption{Chute libre, angle positif}
     \label{fig:chute_libre_positif}
 \end{figure}
+
+La figure \ref{fig:chute_libre_negatif} présente le comportement obtenu lorsque l'angle initial est inversé. Le changement de signe de l'orientation permet de vérifier la symétrie du modèle et l'influence de la condition initiale sur la dynamique du système.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/figures/graphs/free_fall_negative.pdf}
-    \caption{Chute libre,angle négatif}
+    \caption{Chute libre, angle négatif}
     \label{fig:chute_libre_negatif}
 \end{figure}
 
-\subsection{Impact IMU}
-\subsubsection{Positionnement}
-\subsubsection{Impulsions accélérations}
-
+Les courbes expérimentales présentent une concordance avec les courbes simulées. Il existe une symmétrie entre les angles négatifs et positifs.
 \subsection{Vitesse maximale}
 
-\subsection{Angle maximal}
+La vitesse maximale est limitée par le logiciel de commande afin de garantir un fonctionnement sûr du système et d'éviter le dépassement des capacités des moteurs. Pour valider cette limitation, la maquette est maintenue hors de contact du sol puis légèrement inclinée. Cette inclinaison génère une consigne de vitesse qui augmente progressivement jusqu'à atteindre la valeur de saturation programmée.
 
-\subsection{Régulation de maintient}
-\subsubsection{Avec filtre}
-\subsubsection{Sans filtre}
-
-\subsection{Réponse de perturbation}
-
-\subsection{Déplacement trapezoïdal}
+La figure \ref{fig:max_speed} présente l'évolution de la vitesse mesurée au cours de cet essai. La vitesse augmente jusqu'à atteindre une valeur maximale de $0.864\,\mathrm{m/s}$, puis reste limitée à cette valeur.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{assets/figures/graphs/free_fall_positive.pdf}
-    \caption{Chute libre,angle négatif}
-    \label{fig:chute_libre_negatif}
+    \includegraphics[width=1\textwidth]{assets/figures/graphs/max_speed.pdf}
+    \caption{Vitesse maximale mesurée}
+    \label{fig:max_speed}
+\end{figure}
+\subsection{Angle maximal}
+
+Une limite d'inclinaison est implémentée dans le logiciel afin de protéger le système contre une chute ou un fonctionnement en dehors de sa plage de stabilité. Lorsque cette limite est atteinte, la commande coupe immédiatement les moteurs. (voir \ref{chap:developpement_embarque})
+
+La figure \ref{fig:max_angle} présente l'évolution de l'angle d'inclinaison ainsi que de la vitesse du système au cours de l'essai. On observe que lorsque l'angle atteint la valeur limite de $30^\circ$, la vitesse chute instantanément à $0\,\mathrm{m/s}$, traduisant l'arrêt des moteurs.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/figures/graphs/max_angle.pdf}
+    \caption{Validation de la limitation de l'angle maximal}
+    \label{fig:max_angle}
+\end{figure}
+
+
+\subsection{Régulation de maintien}
+
+Cet essai a pour objectif d'observer l'influence d'une accélération linéaire sur la mesure de l'angle fournie par l'\acrshort{imu}. Pour cela, une perturbation manuelle est appliquée au robot en le poussant successivement dans les directions positive et négative.
+
+Lors de l'application de la poussée, une variation rapide de l'angle mesuré est observée dans une direction opposée au sens du déplacement imposé. Cette variation est suivie d'un retour vers la valeur de consigne, puis d'une évolution transitoire dans le sens de la poussée avant que l'angle ne converge à nouveau vers sa valeur initiale.
+
+Pour la perturbation positive (\ref{fig:hold_positive_angle}, \ref{fig:hold_positive_angle}), on constate un temps de régulation de 0.62 s
+Pour la perturbation négative (\ref{fig:hold_negative_angle}, \ref{fig:hold_negative_angle}), on constate un temps de régulation de 0.72 s
+
+Les essais réalisés pour les deux sens de déplacement présentent une réponse symétrique : l'évolution temporelle reste identique, seul le signe de la variation angulaire est inversé.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{assets/figures/graphs/hold_positive_speed.pdf}
+    \caption{Vitesse lors d'une perturbation positive}
+    \label{fig:hold_positive_speed}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{assets/figures/graphs/hold_positive_angle.pdf}
+    \caption{Angle lors d'une perturbation positive}
+    \label{fig:hold_positive_angle}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/graphs/hold_negative_speed.pdf}
+    \caption{Vitesse lors d'une perturbation négative}
+    \label{fig:hold_negative_speed}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/graphs/hold_negative_angle.pdf}
+    \caption{Angle lors d'une perturbation négative}
+    \label{fig:hold_negative_angle}
+\end{figure}
+
+\subsection{Déplacement trapézoïdal}
+
+Afin d'étudier la capacité de déplacement du système, une loi de vitesse trapézoïdale est utilisée. Ce type de profil permet de limiter les variations brusques de la consigne en imposant une phase d'accélération progressive avant d'atteindre une vitesse constante, puis une phase de décélération avant l'arrêt.
+
+La consigne de vitesse est définie par trois phases successives :
+
+\begin{itemize}
+    \item une phase d'accélération durant laquelle la vitesse augmente linéairement jusqu'à atteindre la vitesse maximale ;
+    \item une phase à vitesse constante ;
+    \item une phase de décélération durant laquelle la vitesse diminue linéairement jusqu'à atteindre une vitesse nulle.
+\end{itemize}
+
+La loi de vitesse peut être exprimée sous la forme suivante :
+
+\begin{equation}
+v_{ref}(t)=
+\begin{cases}
+\dfrac{v_{max}}{t_{acc}}t,
+& 0\leq t<t_{acc}
+\\[10pt]
+v_{max},
+& t_{acc}\leq t<t_{acc}+t_{c}
+\\[10pt]
+\dfrac{v_{max}}{t_{dec}}
+(t_f-t),
+& t_{acc}+t_c\leq t<t_f
+\\[10pt]
+0,
+& t\geq t_f
+\end{cases}
+\end{equation}
+
+
+où :
+\begin{itemize}
+    \item $v_{max}$ correspond à la vitesse maximale demandée ;
+    \item $t_{acc}$ représente la durée de la phase d'accélération ;
+    \item $t_c$ correspond à la durée de maintien à vitesse constante ;
+    \item $t_{dec}$ représente la durée de décélération ;
+    \item $t_f$ correspond à la durée totale du déplacement.
+\end{itemize}
+
+Dans le cas étudié, la vitesse maximale est fixée à :
+
+\[
+v_{max}=0.7\,\mathrm{m/s}
+\]
+
+La phase d'accélération dure $2\,\mathrm{s}$, suivie d'une phase à vitesse constante d'une durée de $1\,\mathrm{s}$, puis d'une phase de décélération de $2\,\mathrm{s}$. La durée totale du profil est donc de $5\,\mathrm{s}$.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/graphs/trapez_move_velocity.pdf}
+    \caption{Évolution de la vitesse lors d'un déplacement trapézoïdal}
+    \label{fig:trapez_velocity}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/graphs/trapez_move_position.pdf}
+    \caption{Évolution de la position lors d'un déplacement trapézoïdal}
+    \label{fig:trapez_position}
+\end{figure}
+
+
+La figure \ref{fig:trapez_velocity} présente l'évolution de la vitesse mesurée. La phase d'accélération suit correctement la rampe imposée par la consigne.
+
+Lors de la phase à vitesse constante, la mesure reste proche de la valeur de consigne $\dot{x} \approx 0.065 \si{\meter\per\second}$. Une différence apparaît toutefois lors de la phase de décélération, durant laquelle la vitesse mesurée diminue plus rapidement que le profil théorique.
+
+La figure \ref{fig:trapez_position} présente l'évolution de la position obtenue à partir du déplacement réalisé. La trajectoire suit globalement la consigne souhaitée. La position finale simulée est de $x_{sim}=2.985\si{\meter}$, tandis que la position mesurée atteint $x_{mes}=2.854\si{\meter}$.
+
+L'écart relatif entre la simulation et la mesure est donné par :
+
+$$
+e_x=\frac{|x_{sim}-x_{mes}|}{x_{sim}}\times100
+$$
+
+soit :
+
+$$
+e_x=\frac{|2.985-2.854|}{2.985}\times100 \approx 4.39\%
+$$
+
+L'erreur obtenue reste limitée, ce qui confirme la capacité du système à suivre une consigne de déplacement.
+\subsection{Impact IMU}
+
+L'impact représente une phase critique pour la mesure, car les accélérations importantes générées lors du contact avec le sol peuvent influencer fortement l'estimation de l'état du système. Cette partie vise à caractériser l'influence de différents paramètres sur le signal mesuré par l'IMU.
+
+\subsubsection{Positionnement}
+
+La position de l'IMU dans la structure influence directement les accélérations mesurées, les raisons de cette influence sont détaillées ici \ref{subsubsection:position_imu}.
+
+La figure \ref{fig:imu_position} présente l'évolution des différents angles mesurés lors du déplacement suivant une loi trapézoïdale présenté précédemment.
+
+On observe que l'angle mesuré par l'IMU suit plus fidèlement l'évolution de l'angle théorique obtenu à partir du modèle physique que celle de l'angle issu de la simulation de l'IMU.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/graphs/trapez_move_theta.pdf}
+    \caption{Impact de la position de l'IMU}
+    \label{fig:imu_position}
+\end{figure}
+
+\subsubsection{Impulsions d'accélération}
+
+Cet essai a pour objectif d'observer l'influence d'une accélération linéaire sur la mesure de l'angle fournie par l'\acrshort{imu}. Pour cela, une perturbation manuelle est appliquée au système en le poussant successivement dans les directions positive et négative.
+
+Les figures \ref{fig:pulse_positive} et \ref{fig:pulse_negative} présentent l'évolution de l'angle mesuré lors de ces perturbations.
+ 
+Tout comme pour la régulation de maintient, l'application d'une accélération à pour effet une lecture de l'angle opposée au sens de poussée.
+
+Les réponses obtenues pour les deux directions de perturbation présentent un comportement similaire avec une inversion du signe de l'évolution de l'angle.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/graphs/pulse_positive.pdf}
+    \caption{Variation de l'angle lors d'une accélération positive}
+    \label{fig:pulse_positive}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/graphs/pulse_negative.pdf}
+    \caption{Impulsion d'accélération négative}
+    \label{fig:pulse_negative}
 \end{figure}
 
 
 \section{Electriques}
 \subsection{Batterie}
-Afin de mesurer correctement le niveau de la batterie, un pont diviseur est utilisé, comme expliqué dans le chapitre consacré à la maquette.
+Afin de mesurer le niveau de la batterie, un pont diviseur est utilisé, comme expliqué dans le chapitre consacré à la maquette.
 
 Il est important de s'assurer que les résistances utilisées dans le pont diviseur sont correctement reportées dans le code afin de garantir une lecture fidèle de la tension de la batterie.
 

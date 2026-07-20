@@ -17,7 +17,7 @@ m_tot=m_b+2*m_w;
 m_O=m_tot+J_w/r^2;
 
 %IMU position (from wheel axis).
-rho = 0.05113; % distance [m]
+rho = 0.05130; % distance [m]
 phi = -0.373;   % angle [rad]
 
 % Sampling period

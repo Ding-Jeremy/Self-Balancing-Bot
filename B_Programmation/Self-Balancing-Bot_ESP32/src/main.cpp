@@ -43,13 +43,13 @@
 
 // ---------------- PID Controller Parameters ----------------
 // Velocity controller
-#define D_REG_KPV 13.0
+#define D_REG_KPV 26.76
 #define D_REG_TDV 0.0
 #define D_REG_TIV 0.0
 
 // Balance controller
-#define D_REG_KPT 2.21
-#define D_REG_TDT 0.65
+#define D_REG_KPT 1.53
+#define D_REG_TDT 0.38
 #define D_REG_TIT 0.0
 
 // Rest Angle
@@ -187,7 +187,7 @@ uint32_t step_speed_period = 10000; // ms
 uint32_t step_speed_ton = 3000;     // ms
 uint32_t step_counter = 0;          // ms
 
-bool trap_enable = true;
+bool trap_enable = false;
 float trap_peak = .7f; // m/s
 uint32_t trap_start_time = 0;
 uint32_t trap_speed_period = 5000; // ms
@@ -425,6 +425,7 @@ void loop()
   if (!motor_state)
   {
     motor_speed = 0;
+    speed = 0;
   }
 
   // Send angle and speed to clients (if not recording)
@@ -469,7 +470,7 @@ void loop()
 /// @return
 bool is_angle_withing_range()
 {
-  return (theta_measured > angle_limits[0] && theta_measured < angle_limits[1]);
+  return (theta_measured - D_BALANCE_ANGLE > angle_limits[0] && theta_measured - D_BALANCE_ANGLE < angle_limits[1]);
 }
 /// @brief Send the state of the motor to the clients
 /// @param state

@@ -1,0 +1,82 @@
+
+Ce chapitre a pour objectif d'interpréter les résultats présentés lors de la validation expérimentale. Les différents essais permettent de comparer le comportement réel de la maquette avec celui prédit par le modèle physique et les simulations. Les écarts observés sont analysés afin d'identifier leurs origines et d'évaluer les limites de la modélisation.
+
+\section{Mesures modèle physique}
+
+\subsection{Chute libre}
+
+Les essais de chute libre montrent une bonne concordance entre les résultats expérimentaux et les simulations. Pour les deux conditions initiales étudiées, les courbes d'évolution de l'angle présentent une dynamique similaire, ce qui valide le modèle mécanique développé.
+
+On observe toutefois que l'évolution de l'angle mesuré est légèrement plus lente que celle prédite par la simulation. Cet écart peut s'expliquer par des phénomènes qui n'ont pas été entièrement pris en compte dans le modèle, notamment les frottements de roulement entre les roues et le sol ainsi que le couple résistant généré par les moteurs pas à pas lorsqu'ils sont entraînés mécaniquement. En effet, même lorsque les moteurs ne sont pas commandés, leur réluctance magnétique produit un couple de retenue qui s'oppose au mouvement et ralentit la chute du système.
+
+Malgré ces écarts, la bonne superposition des courbes montre que le modèle physique reproduit correctement le comportement global de la maquette et constitue une représentation suffisamment fidèle pour la conception et le réglage de la commande.
+\subsection{Vitesse maximale}
+
+La vitesse maximale mesurée est de
+
+\[
+v_{max}=0.864~\si{\meter\per\second}.
+\]
+
+Avec un rayon de roue de
+
+\[
+r=0.055~\si{\meter},
+\]
+
+la vitesse angulaire correspondante vaut
+
+\[
+\omega=\frac{v}{r}
+=\frac{0.864}{0.055}
+\simeq15.7~\si{\radian\per\second}
+\approx5\pi~\si{\radian\per\second}.
+\]
+
+Cette valeur correspond exactement à la limitation logicielle implémentée dans le contrôleur.
+
+La concordance entre la valeur théorique et la mesure expérimentale confirme que cette limitation est correctement appliquée.
+
+\subsection{Angle maximal}
+
+Les essais montrent que les moteurs sont désactivés dès que l'inclinaison atteint la valeur limite de $30^\circ$. Cette désactivation provoque une chute immédiate de la vitesse à une valeur nulle.
+
+Ce comportement confirme le bon fonctionnement de la protection logicielle. 
+
+\subsection{Régulation de maintien}
+
+Les essais de maintien mettent en évidence le bon fonctionnement de la boucle de régulation.
+
+Lorsqu'une perturbation est appliquée manuellement au robot, celui-ci génère immédiatement une correction destinée à ramener son centre de gravité au-dessus du point de contact avec le sol.
+
+Le comportement observé traduit un compromis satisfaisant entre rapidité de correction et stabilité. Les gains du correcteur permettent de limiter les dépassements tout en assurant un temps de réponse relativement court (< 1s).
+
+Les réponses obtenues pour les perturbations positives et négatives présentent des caractéristiques similaires, ce qui confirme la symétrie du comportement du système.
+
+\subsection{Déplacement trapézoïdal}
+
+Les essais de déplacement montrent que le profil de vitesse généré par le contrôleur est correctement suivi durant la phase d'accélération. La vitesse augmente de manière linéaire jusqu'à atteindre la valeur de consigne avant de rester pratiquement constante pendant la phase de déplacement uniforme.
+
+Une différence apparaît toutefois durant la phase de décélération. La vitesse mesurée décroît plus rapidement que la consigne théorique, ce qui indique que le système freine davantage que prévu par le modèle.
+
+Cette différence se répercute sur la position finale. La simulation prévoit un déplacement de $2.985~\si{\meter}$ tandis que la mesure expérimentale atteint $2.854~\si{\meter}$, soit une erreur relative d'environ $4.4\,\%$.
+
+Cet écart reste modéré et s'explique principalement par les simplifications du modèle, les frottements mécaniques qui ne sont pas représentées dans la simulation.
+
+\subsection{Influence de l'IMU}
+
+Les essais mettent en évidence deux phénomènes liés aux mesures de l'IMU.
+
+Le premier concerne le positionnement du capteur dans la structure. Les mesures montrent que la position de l'IMU influence directement l'évolution de l'angle estimé. Plus le capteur est éloigné du centre de rotation, plus les accélérations linéaires mesurées sont importantes, ce qui modifie l'estimation de l'inclinaison.
+
+Le second phénomène apparaît lors des accélérations brusques. Lorsqu'une impulsion est appliquée au système, l'angle estimé évolue tout d'abord dans une direction opposée au sens de la poussée avant de revenir progressivement vers sa valeur d'équilibre. Ce comportement s'explique par le principe même de fonctionnement de l'accéléromètre, qui mesure simultanément l'accélération gravitationnelle et les accélérations dues au mouvement.
+
+Pendant la phase d'accélération, ces deux contributions ne peuvent plus être distinguées, ce qui perturbe temporairement l'estimation de l'angle. Une fois l'accélération terminée, le filtre de fusion retrouve progressivement une estimation cohérente et l'angle revient vers sa valeur réelle.
+
+Dans l'ensemble, ces essais montrent que les perturbations observées ne proviennent pas d'une erreur de la régulation mais des limites physiques de la mesure inertielle.
+
+\section{Utilisabilité}
+
+Le système présente une bonne utilisabilité. La charge du robot est facilitée par sa conception, permettant une manipulation aisée lors des phases de désassemblage et d'assemblage. L'interface utilisateur développée sous forme d'\acrshort{pwa} est intuitive et rapidement prise en main, permettant un contrôle efficace du système.
+
+Les protections prévues pour amortir les chutes remplissent correctement leur fonction et limitent les risques d'endommagement du robot lors des pertes d'équilibre. De plus, les roues peuvent être retirées facilement, ce qui simplifie le transport du système et réduit son encombrement.
