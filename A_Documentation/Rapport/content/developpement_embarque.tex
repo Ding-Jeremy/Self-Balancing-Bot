@@ -1,6 +1,5 @@
-\label{chap:developpement_embarque}
 
-Une fois le circuit électrique validé par les différents essais réalisés sur breadboard et le \acrshort{pcb} commandé, le développement du logiciel embarqué de l'ESP-32 peut débuter. Ce chapitre présente la conception du programme développé en langage C++ ainsi que les différents outils et bibliothèques utilisés.
+Une fois le circuit électrique validé par les différents essais réalisés sur breadboard et le \acrshort{pcb} commandé, le développement du logiciel embarqué de l'ESP32 peut débuter. Ce chapitre présente la conception du programme développé en langage C++ ainsi que les différents outils et bibliothèques utilisés.
 
 Le logiciel embarqué a pour objectif d'assurer la gestion complète du système. Il réalise notamment l'acquisition des données provenant des capteurs, le traitement de ces informations selon l'algorithme de contrôle défini (\acrshort{pid}), ainsi que la commande des différents actionneurs. Il assure également la communication avec l'interface utilisateur.
 
@@ -15,14 +14,14 @@ L'intégralité du code source est disponible à l'annexe \ref{annexe:code_sourc
 
 Le développement du logiciel embarqué est réalisé avec l'environnement Visual Studio Code associé à l'extension PlatformIO. Ce choix permet de bénéficier d'un environnement complet dédié aux systèmes embarqués, regroupant la gestion du projet, la compilation, le téléversement du programme ainsi que la gestion des bibliothèques.
 
-PlatformIO agit comme un intermédiaire entre le code source écrit en C++ et le microcontrôleur ESP-32. Lors de la compilation, le code est transformé en un firmware exécutable par l'ESP-32. Celui-ci est ensuite automatiquement transféré dans la mémoire Flash du microcontrôleur via l'interface USB.
+PlatformIO agit comme un intermédiaire entre le code source écrit en C++ et le microcontrôleur ESP32. Lors de la compilation, le code est transformé en un firmware exécutable par l'ESP32. Celui-ci est ensuite automatiquement transféré dans la mémoire Flash du microcontrôleur via l'interface USB.
 
 L'utilisation de PlatformIO permet également de définir précisément la configuration matérielle utilisée au travers du fichier \texttt{platformio.ini}. Celui-ci contient notamment le modèle de carte, le framework utilisé ainsi que les différentes dépendances nécessaires au projet.
 
 
 \subsection{Bibliothèques Arduino}
 
-Le programme est développé en utilisant le framework Arduino intégré à PlatformIO. Celui-ci fournit une couche d'abstraction permettant de simplifier l'utilisation des périphériques internes de l'ESP-32, notamment la gestion des entrées/sorties numériques, des communications série ou encore des interruptions.
+Le programme est développé en utilisant le framework Arduino intégré à PlatformIO. Celui-ci fournit une couche d'abstraction permettant de simplifier l'utilisation des périphériques internes de l'ESP32, notamment la gestion des entrées/sorties numériques, des communications série ou encore des interruptions.
 
 Différentes bibliothèques sont utilisées afin de faciliter l'interaction avec les composants externes. Ces bibliothèques permettent notamment de communiquer avec les drivers moteurs via UART, de récupérer les données provenant de l'\acrshort{imu} via le protocole I2C, ainsi que de gérer les différentes communications nécessaires au fonctionnement du système.
 
@@ -44,7 +43,7 @@ La séparation entre l'initialisation et l'exécution permet de structurer le pr
 
 \subsection{Initialisation}
 
-Au démarrage de l'ESP-32, lors de la mise sous tension du système, une phase d'initialisation est exécutée une unique fois. Cette étape a pour objectif de configurer l'ensemble des ressources matérielles et logicielles nécessaires au fonctionnement du programme.
+Au démarrage de l'ESP32, lors de la mise sous tension du système, une phase d'initialisation est exécutée une unique fois. Cette étape a pour objectif de configurer l'ensemble des ressources matérielles et logicielles nécessaires au fonctionnement du programme.
 
 Les différentes initialisations sont réalisées de manière séquentielle dans l'ordre suivant :
 
@@ -61,11 +60,11 @@ Les différentes initialisations sont réalisées de manière séquentielle dans
     \item Activation ou Désactivation des moteurs en fonction de la gamme d'angle autorisée.
 \end{itemize}
 
-Cette phase garantit que l'ensemble des composants du système est correctement configuré avant le début de l'exécution cyclique du programme. Une fois cette séquence terminée, l'ESP-32 entre dans sa boucle principale, durant laquelle les acquisitions, les calculs de contrôle et les commandes des actionneurs sont exécutés continuellement.
+Cette phase garantit que l'ensemble des composants du système est correctement configuré avant le début de l'exécution cyclique du programme. Une fois cette séquence terminée, l'ESP32 entre dans sa boucle principale, durant laquelle les acquisitions, les calculs de contrôle et les commandes des actionneurs sont exécutés continuellement.
 
 \subsection{Boucle principale}
 
-Après l'initialisation, l'ESP-32 exécute continuellement la boucle principale du programme. Cette boucle constitue le cycle d'exécution du système et regroupe l'ensemble des opérations nécessaires au contrôle du robot.
+Après l'initialisation, l'ESP32 exécute continuellement la boucle principale du programme. Cette boucle constitue le cycle d'exécution du système et regroupe l'ensemble des opérations nécessaires au contrôle du robot.
 
 Afin de respecter les contraintes temporelles du système de contrôle, certaines opérations ne sont pas exécutées à chaque itération de la boucle principale, mais uniquement lorsque leur période d'exécution respective est atteinte. Cette méthode permet de séparer les différentes tâches selon leur fréquence d'exécution et d'optimiser l'utilisation des ressources du microcontrôleur.
 
@@ -78,7 +77,7 @@ Afin de respecter les contraintes temporelles du système de contrôle, certaine
     
     \item Si le temps écoulé dépasse la période d'exécution de la boucle interne $T_{IL}$ (\textit{Inner Loop}), la mesure de l'angle est acquise depuis le capteur \acrshort{imu}. L'algorithme \acrshort{pid} de la boucle interne est ensuite exécuté afin de calculer la consigne de vitesse appliquée aux moteurs ;
     
-    \item Si le mode d'enregistrement est activé, les différentes données du système sont sauvegardées. Cette acquisition est réalisée dans la boucle interne afin de conserver une résolution temporelle suffisante pour l'analyse du comportement du système ;
+    \item Si le mode d'enregistrement est activé et que temps écoulé dépasse la période d'exécution de la sauvegard $T_{EN}$ (\textit{Enregistrement}), les différentes données du système sont sauvegardées.
     
     \item Si l'angle mesuré par l'\acrshort{imu} dépasse les limites de fonctionnement définies, une sécurité est déclenchée et les moteurs sont désactivés afin d'éviter une perte de contrôle ou un endommagement du système.
 
@@ -86,12 +85,11 @@ Afin de respecter les contraintes temporelles du système de contrôle, certaine
 
 \end{itemize}
 
-Cette organisation permet d'obtenir une architecture de contrôle à plusieurs fréquences d'exécution. La boucle interne, exécutée plus rapidement, assure la stabilisation dynamique du système, tandis que la boucle externe, exécutée à une fréquence plus faible, permet de gérer les consignes globales du robot.
 \subsection{Interruptions}
 
 La boucle principale assure la stabilisation et le maintien de l'équilibre du robot. Cependant, afin de permettre à l'utilisateur d'interagir avec le système et de modifier son comportement en temps réel, des événements externes doivent également pouvoir être pris en compte.
 
-Ces événements sont générés par l'interface de contrôle utilisateur (présentée dans la section correspondante). Les commandes envoyées par l'utilisateur sont transmises à l'ESP-32 via une communication WebSocket. Les données reçues contiennent notamment les informations nécessaires au pilotage du robot, telles que les consignes de déplacement ou les paramètres de fonctionnement.
+Ces événements sont générés par l'interface de contrôle utilisateur (voir~\ref{chap:interface_web}). Les commandes envoyées par l'utilisateur sont transmises à l'ESP32 via une communication WebSocket. Les données reçues contiennent notamment les informations nécessaires au pilotage du robot, telles que les consignes de déplacement ou les paramètres de fonctionnement.
 
 Lorsqu'une nouvelle donnée est reçue via WebSocket, une fonction de rappel (\textit{callback}) est exécutée afin de traiter l'information reçue. Cette fonction ne réalise pas directement les actions de contrôle, mais met à jour des variables globales accessibles depuis la boucle principale.
 
@@ -99,7 +97,7 @@ Lorsqu'une nouvelle donnée est reçue via WebSocket, une fonction de rappel (\t
 \label{subsubsection:web_socket}
 Les commandes WebSocket permettent au client d'envoyer des instructions au serveur embarqué. Chaque commande est identifiée par un identifiant (\texttt{msg\_id}) correspondant à une action spécifique.
 Les messages échangés via WebSocket peuvent être initiés par le client ou par le serveur. La colonne \textit{Direction} indique le sens de communication associé à chaque identifiant de message.
-Ici, le client représente l'utilisateur et le serveur représente l'ESP-32.
+Ici, le client représente l'utilisateur et le serveur représente l'ESP32.
 
 \begin{table}[H]
 \centering
@@ -109,19 +107,23 @@ Ici, le client représente l'utilisateur et le serveur représente l'ESP-32.
 \hline
 \textbf{msg\_id} & \textbf{msg} & \textbf{Description} \\
 \hline
-\texttt{motors\_off} & "" & Désactivation des moteurs. \\
+\texttt{motors\_off} & \texttt{-} & Désactivation des moteurs. \\
 \hline
-\texttt{motors\_on} & "" & Activation des moteurs si les conditions de sécurité sont respectées. \\
+\texttt{motors\_on} & \texttt{-} & Activation des moteurs si les conditions de sécurité sont respectées. \\
 \hline
-\texttt{calibrate} & "" & Sauvegarde de l'angle actuel comme référence d'équilibre. \\
+\texttt{calibrate} & \texttt{-} & Sauvegarde de l'angle actuel comme référence d'équilibre. \\
 \hline
-\texttt{pid\_values} & PID & Mise à jour des paramètres des correcteurs PID. \\
+\texttt{pid\_values} & \texttt{\{"balance","velocity"\}} & Mise à jour des paramètres des correcteurs PID. \\
 \hline
-\texttt{pid\_request} & "" & Demande des paramètres PID actuels. \\
+\texttt{pid\_request} & \texttt{-} & Demande des paramètres PID actuels. \\
 \hline
-\texttt{joystick-left} & \texttt{"y"} & Modification de la consigne de vitesse. \\
+\texttt{joystick-left} & \texttt{\{"y":0.000\}} & Modification de la consigne de vitesse. \\
 \hline
-\texttt{joystick-right} & \texttt{"x"} & Modification de la consigne de rotation. \\
+\texttt{joystick-right} & \texttt{\{"x":0.000\}} & Modification de la consigne de rotation. \\
+\hline
+\texttt{record\_start} & \texttt{-} & Commande le départ de l'enregistrement des donnés \\
+\hline
+\texttt{record\_stop} & \texttt{-} & Commande l'arrêt de l'enregistrement des donnés\\
 \hline
 \end{tabularx}
 \caption{Commandes WebSocket reçues par le serveur}
@@ -129,31 +131,29 @@ Ici, le client représente l'utilisateur et le serveur représente l'ESP-32.
 
 \begin{table}[H]
 \centering
-\begin{tabularx}{\textwidth}{|l|l|X|}
+\begin{tabularx}{\textwidth}{|l|X|X|}
 \hline
 \multicolumn{3}{|c|}{\textbf{Serveur $\rightarrow$ Client}} \\
 \hline
 \textbf{msg\_id} & \textbf{msg} & \textbf{Description} \\
 \hline
-\texttt{motor\_state} & \texttt{"value"} & Indique l'état actuel des moteurs. \\
+\texttt{motor\_state} & \texttt{\{"value":"on"\}} / \texttt{\{"value":"off"\}} & Indique l'état actuel des moteurs. \\
 \hline
-\texttt{calibration\_angle} & \texttt{"value"} & Retourne l'angle de calibration enregistré. \\
+\texttt{calibration\_angle} & \texttt{\{"value":0.000\}} & Retourne l'angle de calibration enregistré. \\
 \hline
-\texttt{pid\_values} & PID & Retourne les paramètres PID actuellement utilisés. \\
+\texttt{pid\_values} & \texttt{\{"balance","velocity"\}} & Retourne les paramètres PID actuellement utilisés. \\
 \hline
-\texttt{battery} & "votage","percentage" & Transmets les données de la batterie \\
+\texttt{battery} & \texttt{\{"voltage","percentage"\}} & Transmet les informations relatives à l'état de la batterie. \\
 \hline
-\texttt{target\_angle} & "value" & Transmets la valeur de \texttt{target\_angle} \\
+\texttt{target\_angle} & \texttt{\{"value":0.000\}} & Transmet la valeur de l'angle cible \texttt{target\_angle}. \\
 \hline
-\texttt{angle} & "value" & Transmets la valeur de l'angle actuel \\
+\texttt{angle} & \texttt{\{"value":0.000\}} & Transmet la valeur de l'angle actuel mesuré. \\
 \hline
+
 \end{tabularx}
 \caption{Informations WebSocket envoyées par le serveur}
+\label{tab:websocket_server_client}
 \end{table}
-
-Cette séparation permet de conserver une architecture claire : la réception des commandes est gérée de manière asynchrone, tandis que leur application effective reste effectuée dans la boucle principale. Celle-ci conserve ainsi la maîtrise du déroulement temporel de l'algorithme de contrôle.
-
-Ainsi, les commandes utilisateur peuvent modifier le comportement du robot sans perturber l'exécution des boucles de contrôle temps réel nécessaires au maintien de l'équilibre.
 
 Les commandes suivantes: \texttt{battery, target\_angle, angle} sont transmises par le serveur périodiquement. La période d'envoi est réglée par des defines.
 \section{Pilotage des périphériques}
@@ -168,10 +168,10 @@ La bibliothèque inclue la création d'une classe TMC2226, la gestion de l'UART 
 
 Avant de pouvoir piloter les moteurs, chaque driver TMC2226 doit être correctement initialisé. Cette étape consiste tout d'abord à configurer l'interface UART de l'ESP32 avec les paramètres imposés par le datasheet UART 500000 Baud 8N1.
 
-Une fois la liaison série opérationnelle, plusieurs registres de configuration du TMC2226 sont initialisés. Le registre \texttt{GCONF} est configuré afin de désactiver le mode \texttt{PDN} (\texttt{pdn\_disable = 1}), permettant ainsi d'utiliser l'interface UART comme moyen principal de communication. Le bit \texttt{mstep\_reg\_select} est également activé afin que la résolution de micro-pas soit définie par le registre \texttt{CHOPCONF} plutôt que par les broches matérielles. Les options \texttt{scale\_analog} et \texttt{multistep\_filt} sont également activées afin d'utiliser la référence analogique du courant moteur $V_{ref}$ et d'améliorer la fluidité du mouvement grâce au filtrage des micro-pas.
+Une fois la liaison série opérationnelle, plusieurs registres de configuration du TMC2226 sont initialisés. Le registre \texttt{GCONF} est configuré afin de désactiver le mode \texttt{PDN} (\texttt{pdn\_disable = 1}), permettant ainsi d'utiliser l'interface UART comme moyen principal de communication. Le bit \texttt{mstep\_reg\_select} est également activé afin que la résolution de micro-pas soit définie par le registre \texttt{CHOPCONF} plutôt que par les broches matérielles. L'option \texttt{scale\_analog} est également activée afin d'utiliser la référence analogique du courant moteur $V_{ref}$.
 Le courant est donc séléctionné par le potentiomètre et pas le registre correspondant.
 
-Enfin, chaque driver est identifié par une adresse UART. Le protocole de communication du TMC2226 permet de distinguer plusieurs circuits connectés sur un même bus grâce à une adresse codée sur deux bits. Cette adresse est définie matériellement à l'aide des broches \texttt{MS1} et \texttt{MS2}, qui servent à la fois à sélectionner la résolution des micro-pas au démarrage et l'adresse UART du composant. Dans le cadre de ce projet, deux adresses différentes ont été utilisées (\texttt{0b00} et \texttt{0b01}) afin de pouvoir communiquer indépendamment avec plusieurs drivers partageant la même ligne UART. La bibliothèque développée prend en charge cette adresse lors de la construction de chaque instance de la classe \texttt{TMC2226}, permettant ainsi d'envoyer les commandes au driver concerné sans conflit avec les autres périphériques présents sur le bus.
+La bibliothèque développée prend en charge l'addresse (voir \ref{chap:electronique}.) lors de la construction de chaque instance de la classe \texttt{TMC2226}, permettant ainsi d'envoyer les commandes au driver concerné sans conflit avec les autres périphériques présents sur le bus.
 
 \subsubsection{Contrôle vitesse}
 Lors du test avec le breadboard, les pins STP et DIR étaient alors utilisées afin de contrôler ces derniers. Cependant, en parcourant le datasheet du TMC2226, il existe un registre permettant
@@ -216,15 +216,46 @@ N_{\mu}
 
 où :
 \begin{itemize}
-\item $\omega$ est la vitesse angulaire en \si{rad.s^{-1}} ;
-\item $N_{step}$ est le nombre de pas par tour du moteur ;
-\item $N_{\mu}$ est le nombre de micro-pas par pas ;
-\item $f_{CLK}$ est la fréquence d'horloge du driver.
+    \item $\omega$ est la vitesse angulaire en \si{rad.s^{-1}} ;
+    \item $N_{step}$ est le nombre de pas par tour du moteur ;
+    \item $N_{\mu}$ est le nombre de micro-pas par pas ;
+    \item $f_{CLK}$ est la fréquence d'horloge du driver.
 \end{itemize}
 
-Les paramètres $N_{step}$, $N_{\mu}$ et $f_{CLK}$ sont définis dans le fichier \texttt{TMC2226.h}, ce qui permet d'adapter facilement la conversion à un autre moteur ou à une autre configuration de micro-pas.
+Les paramètres $N_{step}$, $N_{\mu}$ et $f_{CLK}$ sont définis dans le fichier \texttt{TMC2226.h}, ce qui permet d'adapter facilement la conversion à un autre moteur ou à une configuration différente du driver.
 
-Après des essais expérimentaux consistant à commander une vitesse de \SI{1}{tour.s^{-1}} pendant \SI{10}{s}, les moteurs réalisaient environ 9,75 tours avec la fréquence nominale de \SI{12}{MHz}. Afin d'obtenir une correspondance entre la vitesse commandée et la vitesse réelle, la fréquence d'horloge utilisée dans le calcul a été ajustée à \SI{11.7}{MHz}. Cette valeur est utilisée pour les deux drivers et permet d'obtenir une erreur de vitesse négligeable sur les essais réalisés.
+Des essais expérimentaux ont ensuite été réalisés afin de valider cette conversion. En commandant une vitesse de \SI{1}{tour.s^{-1}} pendant \SI{10}{s}, les moteurs effectuaient environ 9,75 tours lorsque la fréquence d'horloge nominale de \SI{12}{MHz} était utilisée. Cet écart s'explique par la tolérance de l'oscillateur interne du TMC2226.
+
+Afin d'obtenir une meilleure correspondance entre la vitesse commandée et la vitesse réelle, la fréquence d'horloge utilisée dans le calcul a été ajustée à \SI{11.7}{MHz}. Cette valeur est utilisée pour les deux drivers et permet d'obtenir une erreur de vitesse négligeable sur l'ensemble des essais réalisés.
+
+L'implémentation de cette conversion est réalisée par la fonction \texttt{TMC2226::run\_speed()}, qui reçoit une vitesse angulaire en \si{rad.s^{-1}}, la convertit en valeur de registre \texttt{VACTUAL} puis l'écrit dans le TMC2226.
+\begin{lstlisting}[language=C++]
+void TMC2226::run_speed(float rad_s)
+{
+    TMC2226::VACTUAL vactual;
+    vactual.value = rad_s_to_vactual(rad_s);
+    write_to_register(Register::E_REG_VACTUAL, vactual.bytes);
+}
+\end{lstlisting}
+
+La conversion est réalisée par la fonction \texttt{rad\_s\_to\_vactual()},qui convertit la vitesse angulaire en valeur à écrire dans le registre \texttt{VACTUAL} selon le calcul décrit .
+
+\begin{lstlisting}[language=C++]
+/// @brief Converts rad/s to vactual value
+/// @param rad_s
+/// @param microsteps
+/// @return
+int32_t TMC2226::rad_s_to_vactual(float rad_s)
+{
+    float microsteps_per_sec =
+        (rad_s / (2.0f * M_PI)) *
+        (float)D_TMC_STPPERREV *
+        (float)D_TMC_DEF_MICROSTP;
+
+    return static_cast<int32_t>(
+        microsteps_per_sec * D_TMC_VACTUAL_CONVERSION);
+}
+\end{lstlisting}
 
 
 \subsection{IMU}
@@ -297,9 +328,9 @@ Le gyroscope assure ainsi la réactivité de la mesure sur les variations rapide
 
 \subsection{Mesure de la batterie}
 
-La mesure du niveau de tension de la batterie s'effectue en utilisant le ratio du pont diviseur (voir \ref{subsectin:pont_diviseur}). Ce ratio est inscrit dans le code sous forme de \texttt{define}, \texttt{D\_BATT\_RATIO}, et vaut $6.022$.
+La mesure du niveau de tension de la batterie s'effectue en utilisant le ratio du pont diviseur (voir \ref{subsectin:pont_diviseur}). Ce ratio est inscrit dans le code sous forme de \texttt{define}, \texttt{D\_BATT\_RATIO}.
 
-La tension de la batterie étant supérieure à la tension maximale admissible par l'entrée analogique du microcontrôleur, un pont diviseur résistif est utilisé afin d'abaisser la tension mesurée. L'entrée ADC mesure donc uniquement la tension présente aux bornes de la résistance inférieure du pont diviseur. Le rapport entre la tension réelle de la batterie et la tension mesurée par l'ADC est donné par le facteur \texttt{D\_BATT\_RATIO}.
+L'entrée ADC mesure donc uniquement la tension présente aux bornes de la résistance inférieure du pont diviseur. 
 
 La fonction \texttt{analogReadMilliVolts()} permet de récupérer directement la tension mesurée par l'ADC en millivolts après conversion. Cette valeur est ensuite multipliée par le ratio du pont diviseur afin de retrouver la tension réelle aux bornes de la batterie :
 \begin{equation}
@@ -332,15 +363,15 @@ Afin d'estimer ce niveau de charge, deux tensions de référence sont définies 
 #define D_BATT_MIN_V 14.70
 #define D_BATT_MAX_V 16.00
 \end{lstlisting}
+La constante \texttt{D\_BATT\_MIN\_V} correspond à la tension considérée comme représentant une batterie déchargée. Cette valeur a été déterminée expérimentalement en mesurant la tension de la batterie, puis en la comparant à l'état de charge indiqué par un chargeur ISDT PD60. À l'inverse, la constante \texttt{D\_BATT\_MAX\_V} représente la tension d'une batterie complètement chargée.
 
-La tension \texttt{D\_BATT\_MIN\_V} correspond au seuil considéré comme une batterie vide, tandis que \texttt{D\_BATT\_MAX\_V} représente la tension d'une batterie complètement chargée. Dans cette plage de fonctionnement, la tension mesurée est convertie en pourcentage à l'aide d'une fonction de mise à l'échelle linéaire (\textit{mapping}) :
-
-\[
+Dans cette plage de fonctionnement, la tension mesurée est convertie en un pourcentage d'état de charge à l'aide d'une fonction de mise à l'échelle linéaire (\textit{mapping}) :
+$$
 \mathrm{Niveau}_{\mathrm{batterie}} =
 \frac{V_{\mathrm{batterie}}-V_{\mathrm{min}}}
 {V_{\mathrm{max}}-V_{\mathrm{min}}}
 \times 100
-\]
+$$
 
 où $V_{\mathrm{batterie}}$ est la tension mesurée, $V_{\mathrm{min}}$ la tension minimale définie par \texttt{D\_BATT\_MIN\_V} et $V_{\mathrm{max}}$ la tension maximale définie par \texttt{D\_BATT\_MAX\_V}.
 
@@ -358,7 +389,6 @@ La boucle interne est dédiée au maintien de l'équilibre. Elle utilise la mesu
 
 Le role de la boucle interne est de suivre la consigne imposée par la boucle externe.
 
-Cette architecture permet de séparer deux dynamiques différentes : la dynamique lente du déplacement et la dynamique rapide de stabilisation. La boucle interne est exécutée à une fréquence élevée afin de compenser rapidement les perturbations, tandis que la boucle externe est exécutée plus lentement afin d'éviter des corrections trop brusques.   
 \subsection{Structure du correcteur PID}
 
 La structure utilisée est définie comme suit :
@@ -453,7 +483,7 @@ L'erreur d'inclinaison est ensuite calculée en prenant en compte :
 \begin{itemize}
     \item l'angle d'équilibre du robot ;
     \item l'angle demandé par la boucle vitesse ;
-    \item un offset de calibration du capteur ;
+    \item un offset de calibration du capteur (choisi par le client);
     \item l'angle réellement mesuré.
 \end{itemize}
 
@@ -470,12 +500,9 @@ motor_speed =
     motor_speed;
 \end{lstlisting}
 
-Enfin, la vitesse angulaire est convertie en vitesse de déplacement des moteurs pas à pas et envoyée aux drivers TMC2226 via UART :
+Enfin, la consigne de vitesse est transmise aux moteurs en \si{rad.s^{-1}}.
 
-\begin{lstlisting}[language=C++]
-tmc2226_left.run_speed((int32_t)us_speed + motor_speed_delta);
-tmc2226_right.run_speed(-(int32_t)us_speed + motor_speed_delta);
-\end{lstlisting}
+La conversion s'effectue en deux étapes. La vitesse angulaire est d'abord convertie en tours par seconde, puis en micro-pas par seconde en tenant compte du nombre de pas par tour du moteur (\texttt{D\_TMC\_STPPERREV}) et du facteur de micro-pas configuré (\texttt{D\_TMC\_DEF\_MICROSTP}). Enfin, cette valeur est multipliée par la constante \texttt{D\_TMC\_VACTUAL\_CONVERSION}, définie dans le datasheet du TMC2226, afin d'obtenir la valeur du registre \texttt{VACTUAL}.
 
 Le signe opposé appliqué aux deux moteurs permet de prendre en compte leur montage symétrique sur le robot.
 
@@ -494,29 +521,14 @@ $$
 \omega_{droite} = -\omega_{équilibre} + \Delta\omega_{z}
 $$
 
-Dans l'implémentation, cette composante de rotation correspond à la variable \texttt{motor\_speed\_delta} :
+Dans l'implémentation, cette composante de rotation correspond à la variable \texttt{pivot\_speed} :
 
-\begin{lstlisting}[language=C++]
-float motor_speed_delta =
-    rad_s_to_ustp_s(rotation_speed_target,
-                    micro_stepping_value);
-
-tmc2226_left.run_speed(
-    (int32_t)us_speed + motor_speed_delta);
-
-tmc2226_right.run_speed(
-    -(int32_t)us_speed + motor_speed_delta);
-\end{lstlisting}
-
-La vitesse issue du correcteur d'équilibre (\texttt{us\_speed}) est appliquée avec un signe opposé aux deux moteurs afin de compenser leur montage mécanique inversé. Cette composante assure uniquement le déplacement avant ou arrière ainsi que la stabilisation du robot.
-
-La variable \texttt{rotation\_speed\_target} est quant à elle une consigne indépendante permettant de commander la rotation. Elle est convertie en vitesse moteur par la fonction \texttt{rad\_s\_to\_ustp\_s()} afin d'être compatible avec les drivers TMC2226.
 
 Ainsi :
 \begin{itemize}
-    \item lorsque \texttt{rotation\_speed\_target} vaut zéro, les deux moteurs compensent uniquement l'équilibre du robot et celui-ci avance en ligne droite ;
-    \item lorsque \texttt{rotation\_speed\_target} est positive, une différence de vitesse est créée entre les roues, entraînant une rotation dans un sens ;
-    \item lorsque \texttt{rotation\_speed\_target} est négative, la rotation s'effectue dans le sens opposé.
+    \item lorsque \texttt{pivot\_speed} vaut zéro, les deux moteurs compensent uniquement l'équilibre du robot et celui-ci avance en ligne droite ;
+    \item lorsque \texttt{pivot\_speed} est positive, une différence de vitesse est créée entre les roues, entraînant une rotation dans un sens ;
+    \item lorsque \texttt{pivot\_speed} est négative, la rotation s'effectue dans le sens opposé.
 \end{itemize}
 
 Cette méthode permet de découpler le contrôle de l'équilibre et celui de la direction. La boucle PID d'inclinaison reste ainsi uniquement responsable du maintien de la stabilité du robot, tandis que la commande de rotation modifie directement la vitesse relative des deux moteurs sans perturber la régulation d'équilibre.

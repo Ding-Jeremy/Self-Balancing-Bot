@@ -1,8 +1,9 @@
 
 Les caractéristiques mécaniques du châssis connus, il est à présent possible de modéliser le système en utilisant les équations vues dans le chapitre \ref{chap:principe_physique}.
+La totalité des fichiers Matlab se trouvent également en annexe \ref{annexe:git} ainsi que sur le git \ref{annexe:git}.
 
 \section{Méthode et outils}
-Les outils principaux utilisés dans le but de créer, de simuler ce système sont: Matlab, Simulink, Python.
+Les outils principaux utilisés dans le but de créer, de simuler ce système sont: Matlab, Simulink.
 \section{Système à régler}
 
 Cette section a pour objectif de définir le système à régler ainsi que les éléments influençant son comportement dynamique.
@@ -10,13 +11,11 @@ Comme présenté au chapitre \ref{chap:principe_physique}, les équations \ref{e
 
 Il existe cependant des différence avec la réalité qu'il est important d'expliquer.
 
-
 \subsection{Moteur pas à pas}
 
-Les équations de mouvement régissant le système admettent comme paramètre d'entrée le couple moteur. Cependant, le sytème réel utilise des moteurs pas à pas, ces derniers ne fournissent pas un couple continu.
-Cependant, grâce à l'utilisation d'un réglage micro-pas fin ainsi que du lissage (voir \ref{subsection:drivers_moteurs}), le couple développé peut être considéré comme quasi continu. Le moteur est donc modélisé comme un actionneur continu, ce qui simplifie l'étude et la synthèse du régulateur.
-
+Les équations de mouvement régissant le système utilisent comme paramètre d'entrée le couple moteur. Or, le système réel étant équipé de moteurs pas à pas, le couple produit n'est pas naturellement continu. Toutefois, l'utilisation d'un réglage en micro-pas fin ainsi que d'un lissage (voir \ref{subsection:drivers_moteurs}) permet d'obtenir un comportement proche d'un actionneur continu. Le moteur est donc modélisé par un couple continu afin de simplifier l'étude et la synthèse du régulateur.
 \subsection{Modélisation de l'\acrshort{imu}}
+
 
 Afin de reproduire fidèlement le comportement du robot réel, le modèle intègre une représentation simplifiée de l'\acrshort{imu}. Celle-ci ne se limite pas à la mesure de l'angle d'inclinaison, mais prend également en compte les caractéristiques physiques du capteur ainsi que son traitement numérique interne.
 
@@ -72,12 +71,26 @@ $$
 
 où $\alpha = 0.9$.
 
-Ce filtre permet de combiner les avantages des deux capteurs : le gyroscope fournit une excellente estimation des variations rapides de l'orientation, tandis que l'accéléromètre assure la correction de la dérive à basse fréquence grâce à la mesure de la gravité.
+Ce filtre permet de combiner les avantages des deux capteurs : le gyroscope fournit une bonne estimation des variations rapides de l'orientation, tandis que l'accéléromètre permet de corriger la dérive du gyroscope à basse fréquence grâce à la mesure de la direction de la gravité.
 
-La modélisation de cette chaîne de mesure permet ainsi de reproduire de manière réaliste le comportement de l'\acrshort{imu} utilisée sur le robot, notamment lors des phases d'accélération où les mesures de l'accéléromètre sont perturbées par les accélérations linéaires du châssis.
+\subsubsection{Intégration Matlab}
 
-\subsection{Numérisation}
-Le système à régler est contrôlé par régulation numérique dont la fréquence dépend de la programmation.
+Le modèle de l'\acrshort{imu} ainsi que le filtre complémentaire sont ensuite implémentés dans Matlab/Simulink afin d'intégrer cette chaîne de mesure dans la simulation complète du robot.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/figures/simulink_schematic/IMU.png}
+    \caption{Modèle de l'\acrshort{imu} dans Simulink}
+    \label{fig:imu_simulink}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/figures/simulink_schematic/complementary_filter.png}
+    \caption{Implémentation du filtre complémentaire dans Simulink}
+    \label{fig:complementary_filter}
+\end{figure}
+
 
 \section{Régulation}
 \subsection{Structure de régulation retenue}
@@ -85,8 +98,6 @@ Le système à régler est contrôlé par régulation numérique dont la fréque
 Dans une architecture classique de commande mécanique, la grandeur de commande appliquée aux actionneurs est généralement le couple moteur. Le régulateur calcule alors directement le couple nécessaire afin de modifier la dynamique du système. Cependant, cette approche n'est pas directement applicable au système étudié.
 
 Le robot utilise des moteurs pas à pas dont la commande ne repose pas sur une régulation de couple. Les moteurs sont pilotés par des consignes de déplacement générées sous forme d'impulsions, la fréquence des impulsions définissant la vitesse de rotation et leur variation définissant l'accélération imposée aux roues.
-
-De plus, le principe physique d'équilibrage du robot repose sur la génération d'une accélération horizontale du châssis. En effet, une inclinaison du robot crée un moment gravitationnel autour de l'axe des roues. Afin de compenser ce moment, le déplacement du centre de masse doit être corrigé par une accélération appropriée des roues. L'accélération constitue donc la grandeur intermédiaire la plus pertinente pour commander le système.
 
 La stratégie de régulation retenue est une structure en cascade composée de deux boucles :
 
@@ -97,35 +108,35 @@ La stratégie de régulation retenue est une structure en cascade composée de d
 
 La boucle externe compare la vitesse linéaire mesurée du robot avec la consigne de vitesse :
 
-\[
+$$
 e_v = v_{\mathrm{ref}} - v
-\]
+$$
 
 Cette erreur est appliquée à un régulateur permettant de déterminer l'angle d'inclinaison souhaité :
 
-\[
+$$
 \theta_{\mathrm{ref}} = C_v(e_v)
-\]
+$$
 
 L'inclinaison demandée représente alors une consigne d'accélération indirecte. En effet, pour accélérer dans une direction donnée, le robot doit volontairement s'incliner afin de créer une composante du poids permettant de générer le mouvement.
 
 La boucle interne compare ensuite l'angle désiré avec l'angle mesuré par l'\acrshort{imu} :
 
-\[
+$$
 e_{\theta} = \theta_{\mathrm{ref}}-\theta
-\]
+$$
 
 Le régulateur d'angle calcule l'accélération nécessaire des roues :
 
-\[
+$$
 a_{\mathrm{roues}} = C_{\theta}(e_{\theta})
-\]
+$$
 
 Cette accélération est ensuite intégrée et transmise sous forme de vitesse aux drivers moteurs.
 
 La structure complète de commande est donc :
 
-\[
+$$
 v_{\mathrm{ref}}
 \rightarrow
 (v_{\mathrm{ref}}-v)
@@ -137,7 +148,7 @@ v_{\mathrm{ref}}
 a_{\mathrm{roues}}
 \rightarrow
 \text{moteurs pas à pas}
-\]
+$$
 
 Cette architecture présente l'avantage de découpler la dynamique de déplacement et la dynamique d'équilibrage. La boucle interne, plus rapide, garantit la stabilité du robot tandis que la boucle externe impose le comportement global en vitesse.
 \subsection{Calcul du couple moteur équivalent}
@@ -183,22 +194,56 @@ a^2g\sin(\theta)\cos(\theta)
 }
 \]
 
-Cette expression met en évidence les différentes contributions nécessaires à la génération du couple moteur :
 
-\begin{itemize}
-    \item le terme $d_1\ddot{x}$ correspond au couple nécessaire pour produire l'accélération du châssis ;
-    \item le terme $aI_O\dot{\theta}^2\sin(\theta)$ représente les effets dynamiques liés au mouvement angulaire du corps ;
-    \item le terme $a^2g\sin(\theta)\cos(\theta)$ correspond à la compensation du moment gravitationnel dû à l'inclinaison du robot.
-\end{itemize}
+\subsection{Intégration Matlab}
 
-Le couple calculé représente donc l'effort mécanique instantané nécessaire pour suivre une consigne d'accélération. Dans le système réel, cette accélération est convertie en consigne de mouvement pour les moteurs pas à pas, dont la commande ne permet pas un asservissement direct en couple.\subsection{Régulateur PID}
+La figure \ref{fig:input_simulink} montre l'intégration des deux régulateurs imbriqués. Il s'agit ici de régulateurs analogique saturés. Les valeurs de saturations
+restent à définir.
+Ces derniers sont également paramétrés avec un anti-windup.
+On y voit également l'intégration du signal d'entré principal, ici $v_{target}$ soit la consigne de vitesse.
 
-\subsection{Régulation angle}
+A la sortie de cette image, un bloc ZOH, (Zero Order Hold), permet de cadancer le système à la fréquene souhaitée (permettant un représentation fidèle de la réalité.)
+Le signe négatif appliqué à la sortie du régulateur d'angle permet d'adapter la commande à la dynamique du pendule inversé. En effet, une correction de l'inclinaison nécessite un déplacement des roues dans la direction opposée au mouvement angulaire souhaité. Cette inversion assure donc la cohérence entre la consigne d'accélération des roues et le sens de réaction mécanique du robot.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/figures/simulink_schematic/input.png}
+    \caption{Modèle régulateurs PID}
+    \label{fig:input_simulink}
+\end{figure}
 
-\subsection{Régulation vitesse, angle}
+La figure \ref{fig:linear_speed} présente la lecture de la vitesse linéaire. Cette dernière est entièrement déterminée par la consigne de vitesse appliquée aux moteurs pas à pas. 
+Il s'agit également d'une adaptation permettant de modéliser plus fidèlement le comportement du système réel.
 
+Les valeurs obtenues par l'intégration de la consigne d'accélération sont identiques à celles obtenues à partir du modèle physique \texttt{robot\_dynamics}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/figures/simulink_schematic/omega_reading.png}
+    \caption{Lecture de vitesse linéaire}
+    \label{fig:linear_speed}
+\end{figure}
 
-\section{Modèle final}
-\section{Simulations}
-\subsection{Maintient de la position}
-\subsection{Déplacement}
+La figure \ref{fig:torque_physics} présente l'intégration des deux principaux blocs de calcul. Le premier, \texttt{torque\_computation}, permet de déterminer le couple à partir de l'accélération, tandis que le second, \texttt{robot\_dynamics}, intègre les équations du modèle physique présentées dans la section \ref{chap:principe_physique}.
+
+Cette figure illustre également l'implémentation du bloc \acrshort{imu}, placé en sortie du calcul dynamique afin de simuler les mesures fournies par le capteur inertiel.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/figures/simulink_schematic/torque_physics.png}
+    \caption{Calcul du couple, modèle théorique}
+    \label{fig:torque_physics}
+\end{figure}
+
+La constante \(P\) présente dans les figures ci-dessus représente un vecteur de paramètres. 
+L'intégralité de ces paramètres se trouve dans le fichier \texttt{complete\_parameters.m}. 
+Le vecteur \(\vec{X}\) correspond au vecteur d'état du système, défini par :
+
+\[
+\vec{X} =
+\begin{bmatrix}
+x \\
+\dot{x} \\
+\theta \\
+\dot{\theta}
+\end{bmatrix}
+\]
+
+où \(x\) représente la position linéaire, \(\dot{x}\) sa dérivée temporelle, \(\theta\) la position angulaire et \(\dot{\theta}\) la vitesse angulaire.

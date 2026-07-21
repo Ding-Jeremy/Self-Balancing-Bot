@@ -6,25 +6,22 @@
     \label{fig:meca_raytraced}
 \end{figure}
 
-Une fois le principe physique expliquée, il est temps de réaliser la maquette. Le but ici est de tenir compte des reflexions faites durant la partie théorique.
+Une fois le principe physique expliqué, il est temps de réaliser la maquette. Le but ici est de tenir compte des réflexions faites durant la partie théorique.
 
-Dans ce chapitre, l'entiereté de la conception mécanique de la maquette sera traitée en commençant par les outils utilisés, en traitant ensuite des contraintes mécaniques connues.
+Dans ce chapitre, l'entièreté de la conception mécanique de la maquette sera traitée, en commençant par les outils utilisés, puis en présentant les contraintes mécaniques connues.
 
 Finalement, une rapide instruction de montage sera présentée.
 
-L'ensemble des dessins mécanique se trouvent à l'annexe \ref{annexe:dessins_mecaniques}. De plus, les fichiers 3D des pièces se trouvent également sur le Git indiqué en annexe \ref{annexe:git}.
-
+L'ensemble des dessins mécaniques se trouve à l'annexe \ref{annexe:dessins_mecaniques}. De plus, les fichiers 3D des pièces sont également disponibles sur le dépôt Git indiqué en annexe \ref{annexe:git}.
 \section{Méthode et outils}
 \subsection{Logiciels}
 
-La conception mécanique du robot a été réalisée à l'aide du logiciel Fusion360 de Autocad. Cette étape a permis de modéliser l'ensemble des composants du robot avant leur fabrication, de vérifier leur intégration ainsi que d'anticiper les éventuels problèmes d'assemblage.
-
-L'utilisation d'un modèle tridimensionnel présente plusieurs avantages. Elle permet notamment de contrôler les dimensions de l'ensemble, de vérifier les interfaces entre les différents composants, d'optimiser la répartition des masses et de préparer la fabrication des différentes pièces.
+La conception mécanique du robot a été réalisée à l'aide du logiciel Fusion360 de Autocad.
 
 Le PCB ayant été réalisé en premier, ce deriner a été importé dans le modèle afin de pouvoir l'intégrer directement au dessin 3D.
-\subsection{Outillage}
+\subsection{Pièces}
 
-Essentiellement, le robot est constitué de pièces imprimées en 3D ainsi que de pièces découpées au laser. Divers éléments d'assemblage (vis, colonnettes, écrous, etc.) proviennent du MakeLab ou de l'atelier mécanique.
+Le robot est constitué de pièces imprimées en 3D, découpées au laser, et usinées à la CNC 3 axes. Divers éléments d'assemblage (vis, colonnettes, écrous, etc.) proviennent du MakeLab ou de l'atelier mécanique.
 
 Les pneus ainsi que les protections anti-chutes ont été imprimé en TPU, un filament flexible afin d'améliorer l'adhérance et amortir l'impact d'une éventuelle chute.
 
@@ -51,7 +48,7 @@ BambuLab V1 & MakeLab & \acrshort{fdm}, TPU \\
 
 \section{Contraintes mécaniques}
 
-Avant de débuter la conception du châssis, plusieurs contraintes mécaniques ont été identifiées soit par le cahier des charges, soit par le chapitre \ref{chap:principe_physique}.
+Avant de débuter la conception du châssis, plusieurs contraintes mécaniques ont été identifiées.
 
 Les principales contraintes sont les suivantes :
 
@@ -67,17 +64,27 @@ Les principales contraintes sont les suivantes :
 
 Ces contraintes ont servi de fil conducteur durant toute la phase de conception mécanique.
 
-
 \subsection{Centre de gravité}
 
-Le centre de gravité constitue un élément essentiel dans la conception d'un robot auto-équilibrant. Contrairement à un robot classique, la stabilité dépend directement de la position de la masse par rapport à l'axe des roues.
+La position du centre de gravité influence directement plusieurs paramètres intervenant dans le modèle dynamique du robot. 
+Dans les équations précédentes, la distance $l$ représente la distance entre l'axe de rotation des roues et le centre de gravité du châssis. 
+Cette distance intervient dans le terme $a = m_b l$, qui représente l'effet du poids du châssis appliqué à une distance donnée de l'axe des roues.
 
-Un centre de gravité situé plus haut augmente le bras de levier entre la masse et les roues. Le robot bascule alors plus lentement, ce qui laisse davantage de temps au correcteur pour réagir. En revanche, cette configuration nécessite un déplacement plus important des roues pour maintenir l'équilibre.
+Lorsque le centre de gravité est déplacé vers le haut, la valeur de $l$ augmente. Cela entraîne une augmentation du moment d'inertie du châssis autour de l'axe des roues, représenté par :
+\begin{equation}
+I_O = J_b + m_b l^2
+\end{equation}
+Ainsi, pour une même variation angulaire, l'accélération du châssis est réduite, ce qui ralentit la dynamique du robot. Cette diminution de la rapidité de variation de l'angle facilite l'action du correcteur, car celui-ci dispose de davantage de temps pour appliquer un couple moteur correctif.
 
-À l'inverse, un centre de gravité trop bas rend le système beaucoup plus réactif mais également plus difficile à stabiliser, les variations d'angle étant plus rapides.
+Cependant, l'augmentation de $l$ augmente également le moment créé par la gravité. Le terme :
+\begin{equation}
+a m_O g \sin(\theta)
+\end{equation}
+devient plus important, ce qui augmente le couple nécessaire pour ramener le robot vers sa position d'équilibre. Le moteur doit donc fournir un effort plus important pour corriger une même erreur angulaire.
 
-C'est pour cette raison que plusieurs perçage ont été réalisés sur les plaques en PVC se situant sur les côtés, de cette manière, la batterie peut être déplacée afin de modifier les caractéristiques du robot.
+À l'inverse, un centre de gravité plus bas diminue la distance $l$. Les moments générés par la gravité ainsi que l'inertie du châssis diminuent. Le robot devient alors plus sensible aux variations d'angle, car les accélérations angulaires peuvent être plus importantes. Le correcteur doit donc réagir plus rapidement afin de compenser les perturbations.
 
+Le choix de la hauteur du centre de gravité représente ainsi un compromis entre la rapidité de réaction du système et l'effort nécessaire pour maintenir l'équilibre.
 \subsection{Rigidité}
 
 Le châssis doit présenter une rigidité suffisante afin que les mouvements du robot correspondent fidèlement aux mesures fournies par l'unité de mesure inertielle (IMU).
@@ -91,11 +98,14 @@ Dans cette optique, les matériaux utilisés dans la fabrication du châssis ne 
 
 \subsection{Encombrement}
 
-Les dimensions du robot ayant été indiquées par le cahier des charges, voici les dimensions obtenues.
+Les dimensions hors tout du robot ont été déterminées à l'aide du logiciel Fusion 360. 
+Le modèle présente les dimensions suivantes :
 
-156x143x248mm
-
-L'implantation des différents modules a également été étudiée afin de faciliter l'assemblage, la maintenance ainsi que le passage des câbles. Une attention particulière a été portée à l'accessibilité des principaux éléments, notamment la batterie, le switch d'alimentation et les connecteurs.
+\begin{itemize}
+    \item Hauteur : 248 mm
+    \item Largeur : 156 mm
+    \item Profondeur : 143 mm
+\end{itemize}
 
 \subsection{Roues}
 \label{subsection:roues}
@@ -127,7 +137,7 @@ Les résultats sont donnés en \si{\kilogram}.
 \hline
 \textbf{Pièce} & \textbf{Désignation} & \textbf{Mesure} & \textbf{Fusion360} & \textbf{Unité} \\
 \hline
-6 & Protection anti-chute & $0.010$ & -- & \si{\kilogram} \\
+6 & Protection anti-chute & $0.010$ & 0.010 & \si{\kilogram} \\
 \hline
 7 & Pneu & $0.013$ & $0.014$ & \si{\kilogram} \\
 \hline
@@ -158,7 +168,7 @@ Les résultats sont donnés en \si{\kilogram}.
 \end{table}
 \label{tab:masse_pieces}
 
-A partir des masses individuelles et des propriétés géométriques obtenues par Fusion360, les paramètres mécaniques nécessaires à la modélisation dynamique (voir \ref{chap:principe_physique}) sont déterminés.
+A partir des masses individuelles et des propriétés géométriques obtenues par Fusion360, les paramètres mécaniques nécessaires à la modélisation dynamique sont déterminés.
 
 La masse totale des sous-ensembles est obtenue à l'aide d'une nouvelle mesure.
 
@@ -192,10 +202,11 @@ $J_b$ & Fusion360 & Moment d'inertie du châssis (sans les roues) autour de son 
 \label{tab:caracteristiques_mecaniques}
 \end{table}
 
-L'analyse du modèle CAO réalisée sous Fusion 360 permet de déterminer avec précision la position de l'\acrshort{imu} par rapport à l'axe de rotation des roues. Cette information est nécessaire pour tenir compte des accélérations linéaires mesurées par le capteur lors des mouvements du robot.
+L'analyse du modèle CAO réalisée sous Fusion 360 permet de déterminer avec précision la position de l'\acrshort{imu} par rapport à l'axe de rotation des roues. Cette information est nécessaire afin de tenir compte des accélérations linéaires mesurées par le capteur lors des mouvements du robot.
 
-La position de l'\acrshort{imu} est exprimée en coordonnées polaires, définies par la distance $\rho$ entre le capteur et l'axe de rotation, ainsi que par l'angle $\phi$ :
+La position de l'\acrshort{imu} est exprimée en coordonnées polaires, définies par la distance $\rho$ entre le capteur et l'axe de rotation des roues, ainsi que par l'angle $\phi$. Ce dernier correspond à l'angle entre l'axe vertical $Z$ du robot et le vecteur reliant l'axe de rotation des roues à la position de l'\acrshort{imu}. La convention de signe adoptée définit un angle négatif lorsque l'\acrshort{imu} est situé dans le sens opposé à l'orientation positive de l'axe de référence.
 
+Les paramètres obtenus sont :
 $$
 \phi = -0.373~\mathrm{rad}
 $$
@@ -203,3 +214,4 @@ $$
 $$
 \rho = 51.13~\mathrm{mm}
 $$
+

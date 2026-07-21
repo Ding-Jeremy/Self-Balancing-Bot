@@ -3,6 +3,7 @@
 
 \LoadClass[11pt,a4paper,twoside,final]{book}
 
+
 \def\builddir{build}
 \def\graphicsExt{pdf}
 \def\assetsdir{\builddir/assets/figures}
@@ -381,12 +382,11 @@ Yverdon-les-Bains, le \@date
 \addcontentsline{toc}{chapter}{\authenticiationname}
 Je soussigné\ifx\@genre\female e\fi, \@author, atteste par la présente avoir réalisé seul\ifx\@genre\female e\fi~ce travail et n'avoir utilisé aucune autre source que celles expressément mentionnées.
 \vfil
-{\leftskip9cm\relax\@author\par
-\ifdefined\@signature
-%\hspace{8cm}
-\printsignature
+{\leftskip9cm\relax
+\@author\par
 
-\fi
+\includegraphics[width=4cm]{assets/figures/signature.pdf}
+
 }
 \vfil
 Yverdon-les-Bains, le \@date

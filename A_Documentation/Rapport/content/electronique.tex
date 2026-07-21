@@ -1,12 +1,13 @@
-Cette partie décrit l'architecture électronique mise en œuvre dans le cadre du projet. Elle présente l'ensemble des choix de conception réalisés afin d'assurer l'alimentation, le contrôle et l'actionnement de la maquette, tout en respectant les contraintes électriques et fonctionnelles identifiées.
+Cette partie présente la conception et la réalisation de l'architecture électronique développée pour le système. Elle décrit les différents choix effectués afin de répondre aux contraintes liées à l'alimentation, au traitement des informations, au pilotage des actionneurs et à l'intégration des différents composants électroniques.
 
-L'architecture globale du système est d'abord introduite au moyen d'un schéma bloc, permettant de mettre en évidence les différents sous-ensembles et leurs interactions. Les solutions retenues pour la distribution d'énergie ainsi que pour l'entraînement des moteurs sont ensuite détaillées, en particulier au regard des contraintes de courant et de dimensionnement des composants.
+Dans un premier temps, la méthode de conception ainsi que les outils utilisés sont introduits. L'architecture générale du système est ensuite présentée au travers d'un schéma bloc permettant d'identifier les principaux sous-ensembles électroniques et leurs interactions. Les solutions retenues pour l'alimentation sont détaillées, notamment le dimensionnement de la source d'énergie, les dispositifs de conversion de tension et la distribution des différentes alimentations nécessaires aux composants.
 
-Une attention particulière est portée au choix du microcontrôleur, élément central du système de commande, ainsi qu'à l'implémentation de l'électronique de puissance associée aux drivers moteurs. Enfin, la réalisation du schéma électrique complet, le prototypage sur breadboard et la conception du \gls{pcb} sont présentés et justifiés.
+La conception de l'électronique de commande est ensuite abordée avec la présentation du microcontrôleur ESP32, des circuits de pilotage des moteurs pas à pas ainsi que du module de mesure inertielle. Les choix de composants sont justifiés en fonction des besoins du système et des contraintes de fonctionnement.
 
+Enfin, cette partie décrit la réalisation du schéma électrique complet, l'assemblage des premiers prototypes sur breadboard ainsi que la conception du circuit imprimé \gls{pcb}
 \section{Méthode et outils}
 
-Dans un premier temps, il est important de présenter les différents outils utilisés dans la conception et la réalisation de la partie électronique du projet. Ces outils couvrent à la fois la conception des schémas, le routage des circuits imprimés ainsi que la modélisation des architectures fonctionnelles.
+Dans un premier temps, il est important de présenter les différents outils utilisés dans la conception et la réalisation de la partie électronique du projet.
 
 \begin{table}[H]
 \centering
@@ -26,11 +27,11 @@ Conception et routage du PCB & KiCad 9.0 \\
 \section{Alimentation}
 Afin de designer correctement le système électrique, il est important de définir les prérequis en terme d'alimentation. Plus précisemment, le but est ici de déterminer les tensions et courants de fonctionnement nécessaires pour les
 différents modules.
-\subsection{ESP-32}
-L'ESP-32 Devkit V1 \cite{ESP-32-Devkit-V1} peut être alimenté de deux manière différentes. Soit alimenté en 5 V soit en 3.3 V. En effet ce dernier possède un réglateur linéaire,  \gls{ldo} offrant une tension de 3.3 V.
-Ce régulateur sert à générer la tension nécessaire au fonctionnement du chip ESP-32 présent sur la carte de développement mais peut également être utilisé pour alimenter des modules externes pour autant que ces derniers ne consomment pas trop d'énérgie.
+\subsection{ESP32}
+L'ESP32 Devkit V1 \cite{ESP32-Devkit-V1} peut être alimenté de deux manière différentes. Soit alimenté en 5 V soit en 3.3 V. En effet ce dernier possède un réglateur linéaire,  \gls{ldo} offrant une tension de 3.3 V.
+Ce régulateur sert à générer la tension nécessaire au fonctionnement du chip ESP32 présent sur la carte de développement mais peut également être utilisé pour alimenter des modules externes pour autant que ces derniers ne consomment pas trop d'énérgie.
 Le \acrshort{ldo} est de type \cite{AMS1117} et offre un courant de 1 A pour une chute de tension de 1.2 V.
-Comme indiqué dans le chapitre \ref{chap:choix_composants}, le courant consommé par l'ESP-32 dépend de son utilisation, dans le pire cas de figure, ce dernier consomme un courant maximale de:
+Comme indiqué dans le chapitre \ref{chap:choix_composants}, le courant consommé par l'ESP32 dépend de son utilisation, dans le pire cas de figure, ce dernier consomme un courant maximale de:
 $$I_{ESP,max} = 0.4 \si\ampere$$
 Cela veut dire que le LDO présent sur la carte de développement peut fournir un courant aux autres modules valant:
 $$I_{LDO,max} = 0.6 \si\ampere$$
@@ -43,14 +44,18 @@ Le driver moteur nécessite deux alimentations distinctes, une alimentation pour
     \item Tension logique : $V_{\mathrm{DD}} \in [3.3, 5]\,\mathrm{V}$
 \end{itemize}
 
-En ce qui concerne le courant tiré par le module sur l'entrée 3.3V, voici ce que l'on peut trouver dans le datasheet \cite{TMC2226_datasheet}.
+En ce qui concerne le courant consommé par le module sur son entrée \SI{3.3}{V}, la valeur indiquée dans le datasheet \cite{TMC2226_datasheet} est présentée à la figure \ref{fig:tmc_2226_consumption}.
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{assets/figures/tmc2226_consumption.png}
-    \caption{Consommation TMC2226}
+    \caption{Consommation du TMC2226}
     \label{fig:tmc_2226_consumption}
 \end{figure}
 
+Le datasheet précise que cette valeur correspond au courant consommé lorsque les sorties ne fournissent aucune charge (\textit{no loads on output}). Aucune autre information concernant la consommation propre de la logique interne du composant n'est fournie.
+
+Afin de conserver une marge de sécurité lors du dimensionnement de l'alimentation et d'éviter tout sous-dimensionnement, un courant de \SI{10}{mA} est retenu pour l'alimentation logique du module.
 
 \subsection{MPU6050}
 Le datasheet du module \acrshort{imu} \cite{MPU6050_Datasheet} indique les informations suivantes concernant la consommation d'énergie.
@@ -222,7 +227,7 @@ TMC2226 & Driver moteur (logique) & $3.3\,\si{\volt}$ & $\approx 30\,\si{\micro\
 \hline
 MPU6050 & IMU (accéléromètre + gyroscope) & $3.3\,\si{\volt}$ & $\approx 4\,\si{\milli\ampere}$ & $\approx 13.2\,\si{\milli\watt}$ \\
 \hline
-42SHD0217 & Moteur pas à pas (par moteur) & - & - & $\approx 10\,\si{\watt}$ \\
+42SHD0217 & Moteurs pas à pas & - & - & $\approx 10\,\si{\watt}$ \\
 \hline
 \end{tabular}
 \caption{Caractéristiques électriques des différents modules.}
@@ -230,11 +235,11 @@ MPU6050 & IMU (accéléromètre + gyroscope) & $3.3\,\si{\volt}$ & $\approx 4\,\
 \end{table}
 \subsection{Convertisseur / Régulateur}
 
-Les modules alimentés en \SI{3.3}{\volt}, à savoir le MPU6050 et les entrées logiques des drivers TMC2226, présentent une consommation très faible. Leur courant total est inférieur à \SI{10}{\milli\ampere}. Cette consommation reste largement inférieure au courant maximal pouvant être fourni par le régulateur linéaire intégré à la carte ESP-32 DevKit V1.
+Les modules alimentés en \SI{3.3}{\volt}, à savoir le MPU6050 et les entrées logiques des drivers TMC2226, présentent une consommation très faible. Leur courant total est inférieur à \SI{10}{\milli\ampere}. Cette consommation reste largement inférieure au courant maximal pouvant être fourni par le régulateur linéaire intégré à la carte ESP32 DevKit V1.
 
 Il est donc possible d'utiliser directement la sortie \SI{3.3}{\volt} de la carte de développement pour alimenter l'ensemble de la partie logique du système, sans qu'un régulateur supplémentaire ne soit nécessaire. Cette solution permet de réduire le nombre de composants, de simplifier le schéma électrique et de limiter les coûts.
 
-En revanche, le système est alimenté par une batterie dont la tension est supérieure à \SI{5}{\volt}. Une conversion de tension est donc nécessaire afin d'alimenter correctement la carte ESP-32 DevKit V1. Pour cette fonction, un convertisseur DC/DC abaisseur (\emph{buck converter}) est retenu plutôt qu'un régulateur linéaire. En effet, un convertisseur à découpage présente un rendement élevé, généralement supérieur à 90\,\%, ce qui limite les pertes d'énergie et l'échauffement du système.
+En revanche, le système est alimenté par une batterie dont la tension est supérieure à \SI{5}{\volt}. Une conversion de tension est donc nécessaire afin d'alimenter correctement la carte ESP32 DevKit V1. Pour cette fonction, un convertisseur DC/DC abaisseur (\emph{buck converter}) est retenu plutôt qu'un régulateur linéaire. En effet, un convertisseur à découpage présente un rendement élevé, généralement supérieur à 90\,\%, ce qui limite les pertes d'énergie et l'échauffement du système.
 
 Le convertisseur retenu est le module TSR~1-2450E \cite{TSR1-2450E}. Celui-ci est disponible chez Distrelec et présente les caractéristiques principales suivantes :
 
@@ -245,7 +250,7 @@ Le convertisseur retenu est le module TSR~1-2450E \cite{TSR1-2450E}. Celui-ci es
     \item rendement typique : supérieur à 90\,\%.
 \end{itemize}
 
-Le courant maximal consommé par l'ensemble de l'électronique alimentée en \SI{5}{\volt} est estimé à environ \SI{0.4}{\ampere}, essentiellement dû à l'ESP-32. Le convertisseur dispose donc d'une marge de fonctionnement confortable, garantissant un fonctionnement fiable tout en laissant la possibilité d'ajouter de futurs périphériques.
+Le courant maximal consommé par l'ensemble de l'électronique alimentée en \SI{5}{\volt} est estimé à environ \SI{0.4}{\ampere}. Le convertisseur dispose donc d'une marge de fonctionnement confortable, garantissant un fonctionnement fiable tout en laissant la possibilité d'ajouter de futurs périphériques.
 
 \subsection{Batterie}
 \subsubsection{Technologie}
@@ -356,61 +361,59 @@ Une fois les informations relatives aux composants, à la batterie et à l'archi
     \label{fig:schema_bloc_electrique}
 \end{figure}
 
-Comme illustré sur la figure~\ref{fig:schema_bloc_electrique}, l'ESP-32 constitue l'élément central du système. Il assure à la fois les fonctions de calcul, de communication et de supervision globale. L'ensemble de l'architecture logicielle, incluant l'algorithme de contrôle et le serveur web embarqué, s'exécute directement sur ce microcontrôleur.
+Comme illustré sur la figure~\ref{fig:schema_bloc_electrique}, l'ESP32 constitue l'élément central du système. Il assure à la fois les fonctions de calcul, de communication et de supervision globale. L'ensemble de l'architecture logicielle, incluant l'algorithme de contrôle et le serveur web embarqué, s'exécute directement sur ce microcontrôleur.
 
-L'ESP-32 interagit avec les différents sous-systèmes selon plusieurs protocoles de communication adaptés à leurs contraintes respectives.
+L'ESP32 interagit avec les différents sous-systèmes selon plusieurs protocoles de communication adaptés à leurs contraintes respectives.
 
 \paragraph{Commande des moteurs}
-Les moteurs pas à pas sont pilotés via des drivers TMC2226. La communication entre l'ESP-32 et ces derniers repose sur une interface UART, utilisée principalement pour la configuration dynamique des registres internes du driver.
+Les moteurs pas à pas sont pilotés via des drivers TMC2226. La communication entre l'ESP32 et ces derniers repose sur une interface UART, utilisée principalement pour la configuration dynamique des registres internes du driver.
 
 En complément, deux lignes \acrshort{gpio} sont utilisées pour la génération des signaux de commande temporelle (notamment STEP et DIR). Ces signaux déterminent respectivement l'avancement des pas moteurs et le sens de rotation.
 
 \paragraph{Acquisition inertielle}
-L'unité de mesure inertielle (IMU) MPU6050 est connectée à l'ESP-32 via le bus I2C, un protocole série synchrone particulièrement adapté aux capteurs embarqués à faible débit. Ce choix permet une communication avec câblage réduit (deux lignes de données uniquement : SDA et SCL).
+L'unité de mesure inertielle (IMU) MPU6050 est connectée à l'ESP32 via le bus I2C, un protocole série synchrone particulièrement adapté aux capteurs embarqués à faible débit. Ce choix permet une communication avec câblage réduit (deux lignes de données uniquement : SDA et SCL).
 
-L'IMU fournit des mesures d'accélération et de vitesse angulaire utilisées pour l'estimation de l'état du système (orientation, stabilité et dynamique du mouvement). Ces données sont ensuite exploitées par l'algorithme de contrôle exécuté sur l'ESP-32.
+L'IMU fournit des mesures d'accélération et de vitesse angulaire utilisées pour l'estimation de l'état du système (orientation, stabilité et dynamique du mouvement). Ces données sont ensuite exploitées par l'algorithme de contrôle exécuté sur l'ESP32.
 
 \paragraph{Supervision et interface utilisateur}
-Le système est supervisé par un serveur web embarqué directement sur l'ESP-32. Ce serveur permet la visualisation des données en temps réel ainsi que l'envoi de commandes utilisateur. Cette solution présente l'avantage de ne nécessiter aucun matériel externe dédié à l'interface homme-machine, tout en permettant une interaction sans fil avec le système via Wi-Fi.
+Le système est supervisé par un serveur web embarqué directement sur l'ESP32. Ce serveur permet la visualisation des données en temps réel ainsi que l'envoi de commandes utilisateur. Cette solution présente l'avantage de ne nécessiter aucun matériel externe dédié à l'interface homme-machine, tout en permettant une interaction sans fil avec le système via Wi-Fi.
 
 \paragraph{Actionnement}
 Les moteurs (représentés en rouge sur le schéma) constituent les éléments d'action du système. Ils sont contrôlés par les drivers TMC2226.
-
-\paragraph{Synthèse de l'architecture}
-L'ensemble du système repose donc sur une architecture centralisée, dans laquelle l'ESP-32 joue un rôle de contrôleur principal.
 
 
 \section{Schéma Electrique}
 Le schéma électrique complet ainsi que le circuit imprimé se trouvent en annexe \ref{annexe:schema_electrique}. Ici, les différentes parties du schéma sont décomposées afin d'êtres décrites.
 De plus, la liste de pièce complète est également disponible en annexe \ref{annexe:bom}.
 
-\subsection{ESP-32 Devkit V1}
+\subsection{ESP32 Devkit V1}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{assets/figures/schema_ESP32.png}
-    \caption{Schema: ESP-32}
-    \label{fig:ESP-32}
+    \caption{Schema: ESP32}
+    \label{fig:ESP32}
 \end{figure}
 
 \begin{figure}[H] 
     \centering 
     \includegraphics[width=1\textwidth]{assets/figures/esp32_pinout.png} 
-    \caption{Pinout ESP-32} 
-    \label{fig:pinout ESP-32} 
+    \caption{Pinout ESP32} 
+    \label{fig:pinout ESP32} 
 \end{figure}
 
-Le choix des pins utilisées repose principalement sur le Pinout présenté à la figure \ref{fig:pinout ESP-32}. Celui-ci permet d'identifier les différentes fonctionnalités disponibles sur chaque broche ainsi que leurs éventuelles limitations.
+Le choix des pins utilisées repose principalement sur le Pinout présenté à la figure \ref{fig:pinout ESP32}. Celui-ci permet d'identifier les différentes fonctionnalités disponibles sur chaque broche ainsi que leurs éventuelles limitations.
 
 Cette carte de développement ne nécessite aucun composant externe supplémentaire indispensable à son fonctionnement. En effet, elle intègre déjà les éléments nécessaires tels que le régulateur de tension, le convertisseur USB-UART ainsi que les circuits permettant sa programmation.
 
-Les pins utilisées afin de contrôler l'ensemble des modules sont principalement de simples broches \acrshort{gpio}, configurées soit en entrée soit en sortie numérique selon leur fonction. Ces broches permettent notamment de générer les signaux de commande des drivers moteurs ou encore d'assurer les différentes communications avec les périphériques.
+Les pins utilisées afin de contrôler l'ensemble des modules sont des broches \acrshort{gpio} ainsi que des broches séries I2C, UART. 
 
-La pin n°35 constitue une exception. Celle-ci est une broche dite "Input Only", c'est-à-dire qu'elle ne peut être utilisée qu'en entrée. Cependant, elle possède également une entrée analogique reliée au convertisseur analogique-numérique (ADC) de l'ESP32. Cette caractéristique la rend adaptée à la mesure de la tension issue du pont diviseur.
+La pin n°35 constitue une exception. Celle-ci est une broche dite "Input Only", c'est-à-dire qu'elle ne peut être utilisée qu'en entrée. Cependant, elle possède également une entrée analogique reliée au convertisseur analogique-numérique (ADC) de l'ESP32.
 
 Elle est donc utilisée pour effectuer la mesure de la tension de la batterie comme décrit plus bas.
 
-Les broches utilisées pour RX et TX correspondent à l'interface UART2, l'ESP-32 possède en effet plusieurs interfaces UART.
+Les broches utilisées pour RX et TX correspondent à l'interface UART2, l'ESP32 possède en effet plusieurs interfaces UART.
+
 Les broches utilsées pour SCL et SDA (protocle I2C) sont les broches indiquées par le pinout.
 
 
@@ -427,9 +430,7 @@ Le câblage des modules TMC2226 est réalisé conformément aux recommandations 
 
 Afin de permettre l'utilisation d'une communication UART bidirectionnelle, une résistance doit être ajoutée entre les lignes RX et TX du microcontrôleur. Cette résistance permet de réaliser une communication sur une seule ligne de données en partageant le même canal pour l'émission et la réception.
 
-Grâce à cette interface, l'ESP32 peut modifier les registres internes du TMC2226 afin de configurer son comportement, mais également lire ces registres afin de récupérer des informations sur l'état du driver ou vérifier les paramètres appliqués.
-
-Les pins MS1 et MS2 permettent normalement de sélectionner le mode de microstepping du moteur. Cependant, dans le cas d'une communication UART bidirectionnelle, ces mêmes broches permettent également de définir l'adresse du driver. Cette adresse est nécessaire afin d'identifier individuellement chaque module lorsqu'ils sont connectés sur un même bus de communication.
+fLes pins MS1 et MS2 permettent normalement de sélectionner le mode de microstepping du moteur. Cependant, dans le cas d'une communication UART bidirectionnelle, ces mêmes broches permettent également de définir l'adresse du driver. Cette adresse est nécessaire afin d'identifier individuellement chaque module lorsqu'ils sont connectés sur un même bus de communication.
 
 Le réglage du microstepping est donc réalisé directement par logiciel via l'écriture des registres internes du TMC2226. Cette méthode offre davantage de flexibilité puisqu'il est possible de modifier la résolution du mouvement sans modifier le câblage électrique.
 
@@ -507,59 +508,82 @@ $$
 V_{ESP}=V_{BAT}\times0.1639
 $$
 
-Pour la tension maximale retenue de 20 V :
+Pour la tension nominale de la batterie (\SI{14.8}{V}), la tension mesurée par l'entrée analogique de l'ESP32 est donnée par le pont diviseur de tension :
 
-$$
-V_{ESP}=20\times0.1639
-$$
+\[
+V_{ESP}=V_{BAT}\times\frac{R_4}{R_3+R_4}
+\]
 
-$$
-V_{ESP}=3.28~\mathrm{V}
-$$
+avec \(R_3=\SI{51}{k\Omega}\) et \(R_4=\SI{10}{k\Omega}\).
 
-Cette valeur reste inférieure à la tension maximale admissible sur l'entrée analogique de l'ESP32 (3.3 V), ce qui garantit un fonctionnement sûr tout en exploitant presque toute la plage de mesure de l'ADC.
+Ainsi, pour la tension nominale de la batterie :
 
-Le courant circulant dans le pont diviseur vaut :
+\[
+V_{ESP}=14.8\times\frac{10\,000}{51\,000+10\,000}
+\]
 
-$$
+\[
+V_{ESP}=14.8\times0.1639
+\]
+
+\[
+V_{ESP}=2.43~\mathrm{V}
+\]
+
+Cette valeur est compatible avec la plage d'entrée analogique de l'ESP32. À la tension maximale considérée de la batterie (\SI{20}{V}), la tension appliquée à l'entrée ADC vaut :
+
+\[
+V_{ESP,max}=20\times0.1639
+\]
+
+\[
+V_{ESP,max}=3.28~\mathrm{V}
+\]
+
+Cette valeur reste inférieure à la tension maximale admissible sur l'entrée analogique de l'ESP32 (\SI{3.3}{V}), ce qui garantit un fonctionnement sûr tout en exploitant une grande partie de la plage de mesure de l'ADC.
+
+Le courant circulant dans le pont diviseur est donné par :
+
+\[
 I=\frac{V_{BAT}}{R_3+R_4}
-$$
+\]
 
-À la tension maximale de 20 V :
+À la tension nominale de la batterie (\SI{14.8}{V}), le courant circulant dans le pont diviseur est donné par :
 
-$$
-I=\frac{20}{51,000+10,000}
-$$
+\[
+I=\frac{V_{BAT}}{R_3+R_4}
+\]
 
-$$
-I=\frac{20}{61,000}
-$$
+\[
+I=\frac{14.8}{51\,000+10\,000}
+\]
 
-$$
-I=3.28\times10^{-4}~\mathrm{A}
-$$
+\[
+I=2.43\times10^{-4}~\mathrm{A}
+\]
 
-$$
-I=0.328~\mathrm{mA}
-$$
+\[
+I=0.243~\mathrm{mA}
+\]
 
 La puissance totale dissipée par le pont diviseur est alors :
 
-$$
+\[
 P_{tot}=V_{BAT}\times I
-$$
+\]
 
-$$
-P_{tot}=20\times0.328~\mathrm{mA}
-$$
+\[
+P_{tot}=14.8\times0.243~\mathrm{mA}
+\]
 
-$$
-P_{tot}=6.56~\mathrm{mW}
-$$
+\[
+P_{tot}=3.60~\mathrm{mW}
+\]
+
 Cette puissance reste très faible devant la capacité énergétique de la batterie et n'a donc qu'un impact négligeable sur l'autonomie du système.
 \section{Connecteurs}
 
-Les connecteurs utilisés sur la carte sont principalement des pin headers au pas de 2,54~mm. Ce choix est motivé par leur faible coût, leur grande disponibilité ainsi que leur facilité de soudage.
+Les connecteurs utilisés sur la carte sont principalement des pin headers au pas de 2,54~mm. Ce choix est motivé par leur faible coût et leur grande disponibilité.
 
 Les connecteurs destinés aux moteurs peuvent être branchés dans les deux sens. Une inversion ne modifie que le sens de rotation du moteur, lequel peut également être corrigé par logiciel. Il n'est donc pas nécessaire d'utiliser un connecteur détrompé.
 
@@ -594,7 +618,13 @@ Les essais réalisés montrent que le système fonctionne conformément aux atte
 \end{figure}
 \section{PCB}
 
-Le circuit imprimé (\acrshort{pcb}) a été conçu avec KiCad 9.0 conformément à la méthodologie présentée au début de ce chapitre.
+Le circuit imprimé (\acrshort{pcb}) a été conçu avec KiCad 9.0. Il s'agit d'un PCB 4 couches dont voici la constitution:
+\begin{itemize}
+    \item F: Signaux
+    \item IN1: Masse
+    \item IN2: Alim
+    \item B: Signaux
+\end{itemize}
 
 Les différents modules sont disposés de manière à limiter les longueurs de pistes tout en facilitant le routage. Une attention particulière est portée à la séparation des pistes de puissance et des pistes de communication afin de limiter les perturbations électromagnétiques.
 
@@ -605,7 +635,7 @@ Certains symboles et empreintes n'étant pas disponibles dans les bibliothèques
 \hline
 \textbf{N° Référence} & \textbf{Module} \\
 \hline
-U2 & ESP-32 Devkit V1\\
+U2 & ESP32 Devkit V1\\
 \hline
 U3 & BigTechTree TMC2226\\
 \hline 

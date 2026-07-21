@@ -4,35 +4,35 @@
 \section{Méthode et outils}
 
 
-De même que pour le développement du logiciel embarqué en \texttt{C++}, l'environnement de développement utilisé pour l'application web est \textit{Visual Studio Code}, associé à l'extension \textit{PlatformIO}. Cette combinaison permet de gérer efficacement le projet embarqué contenant le serveur web ainsi que le code exécuté sur le microcontrôleur ESP-32.
+De même que pour le développement du logiciel embarqué en \texttt{C++}, l'environnement de développement utilisé pour l'application web est \textit{Visual Studio Code}, associé à l'extension \textit{PlatformIO}. Cette combinaison permet de gérer efficacement le projet embarqué contenant le serveur web ainsi que le code exécuté sur le microcontrôleur ESP32.
 
 Afin de faciliter le développement de l'interface utilisateur, un environnement serveur local est également utilisé. Celui-ci repose sur \textit{XAMPP}, qui fournit notamment un serveur \textit{Apache} permettant d'exécuter les fichiers constituant l'application web directement depuis l'ordinateur de développement.
 
-L'utilisation de cet environnement local permet d'accélérer le cycle de développement. En effet, les modifications apportées aux fichiers HTML, CSS et JavaScript peuvent être testées instantanément dans un navigateur, sans nécessiter une nouvelle programmation (``flash'') de l'ESP-32 après chaque changement. Cette approche simplifie le processus de débogage et permet de valider rapidement le comportement de l'interface avant son intégration dans le système embarqué.
+L'utilisation de cet environnement local permet d'accélérer le cycle de développement. En effet, les modifications apportées aux fichiers HTML, CSS et JavaScript peuvent être testées instantanément dans un navigateur, sans nécessiter une nouvelle programmation (``flash'') de l'ESP32 après chaque changement. Cette approche simplifie le processus de débogage et permet de valider rapidement le comportement de l'interface avant son intégration dans le système embarqué.
 
-Une fois les fonctionnalités de l'application validées, les fichiers nécessaires sont transférés dans la mémoire de l'ESP-32 afin d'être utilisés par le serveur embarqué. Des tests finaux sont alors réalisés dans les conditions réelles d'utilisation afin de garantir le bon fonctionnement de l'ensemble du système.
+Une fois les fonctionnalités de l'application validées, les fichiers nécessaires sont transférés dans la mémoire de l'ESP32 afin d'être utilisés par le serveur embarqué. Des tests finaux sont alors réalisés dans les conditions réelles d'utilisation afin de garantir le bon fonctionnement de l'ensemble du système.
 
 \section{Architecture générale}
 
-L'application développée repose sur une architecture client-serveur dans laquelle l'ESP-32 joue le rôle de serveur embarqué. Celui-ci possède une interface WiFi permettant de créer un point d'accès auquel un client peut se connecter directement.
+L'application développée repose sur une architecture client-serveur dans laquelle l'ESP32 joue le rôle de serveur embarqué. Celui-ci possède une interface WiFi permettant de créer un point d'accès auquel un client peut se connecter directement.
 
-Après connexion au réseau WiFi généré par l'ESP-32, l'utilisateur peut accéder au serveur web embarqué en utilisant l'adresse IP \texttt{192.168.4.1}. Cette adresse correspond à la passerelle du réseau créé par le microcontrôleur. Lorsqu'une requête est reçue, le serveur HTTP retourne les différents fichiers nécessaires au fonctionnement de l'application, notamment les pages HTML, les feuilles de style CSS ainsi que les scripts JavaScript.
+Après connexion au réseau WiFi généré par l'ESP32, l'utilisateur peut accéder au serveur web embarqué en utilisant l'adresse IP \texttt{192.168.4.1}. Cette adresse correspond à la passerelle du réseau créé par le microcontrôleur. Lorsqu'une requête est reçue, le serveur HTTP retourne les différents fichiers nécessaires au fonctionnement de l'application, notamment les pages HTML, les feuilles de style CSS ainsi que les scripts JavaScript.
 
-Une fois l'interface web chargée dans le navigateur du client, une seconde communication est établie au moyen du protocole WebSocket. Contrairement au protocole HTTP classique basé sur un échange requête-réponse, WebSocket permet une communication bidirectionnelle permanente entre le client et l'ESP-32. Ainsi, le navigateur peut transmettre des commandes au système embarqué, tandis que l'ESP-32 peut envoyer spontanément des informations au client.
+Une fois l'interface web chargée dans le navigateur du client, une seconde communication est établie au moyen du protocole WebSocket. Contrairement au protocole HTTP classique basé sur un échange requête-réponse, WebSocket permet une communication bidirectionnelle permanente entre le client et l'ESP32. Ainsi, le navigateur peut transmettre des commandes au système embarqué, tandis que l'ESP32 peut envoyer spontanément des informations au client.
 
 Cette architecture permet donc d'obtenir une interface réactive capable d'afficher l'état du système en temps réel tout en permettant à l'utilisateur d'interagir avec celui-ci.
 
 \section{Serveur embarqué}
 
-Le serveur embarqué est exécuté directement sur l'ESP-32. Il assure deux fonctions principales : la distribution de l'application web au travers du protocole HTTP et l'échange de données en temps réel grâce au protocole WebSocket.
+Le serveur embarqué est exécuté directement sur l'ESP32. Il assure deux fonctions principales : la distribution de l'application web au travers du protocole HTTP et l'échange de données en temps réel grâce au protocole WebSocket.
 
 \subsection{Serveur \acrshort{http}}
 
-Le serveur HTTP est responsable de la transmission des ressources nécessaires au fonctionnement de l'application web. Lorsqu'un utilisateur se connecte à l'adresse IP de l'ESP-32, une requête HTTP est envoyée au microcontrôleur.
+Le serveur HTTP est responsable de la transmission des ressources nécessaires au fonctionnement de l'application web. Lorsqu'un utilisateur se connecte à l'adresse IP de l'ESP32, une requête HTTP est envoyée au microcontrôleur.
 
 En réponse à cette requête, le serveur retourne les différents fichiers enregistrés dans sa mémoire, tels que les pages HTML, les fichiers CSS définissant l'apparence de l'interface ainsi que les scripts JavaScript assurant son fonctionnement dynamique.
 
-L'utilisation d'un serveur HTTP directement intégré à l'ESP-32 permet de supprimer la nécessité d'un serveur externe. L'ensemble de l'application peut ainsi fonctionner de manière autonome, uniquement avec le microcontrôleur et un appareil connecté au réseau WiFi.
+L'utilisation d'un serveur HTTP directement intégré à l'ESP32 permet de supprimer la nécessité d'un serveur externe. L'ensemble de l'application peut ainsi fonctionner de manière autonome, uniquement avec le microcontrôleur et un appareil connecté au réseau WiFi.
 
 \subsection{Serveur WebSocket}
 
@@ -40,7 +40,7 @@ Afin de permettre une communication en temps réel entre l'utilisateur et le sys
 
 Contrairement au protocole HTTP, où chaque échange nécessite l'envoi d'une nouvelle requête, WebSocket maintient une connexion permanente entre le client et le serveur. Cette caractéristique permet aux deux parties d'envoyer des informations à tout moment.
 
-Dans cette application, WebSocket est utilisé pour transmettre les commandes utilisateur vers l'ESP-32, mais également pour retourner les informations provenant du système embarqué vers l'interface web. Cette communication bidirectionnelle permet notamment de mettre à jour l'affichage sans nécessiter de rafraîchissement manuel de la page.
+Dans cette application, WebSocket est utilisé pour transmettre les commandes utilisateur vers l'ESP32, mais également pour retourner les informations provenant du système embarqué vers l'interface web. Cette communication bidirectionnelle permet notamment de mettre à jour l'affichage sans nécessiter de rafraîchissement manuel de la page.
 
 \section{Application Web}
 
@@ -101,7 +101,7 @@ Cette vue permet à l'utilisateur d'interagir avec la partie déplacement du sys
 \hline
 \texttt{Calibrate} & Sauvegarde la valeur de l'angle actuel (\texttt{theta\_measured}) comme valeur d'angle d'équilibre (\texttt{theta\_offset}) \\
 \hline
-\texttt{Record} & Permet l'enregistrement des données, à la pression du bouton, l'enregistrement démarre, une fois relaché, les données sont transmises au client.\\
+\texttt{Record} & Permet l'enregistrement des données, à la pression du bouton, l'enregistrement démarre, une seconde pression interromps l'enregistrement, les données sont transmises au client.\\
 \hline
 \texttt{PID Settings} & Accès à la seconde page de réglage des régulateurs \\
 \hline
@@ -144,10 +144,4 @@ L'implémentation repose sur un fichier \texttt{manifest.json} décrivant les in
 
 L'installation de l'application est réalisée directement depuis un navigateur compatible. Lorsque les critères nécessaires sont remplis, celui-ci propose à l'utilisateur d'ajouter l'application à son appareil.
 
-Une fois installée, la PWA apparaît comme une application classique et peut être lancée indépendamment du navigateur. L'utilisateur bénéficie ainsi d'un accès rapide à l'interface de contrôle de l'ESP-32.
-
-\subsection{Échange des données}
-
-Les échanges de données entre l'application web et l'ESP-32 sont réalisés au travers de la connexion WebSocket.
-
-Le formattage ainsi que la liste des commandes est disponible ici \ref{subsubsection:web_socket}
+Une fois installée, la PWA apparaît comme une application classique et peut être lancée indépendamment du navigateur. L'utilisateur bénéficie ainsi d'un accès rapide à l'interface de contrôle de l'ESP32.

@@ -32,17 +32,11 @@ L'objectif est de vérifier que le modèle reproduit fidèlement le comportement
 
 La phase de chute libre correspond à la période durant laquelle le système n'est soumis qu'à l'action de la gravité. Cette phase permet entre autre d'observer l'effet de l'IMU dans la mesure d'angle.
 
-Les figures \ref{fig:chute_libre_positif} et \ref{fig:chute_libre_negatif} présentent l'évolution des grandeurs cinématiques lors d'une chute libre pour deux orientations initiales différentes : un angle positif et un angle négatif.
-
-Dans le cas d'un angle positif (figure \ref{fig:chute_libre_positif}), le système présente une évolution correspondant au mouvement attendu sous l'effet de la gravité. La vitesse angulaire augmente à mesure que le châssis "tombe", tandis que l'orientation évolue selon le mouvement de rotation induit par la configuration initiale.
-
 Les conditions initiales utilisées pour les simulations de chute libre sont définies par le vecteur d'état suivant :
 
 $$
 \vec{X} = (x,\dot{x},\theta,\dot{\theta})
 $$
-
-où $x$ représente la position, $\dot{x}$ la vitesse de déplacement, $\theta$ l'angle d'inclinaison et $\dot{\theta}$ la vitesse angulaire initiale.
 
 Pour les deux cas étudiés, les conditions initiales sont les suivantes :
 
@@ -55,6 +49,12 @@ Cas négatif :
 $$
 \vec{X}_0 = (0,0,-0.015^\circ,0)
 $$
+
+Les figures \ref{fig:chute_libre_positif} et \ref{fig:chute_libre_negatif} présentent l'évolution des grandeurs cinématiques lors d'une chute libre pour deux orientations initiales différentes : un angle positif et un angle négatif.
+
+Dans le cas d'un angle positif (figure \ref{fig:chute_libre_positif}), le système présente une évolution correspondant au mouvement attendu sous l'effet de la gravité. La vitesse angulaire augmente à mesure que le châssis "tombe", tandis que l'orientation évolue selon le mouvement de rotation induit par la configuration initiale.
+
+
 
 \begin{figure}[H]
     \centering
@@ -73,11 +73,13 @@ La figure \ref{fig:chute_libre_negatif} présente le comportement obtenu lorsque
 \end{figure}
 
 Les courbes expérimentales présentent une concordance avec les courbes simulées. Il existe une symmétrie entre les angles négatifs et positifs.
+
+La différence notable est le fait que la courbe théorique "diminue" ou "augmente" plus rapidement que la mesure. 
 \subsection{Vitesse maximale}
 
 La vitesse maximale est limitée par le logiciel de commande afin de garantir un fonctionnement sûr du système et d'éviter le dépassement des capacités des moteurs. Pour valider cette limitation, la maquette est maintenue hors de contact du sol puis légèrement inclinée. Cette inclinaison génère une consigne de vitesse qui augmente progressivement jusqu'à atteindre la valeur de saturation programmée.
 
-La figure \ref{fig:max_speed} présente l'évolution de la vitesse mesurée au cours de cet essai. La vitesse augmente jusqu'à atteindre une valeur maximale de $0.864\,\mathrm{m/s}$, puis reste limitée à cette valeur.
+La figure \ref{fig:max_speed} présente l'évolution de la vitesse mesurée au cours de cet essai. La vitesse (absolue) augmente jusqu'à atteindre une valeur maximale de $0.864\,\mathrm{m/s}$, puis reste limitée à cette valeur.
 
 \begin{figure}[H]
     \centering
@@ -101,15 +103,17 @@ La figure \ref{fig:max_angle} présente l'évolution de l'angle d'inclinaison ai
 
 \subsection{Régulation de maintien}
 
-Cet essai a pour objectif d'observer l'influence d'une accélération linéaire sur la mesure de l'angle fournie par l'\acrshort{imu}. Pour cela, une perturbation manuelle est appliquée au robot en le poussant successivement dans les directions positive et négative.
+Cet essai a pour objectif d'évaluer la capacité du modèle physique à maitenir une position debout. Pour cela, une perturbation manuelle est appliquée au robot en le poussant successivement dans les directions positive et négative.
 
-Lors de l'application de la poussée, une variation rapide de l'angle mesuré est observée dans une direction opposée au sens du déplacement imposé. Cette variation est suivie d'un retour vers la valeur de consigne, puis d'une évolution transitoire dans le sens de la poussée avant que l'angle ne converge à nouveau vers sa valeur initiale.
+Lors de l'application de la poussée, une variation rapide de l'angle mesuré est observée dans un sens opposé à celui du déplacement imposé. À la fin de la perturbation, l'angle évolue vers la valeur de consigne, présente un dépassement dans le sens de la poussée, puis revient progressivement à sa valeur initiale.
 
-Pour la perturbation positive (\ref{fig:hold_positive_angle}, \ref{fig:hold_positive_angle}), on constate un temps de régulation de 0.62 s
-Pour la perturbation négative (\ref{fig:hold_negative_angle}, \ref{fig:hold_negative_angle}), on constate un temps de régulation de 0.72 s
+L'angle de consigne $\theta_{target}$ précède d'environ \SI{0.2}{s} l'évolution de l'angle mesuré $\theta$.
 
-Les essais réalisés pour les deux sens de déplacement présentent une réponse symétrique : l'évolution temporelle reste identique, seul le signe de la variation angulaire est inversé.
+La vitesse présente une évolution similaire à celle de l'angle pendant l'application de la perturbation. Son retour vers la valeur de consigne est toutefois plus progressif.
 
+Pour une perturbation dans le sens positif (figures \ref{fig:hold_positive_speed} et \ref{fig:hold_positive_angle}), le temps de régulation mesuré est de \SI{0.62}{s}. Pour une perturbation dans le sens négatif (figures \ref{fig:hold_negative_speed} et \ref{fig:hold_negative_angle}), le temps de régulation est de \SI{0.72}{s}.
+
+Les essais réalisés dans les deux sens de déplacement présentent une réponse de forme similaire. Seul le signe de la variation de l'angle mesuré est inversé.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{assets/figures/graphs/hold_positive_speed.pdf}
@@ -222,7 +226,6 @@ $$
 e_x=\frac{|2.985-2.854|}{2.985}\times100 \approx 4.39\%
 $$
 
-L'erreur obtenue reste limitée, ce qui confirme la capacité du système à suivre une consigne de déplacement.
 \subsection{Impact IMU}
 
 L'impact représente une phase critique pour la mesure, car les accélérations importantes générées lors du contact avec le sol peuvent influencer fortement l'estimation de l'état du système. Cette partie vise à caractériser l'influence de différents paramètres sur le signal mesuré par l'IMU.
@@ -233,7 +236,9 @@ La position de l'IMU dans la structure influence directement les accélérations
 
 La figure \ref{fig:imu_position} présente l'évolution des différents angles mesurés lors du déplacement suivant une loi trapézoïdale présenté précédemment.
 
-On observe que l'angle mesuré par l'IMU suit plus fidèlement l'évolution de l'angle théorique obtenu à partir du modèle physique que celle de l'angle issu de la simulation de l'IMU.
+On observe que l'angle mesuré par l'IMU suit presque parfaitement l'angle théorique obtenu à partir du modèle physique lors de la phase d'accélération. Ensuite, pour la phase de vitesse constante l'angle revient peu à peu à son angle d'équilibre.
+
+Pour la phase de déceleration, l'angle mesuré par l'IMU est moins important que l'angle simulé, ce dernier reste cependant plus proche de la valeur simulée.
 
 \begin{figure}[H]
     \centering
@@ -324,7 +329,6 @@ Cette correction permet d'améliorer la précision de la mesure de la tension et
 \subsection{Tensions, Courants}
 Afin de mesurer la consommation énergétique de la maquette, l'idée est de réaliser une mesure du courant total dans le système.
 Pour ce faire, le multimètre est placé en mode ampèremètre entre le connecteur de la batterie et celui du PCB.
-La notion de moteurs "allumées" indiquent qu'ils tournent à vitesse maximale. (Référence à la partie programmation traitant des micropas...)
 
 \begin{table}[H]
     \centering

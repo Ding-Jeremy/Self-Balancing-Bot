@@ -1,8 +1,8 @@
+La première étape de réalisation de ce projet consiste à sélectionner les différents composants constituant le système. Ce choix représente une étape essentielle, car les caractéristiques des éléments retenus influencent directement la conception mécanique, la modélisation théorique ainsi que les performances finales du robot. Il est notamment nécessaire de déterminer le type d'actionneurs, de capteurs et d'unités de traitement adaptés aux contraintes du système afin d'adopter une approche de conception cohérente.
 
-% !TeX root = ../report.tex
-La première étape de réalisation de ce projet consiste au choix des différents composants le constituant. Il est en effet nécessaire de déterminer par exemple quel type de moteur sera utilisé d'utiliser la bonne approche théorique.
-Il est important de noter que les critères de choix ne sont pas toujours issus directement du cahier des charges. Cependant, ils permettent une sélection objective des meilleurs composants.
-Les composants soumis à ces choix sont les composants principaux suivants:
+Il est important de préciser que les critères de sélection ne découlent pas exclusivement du cahier des charges. Certains choix résultent également de contraintes liées à l'intégration du système, à la disponibilité des composants, à la simplicité de mise en œuvre ou encore aux performances attendues. Ces critères permettent néanmoins d'effectuer une comparaison objective des différentes solutions envisageables et de sélectionner les composants les plus adaptés au projet.
+
+Les principaux éléments faisant l'objet d'une analyse comparative sont les suivants :
 
 \begin{itemize}
     \item Moteurs
@@ -17,7 +17,7 @@ Les composants soumis à ces choix sont les composants principaux suivants:
 \subsection{Critères de choix}
 \begin{table}[H]
     \centering
-    \begin{tabular}{|c|l|}
+    \begin{tabular}{|l|p{8cm}|}
         \hline
         \textbf{Critère} & \textbf{Justification} \\
         \hline
@@ -30,6 +30,8 @@ Les composants soumis à ces choix sont les composants principaux suivants:
         Consommation énergétique & Améliore l'autonomie du système embarqué sur batterie. \\
         \hline
         Système de contrôle simple & Réduit la complexité électronique et facilite l'implémentation. \\
+        \hline
+        Coût \\
         \hline
     \end{tabular}
     \caption{Critères moteurs}
@@ -140,7 +142,7 @@ $$
 \theta = \frac{360^\circ}{200 \cdot 16} \approx 0.1125^\circ
 $$
 
-Cependant, comme le système est en boucle ouverte, aucune information de position réelle n'est disponible en sortie moteur. Il est donc difficile de détecter un décrochage (\textit{stall}).
+Cependant, comme le système est en boucle ouverte, aucune information de position réelle n'est disponible en sortie moteur. 
 
 Ainsi, si un pas est perdu, cette erreur n'est pas forcément détectée. Toutefois, en dimensionnant correctement le système (couple adapté à la charge), on peut limiter fortement ce risque.
 
@@ -158,7 +160,7 @@ Afin de maintenir une position, il est nécessaire d'alimenter en permanence les
 
 Le contrôle d'un moteur pas à pas repose sur des drivers permettant de configurer le micro-stepping (généralement de 1 à 32 micro-pas par pas).
 
-Le contrôle se fait via deux signaux principaux :
+Le contrôle se fait normalement via deux signaux principaux :
 
 \begin{itemize}
     \item \textbf{STEP} : chaque impulsion correspond à un micro-pas
@@ -255,7 +257,7 @@ Le contrôle d'un moteur brushless nécessite un ESC (Electronic Speed Controlle
 
 Pour obtenir de bonnes performances, il est nécessaire d'avoir une estimation de la position du rotor.
 
-Cependant, la détection par Back-EMF est peu efficace à basse vitesse, ce qui rend la commande complexe et coûteuse à mettre en oeuvre.
+Cependant, la détection par Back-EMF est peu efficace à basse vitesse, ce qui rend la commande complexe et coûteuse à mettre en oeuvre.f
 
 \subsubsection{Synthèse des performances}
 
@@ -285,30 +287,18 @@ $$
 $$
 
 \subsection{Choix final}
+
 À l'issue de l'analyse des trois technologies étudiées (moteur DC, moteur pas à pas et moteur brushless), le moteur pas à pas apparaît comme le meilleur compromis pour ce projet.
 
-Bien qu'il présente une consommation énergétique plus élevée que les autres solutions et une vitesse maximale plus limitée, il se distingue clairement sur les critères essentiels au bon fonctionnement du système.
+Bien qu'il présente une consommation énergétique plus élevée que certaines alternatives et une vitesse maximale limitée, il se distingue sur les critères essentiels au bon fonctionnement du système, notamment la précision de positionnement, la simplicité de commande et la synchronisation entre les deux actionneurs.
 
-En effet, le moteur pas à pas offre :
-
-\begin{itemize}
-    \item une excellente précision de contrôle grâce au micro-stepping,
-    \item une très bonne synchronisation entre moteurs en fonctionnement normal,
-    \item un contrôle simple basé sur des signaux STEP/DIR,
-    \item une bonne répétabilité du mouvement en boucle ouverte.
-\end{itemize}
-
-Ces caractéristiques sont particulièrement adaptées à un système de stabilisation, où la précision des petits déplacements et la synchronisation des moteurs sont des éléments critiques.
-
-De plus, la simplicité de mise en oeuvre des drivers pas à pas permet de limiter la complexité électronique globale du système, ce qui constitue un avantage important dans le cadre de ce projet embarqué.
-
-Ainsi, malgré ses limites en termes de rendement énergétique et de vitesse maximale, le moteur pas à pas est retenu comme solution finale, car il répond le mieux aux exigences de précision, de contrôle et de simplicité imposées par le cahier des charges.
+Le moteur retenu est le modèle \textbf{42SHD0217-24B} \cite{42SHD0217_datasheet}, un moteur pas à pas bipolaire au format NEMA 17. Ce choix est motivé par son couple disponible $T_{max} = 0.45 \si{\newton\meter}$ et son encombrement adapté à l'intégration mécanique du robot.
 
 \section{Drivers moteurs}
 \subsection{Critères de choix}
 \begin{table}[H]
     \centering
-    \begin{tabular}{|c|l|}
+    \begin{tabular}{|l|p{8cm}|}
         \hline
         \textbf{Critère} & \textbf{Justification} \\
         \hline
@@ -463,7 +453,7 @@ Ainsi, le TMC2226 est retenu comme driver moteur pour ce projet, car il répond 
 \subsection{Critères de choix}
 \begin{table}[H]
     \centering
-    \begin{tabular}{|c|l|}
+    \begin{tabular}{|l|p{8cm}|}
         \hline
         \textbf{Critère} & \textbf{Justification} \\
         \hline
@@ -479,43 +469,43 @@ Ainsi, le TMC2226 est retenu comme driver moteur pour ce projet, car il répond 
     \caption{Critères de sélection du microcontrôleur}
     \label{tab:criteres_microcontroleur}
 \end{table}
-\subsection{ESP-32 DevKit V1}
+\subsection{ESP32 DevKit V1}
 
-L'ESP-32 DevKit V1 \cite{ESP-32-Devkit-V1} est une carte de développement intégrant, comme son nom l'indique, un microcontrôleur de type ESP-32 \cite{ESP-32_Series}. 
+L'ESP32 DevKit V1 \cite{ESP32-Devkit-V1} est une carte de développement intégrant, comme son nom l'indique, un microcontrôleur de type ESP32 \cite{ESP32_Series}. 
 
 Cette carte de développement met à disposition 21 entrées/sorties (\acrshort{gpio}), ce qui la rend particulièrement adaptée aux applications embarquées.
 
-L'ESP-32 inclut également une antenne \acrshort{pcb}, permettant une communication sans fil via WiFi ou Bluetooth.
+L'ESP32 inclut également une antenne \acrshort{pcb}, permettant une communication sans fil via WiFi ou Bluetooth.
 
 \subsubsection{Fréquence de travail}
 
-L'ESP-32 peut fonctionner jusqu'à une fréquence d'horloge maximale de $240\,\si{\mega\hertz}$.
+L'ESP32 peut fonctionner jusqu'à une fréquence d'horloge maximale de $240\,\si{\mega\hertz}$.
 
 \subsubsection{Taille}
 
-Les dimensions du module ESP-32 DevKit V1 sont présentées ci-dessous :
+Les dimensions du module ESP32 DevKit V1 sont présentées ci-dessous :
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{assets/figures/esp32_devkit_v1.png}
-    \caption{Dimensions du module ESP-32 DevKit V1}
+    \caption{Dimensions du module ESP32 DevKit V1}
     \label{fig:esp32_dimensions}
 \end{figure}
 
 \subsubsection{Efficacité énergétique}
 
-D'après le datasheet de l'ESP-32, sa consommation électrique dépend fortement du mode de fonctionnement (veille, WiFi actif, Bluetooth actif, etc.).
+D'après le datasheet de l'ESP32, sa consommation électrique dépend fortement du mode de fonctionnement (veille, WiFi actif, Bluetooth actif, etc.).
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\textwidth]{assets/figures/esp32_consumption.png}
-    \caption{Consommation énergétique de l'ESP-32 selon le mode de fonctionnement}
+    \caption{Consommation énergétique de l'ESP32 selon le mode de fonctionnement}
     \label{fig:esp32_power}
 \end{figure}
 
 \subsubsection{Communication sans fil}
 
-Comme indiqué précédemment, l'ESP-32 inclut une antenne intégrée permettant la communication sans fil via WiFi et Bluetooth, offrant ainsi une grande flexibilité pour les applications connectées.
+Comme indiqué précédemment, l'ESP32 inclut une antenne intégrée permettant la communication sans fil via WiFi et Bluetooth, offrant ainsi une grande flexibilité pour les applications connectées.
 
 \begin{table}[H]
     \centering
@@ -532,7 +522,7 @@ Comme indiqué précédemment, l'ESP-32 inclut une antenne intégrée permettant
         Communication sans fil & 8/10\\
         \hline
     \end{tabular}
-    \caption{Résultats critères ESP-32 Devkit V1}
+    \caption{Résultats critères ESP32 Devkit V1}
     \label{tab:esp32_results}
 \end{table}
 
@@ -543,7 +533,7 @@ $$
 
 Le Raspberry Pi Pico W \cite{RaspberryPiPicoW} est une carte de développement basée sur le microcontrôleur RP2040, développée par la fondation Raspberry Pi. Il s'agit d'une évolution du Raspberry Pi Pico, à laquelle a été ajouté un module de communication sans fil.
 
-Contrairement à des cartes plus complètes comme l'ESP-32 DevKit V1 \cite{ESP-32-Devkit-V1}, le Pico W ne dispose pas de Bluetooth, mais intègre une connectivité WiFi 2.4 GHz.
+Contrairement à des cartes plus complètes comme l'ESP32 DevKit V1 \cite{ESP32-Devkit-V1}, le Pico W ne dispose pas de Bluetooth, mais intègre une connectivité WiFi 2.4 GHz.
 
 Cette carte peut être programmée en C/C++ via le SDK officiel, ainsi qu'en MicroPython, ce qui la rend accessible aussi bien pour le prototypage que pour des applications embarquées avancées.
 
@@ -595,18 +585,18 @@ $$
 
 \subsection{Choix final}
 
-À l'issue de l'analyse comparative des deux microcontrôleurs étudiés (ESP-32 DevKit V1 et Raspberry Pi Pico W), le choix s'oriente vers l'ESP-32 DevKit V1.
+À l'issue de l'analyse comparative des deux microcontrôleurs étudiés (ESP32 DevKit V1 et Raspberry Pi Pico W), le choix s'oriente vers l'ESP32 DevKit V1.
 
 Bien que le Raspberry Pi Pico W présente une meilleure efficacité énergetique et une taille inférieure à l'ESP, il reste limité par l'absence de Bluetooth ainsi que la fréquence d'horloge.
 
-L'ESP-32 DevKit V1 se distingue par une meilleure polyvalence, notamment grâce à la présence du WiFi et du Bluetooth, une fréquence de travail plus élevée.
+L'ESP32 DevKit V1 se distingue par une meilleure polyvalence, notamment grâce à la présence du WiFi et du Bluetooth, une fréquence de travail plus élevée.
 
 
 \section{IMU}
 \subsection{Critères de choix}
 \begin{table}[H]
     \centering
-    \begin{tabular}{|c|l|}
+    \begin{tabular}{|l|p{8cm}|}
         \hline
         \textbf{Critère} & \textbf{Justification} \\
         \hline
@@ -633,12 +623,10 @@ Les vitesse de lectures se trouvent dans le datasheet aux pages 12 et 13.
     \item Fréquence max de lecture gyroscope:  8 kHz;
 \end{itemize}
 Les données sont accessibles via une interface I\textsuperscript{2}C simple à mettre en oeuvre \cite{MPU6050_Datasheet}.
-
-
 \subsubsection{Qualité du signal}
-Le capteur intègre un accéléromètre 3 axes et un gyroscope 3 axes 16 bits. 
-Bien que plus ancien que les IMU récentes, il offre une qualité de mesure suffisante pour une estimation fiable de l'angle après application d'un filtre complémentaire software. Il n'intègre cependant pas de
-filtrage de données embarqué.
+Le capteur MPU6050 intègre un accéléromètre 3 axes et un gyroscope 3 axes, tous deux dotés d'une résolution de 16 bits. 
+La qualité des mesures peut être améliorée grâce au filtre passe-bas numérique intégré (DLPF), configurable via les registres du capteur. 
+Ce filtre permet de réduire le bruit haute fréquence au détriment d'une légère augmentation de la latence du signal. 
 
 \subsubsection{Taille}
 
@@ -655,7 +643,6 @@ Le MPU6050 est probablement l'IMU la plus documentée. De nombreuses bibliothèq
 
 \subsubsection{Prix}
 Le module GY-521 basé sur le MPU6050 est très répandu et disponible chez de nombreux fournisseurs pour un prix compris entre 3 et 5 CHF. 
-Son faible coût en fait une solution particulièrement intéressante pour les projets étudiants et les prototypes.
 \begin{table}[H]
     \centering
     \begin{tabular}{|l|c|}
@@ -707,7 +694,6 @@ Les mesures obtenues sont généralement plus précises.
 
 \subsubsection{Facilité d'implémentation}
 Bien que plusieurs bibliothèques soient disponibles, le BMI160 nécessite une configuration plus complexe que le MPU6050. 
-La documentation est également moins abondante au sein de la communauté des makers.
 
 \subsubsection{Prix}
 
@@ -738,8 +724,8 @@ $$
 $$
 \subsection{Choix final}
 
-Le BMI160 présente de meilleures performances en termes de qualité du signal et bénéficie d'une électronique plus récente. En revanche, ces avantages ne sont pas indispensables dans le cadre d'un robot auto-équilibré. Les performances du MPU6050 sont largement suffisantes pour atteindre la fréquence d'échantillonnage nécessaire et réaliser une estimation fiable de l'angle à l'aide d'un filtre logiciel.
+Le BMI160 présente de meilleures performances en termes de qualité du signal et bénéficie d'une électronique plus récente. Cependant, ces caractéristiques supplémentaires ne constituent pas un critère déterminant pour cette application. Le MPU6050 répond aux exigences du système en termes de fréquence d'échantillonnage et d'estimation de l'angle.
 
-Par ailleurs, le module GY-521 intégrant le MPU6050 est environ deux fois moins cher qu'une carte de développement basée sur le BMI160. Le grand nombre de bibliothèques disponibles et son faible coût permettent également de réduire le temps de développement ainsi que le coût global du projet.
+Par ailleurs, le module GY-521 intégrant le MPU6050 est environ deux fois moins cher qu'une carte de développement basée sur le BMI160. Le grand nombre de bibliothèques disponibles ainsi que sa large utilisation facilitent également son intégration dans le projet.
 
-Le choix s'est donc porté sur le \textbf{MPU6050}, qui offre le meilleur compromis entre performances, simplicité d'intégration et coût pour cette application.
+Le choix s'est donc porté sur le \textbf{MPU6050}, qui représente un compromis adapté entre performances, simplicité d'intégration et coût pour cette application.

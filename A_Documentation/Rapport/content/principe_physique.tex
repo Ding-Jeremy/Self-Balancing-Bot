@@ -34,7 +34,7 @@ où :
 Le seul effort appliqué au pendule est son poids
 
 \begin{equation}
-\vec{F_g}=m\vec{g}
+\vec{F_g}=m_p\vec{g}
 \end{equation}
 
 La réaction du pivot passe par le point de rotation et ne génère donc aucun moment.
@@ -183,7 +183,7 @@ m_O
 
 où $\ddot{x}$ représente l'accélération horizontale du robot et $\ddot{\theta}$ l'accélération angulaire du châssis par rapport à la verticale. Le terme $T$ correspond au couple appliqué par les moteurs sur les roues. Celui-ci constitue l'entrée de commande du système et permet d'agir sur l'équilibre du robot.
 
-Les termes liés à la masse et à l'inertie permettent de représenter l'influence des différents éléments mécaniques. La masse du châssis est représentée par $m_b$, tandis que $m_w$ correspond à la masse d'une roue. Les moments d'inertie $J_b$ et $J_w$ représentent respectivement l'inertie du châssis et des roues autour de leur axe de rotation.
+Les termes liés à la masse et à l'inertie permettent de représenter l'influence des différents éléments mécaniques. La masse du châssis est représentée par $m_b$, tandis que $m_w$ correspond à la masse d'une roue. Les moments d'inertie $J_b$ et $J_w$ représentent respectivement l'inertie du châssis et des roues autour de leur centre de masse.
 
 Les simplifications suivantes sont utilisées afin de regrouper certains paramètres et de rendre les équations plus lisibles :
 
@@ -203,6 +203,8 @@ Le terme $d_1$ représente le dénominateur commun des équations du mouvement e
 
 Ce modèle fournit ainsi une représentation plus fidèle du comportement du robot réel. Il permet notamment d'étudier l'influence des paramètres mécaniques sur la dynamique du système et constitue une base pour le développement de la loi de commande.
 
-La différence principale entre le modèle incluant les roues et les autres est l'effet du couple sur la réguation d'angle. 
+La différence principale entre le modèle incluant les roues et les modèles précédents réside dans l'apparition du terme associé au couple moteur dans l'équation de la dynamique angulaire du levier. Contrairement aux modèles simplifiés, l'actionneur intervient directement dans l'équilibre des moments autour de l'axe de rotation.
 
-Le couple généré est bénefique à la régulation.
+Le couple appliqué aux roues génère un moment opposé aux effets gravitationnels agissant sur le centre de masse du levier. Il constitue ainsi une action corrective permettant de réduire l'écart angulaire par rapport à la position d'équilibre. 
+
+Le couple moteur agit également par l'intermédiaire de l'accélération horizontale du robot : le mouvement des roues provoque une réaction inertielle qui modifie la dynamique du levier. Les deux effets contribuent donc conjointement à la stabilisation du système. Le couple moteur représente ainsi l'entrée de commande permettant de compenser le moment gravitationnel et de maintenir le robot autour de sa position d'équilibre.

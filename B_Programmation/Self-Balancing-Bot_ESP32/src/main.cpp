@@ -118,12 +118,12 @@ float PID_update(PIDController *pid, float error, float dt);
 void send_angle(float s);
 void send_target_angle(float target_angle);
 void send_motor_state(bool state);
+void send_battery(float battery_voltage);
+void send_recording();
 
+float read_battery();
 bool is_angle_withing_range();
 float map_f(float value, float min1, float max1, float min2, float max2);
-void send_recording();
-float read_battery();
-void send_battery(float battery_voltage);
 
 //-------------- GLOBAL VARIABLES ---------------
 AsyncWebServer server(80); // Web server
