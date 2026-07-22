@@ -25,7 +25,7 @@
 #include <Arduino_JSON.h>
 #include "LittleFS.h"
 #include <SPI.h>
-#include "TMC2226.h"
+#include <TMC2226.h>
 #include <Wire.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
@@ -61,7 +61,7 @@
 #define D_SPEED_CTRL_RANGE {-0.7, 0.7}   // Speed control lean angles [m/s]
 #define D_SPEED_DELTA_CTRL_RANGE {-2, 2} // Max pivot speed [rad/s]
 
-#define D_WHEEL_RADIUS 0.055       // [m]
+#define D_WHEEL_RADIUS 0.055            // [m]
 #define D_MOTOR_MAX_SPEED (5.0f * M_PI) // [rad/s]
 
 // WiFi credentials
