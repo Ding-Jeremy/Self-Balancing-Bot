@@ -12,12 +12,9 @@
  */
 #include "TMC2226.h"
 
-/// @brief TMC2226 class, pass module address in parameters
-/// @param node_address
-TMC2226::TMC2226(uint8_t nd_addr)
-{
-    node_address = nd_addr;
-}
+/// @brief Creates a TMC2226 driver for the given UART node address.
+/// @param address UART node address.
+TMC2226::TMC2226(uint8_t address) : node_address(address) {}
 
 /// @brief Sends a UART frame to the TMC2226.
 /// @param frame Pointer to the frame to transmit.
@@ -53,6 +50,7 @@ void TMC2226::init()
     pinMode(D_TMC_PIN_DIR0, OUTPUT);
     pinMode(D_TMC_PIN_DIR1, OUTPUT);
     pinMode(D_TMC_PIN_EN, OUTPUT);
+    disable();
 
     delay(10);
     uart_config_t uart_config = {
@@ -70,8 +68,11 @@ void TMC2226::init()
     err = uart_set_pin(UART_NUM_2, D_TMC_PIN_TX2, D_TMC_PIN_RX2, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     printf("set_pin = %s\n", esp_err_to_name(err));
 
-    err = uart_driver_install(UART_NUM_2, 256, 256, 0, NULL, 0);
-    printf("driver_install = %s\n", esp_err_to_name(err));
+    if (!uart_is_driver_installed(UART_NUM_2))
+    {
+        err = uart_driver_install(UART_NUM_2, 256, 256, 0, NULL, 0);
+        printf("driver_install = %s\n", esp_err_to_name(err));
+    }
 
     // Configure the driver to use UART communication.
     GCONF gconf;
@@ -85,7 +86,7 @@ void TMC2226::init()
     gconf.bits.scale_analog = 1;     // Vref a sense
     gconf.bits.multistep_filt = 0;   // Activate multistep filtering
 
-    chopconf.value = D_TMC_REGDFV_CHOPCONF; // DEFAULT VALUE
+    chopconf.value = D_TMC_REGDFV_CHOPCONF; // Default value
     chopconf.bits.mres = D_TMC_DEF_MRES;    // Microstepping
     // Write the configuration to the GCONF register.
     write_to_register(Register::E_REG_GCONF, gconf.bytes);
@@ -141,17 +142,6 @@ void TMC2226::write_to_register(Register reg_address, uint8_t *data)
     send_frame(frame, D_TMC_FRAME_LENGTH);
 }
 
-/// @brief Reverses the byte order of a 32-bit data buffer.
-/// @param frame
-void TMC2226::invert_bytes(uint8_t frame[D_TMC_DATA_LENGTH])
-{
-    uint8_t new_frame[D_TMC_FRAME_LENGTH - 4];
-    for (uint8_t i = 0; i < D_TMC_FRAME_LENGTH - 4; i++)
-        new_frame[i] = frame[3 - i];
-    for (uint8_t i = 0; i < D_TMC_FRAME_LENGTH - 4; i++)
-        frame[i] = new_frame[i];
-}
-
 /// @brief Reads the 32-bit value stored in a register.
 /// @param reg_address Register to read.
 /// @return Register contents.
@@ -178,10 +168,25 @@ uint32_t TMC2226::read_register(Register reg_address)
         D_TMC_FRAME_LENGTH + 4,
         pdMS_TO_TICKS(50));
 
+    if (len != D_TMC_FRAME_LENGTH + 4)
+    {
+        Serial.println("ERR_COM_TMC: incomplete response");
+        return 0;
+    }
+
     // Check master's address and register validity
     if (rx_buffer[4] != D_TMC_INIT_BYTE || rx_buffer[5] != D_TMC_MASTER_ADDRESS || rx_buffer[6] != reg_address)
     {
-        Serial.println("ERR_COM_TMC");
+        Serial.println("ERR_COM_TMC: invalid response");
+        return 0;
+    }
+
+    uint8_t received_crc = rx_buffer[D_TMC_FRAME_LENGTH + 3];
+    calculate_crc(&rx_buffer[4], D_TMC_FRAME_LENGTH);
+    if (received_crc != rx_buffer[D_TMC_FRAME_LENGTH + 3])
+    {
+        Serial.println("ERR_COM_TMC: invalid CRC");
+        return 0;
     }
     // Save only payload (32 bit data response)
     // order bit correctly (MSB frs)
@@ -194,24 +199,22 @@ uint32_t TMC2226::read_register(Register reg_address)
     return payload;
 }
 
-/// @brief Runs a motor to a desired speed (automatic)
-/// @param node_addr
-/// @param speed
+/// @brief Runs the motor at the desired angular speed.
+/// @param rad_s Angular speed in rad/s.
 void TMC2226::run_speed(float rad_s)
 {
     TMC2226::VACTUAL vactual;
     vactual.value = rad_s_to_vactual(rad_s);
     write_to_register(Register::E_REG_VACTUAL, vactual.bytes);
 }
-/// @brief Converts rad/s to vactual value
-/// @param rad_s
-/// @param microsteps
-/// @return
+/// @brief Converts an angular speed to the TMC2226 VACTUAL format.
+/// @param rad_s Angular speed in rad/s.
+/// @return Corresponding VACTUAL register value.
 int32_t TMC2226::rad_s_to_vactual(float rad_s)
 {
     float microsteps_per_sec =
         (rad_s / (2.0f * M_PI)) *
-        (float)D_TMC_STPPERREV *
+        (float)D_TMC_STEPS_PER_REV *
         (float)D_TMC_DEF_MICROSTP;
 
     return static_cast<int32_t>(

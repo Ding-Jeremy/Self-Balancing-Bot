@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Self-Balancing-Bot</title>
     <link rel="stylesheet" href="/style.css" />
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#000000" />
 
   </head>
@@ -17,13 +17,13 @@
       <!-- Logo Image -->
     <img
       src="/heig_vd_logo.png"
-      id="heig_icon"
+      id="heig-icon"
       alt="HEIG-VD Logo"
       class="logo"
     />
       <div id="title-container">
         <h1>Self-Balancing-Bot</h1>
-        <div id="connection_status">Disconnected</div>
+        <div id="connection-status">Disconnected</div>
       </div>
 
       <div id="battery-indicator">
@@ -52,7 +52,7 @@
 
   </div>
     </header>
-    <div id="control-page"class="page">
+    <div id="control-page" class="page">
     
     
     
@@ -87,16 +87,16 @@
 
     <!-- Buttons -->
     <div class="buttons">
-      <button id = "button_motors_toggle" class="button" onclick="send_button('motors_toggle')">Enable Motors</button>
-      <button id = "button_calibrate" class="button" onclick="calibrate()">Calibrate</button>
-      <button id = "button_record" class="button"onclick="record()">Record</button>
-      <button class = "button"onclick="showPIDPage()">
+      <button id="button-motors-toggle" class="button" onclick="toggleMotors()">Enable Motors</button>
+      <button id="button-calibrate" class="button" onclick="calibrate()">Calibrate</button>
+      <button id="button-record" class="button" onclick="toggleRecording()">Record</button>
+      <button class="button" onclick="showPidPage()">
       
       PID Settings
     </button>
     </div>
     </div>
-    <div id="pid-page"class="page" style="display:none;">
+    <div id="pid-page" class="page" style="display: none">
   
       <!-- PID PAGE-->
     <div class="pid-grid">
@@ -155,7 +155,7 @@
     </div>
     </div>
     <div class="buttons">
-        <button class="button"onclick="savePID()">Save PID</button>
+        <button class="button" onclick="savePid()">Save PID</button>
         <button class="button" onclick="showControlPage()">
           Back
         </button>

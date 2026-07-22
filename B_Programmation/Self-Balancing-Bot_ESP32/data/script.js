@@ -1,34 +1,38 @@
-//const gateway = `ws://localhost:8080`;
 const gateway = `ws://${window.location.hostname}/ws`;
 let websocket;
-let joysticks = {};
+const joysticks = {};
 
-// save old joystick positions
-let old_x_r = null;
-let old_y_l = null;
-
-let motors_on = false;
-// save data flag
+let motorsOn = false;
 let recording = false;
-let csv_data = "";
+let receivingCsv = false;
+let csvData = "";
+
+const sendMessage = (message) => {
+  if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+    return false;
+  }
+
+  websocket.send(JSON.stringify(message));
+  return true;
+};
 
 // Page system
 function showPage(pageId) {
-    document.querySelectorAll(".page").forEach(p => {
-        p.style.display = "none";
-    });
+  document.querySelectorAll(".page").forEach((page) => {
+    page.style.display = "none";
+  });
 
-    document.getElementById(pageId).style.display = "block";
+  document.getElementById(pageId).style.display = "block";
 }
 
-function showPIDPage() {
-    requestPID();
-    showPage("pid-page");
+function showPidPage() {
+  requestPid();
+  showPage("pid-page");
 }
 
 function showControlPage() {
-    showPage("control-page");
-} 
+  showPage("control-page");
+}
 
 // Window
 window.addEventListener("load", onLoad);
@@ -47,90 +51,79 @@ function initWebSocket() {
   websocket = new WebSocket(gateway);
 
   websocket.onopen = () => {
-    console.log("WebSocket connected");
     setJoystickEnabled(true);
     setButtonEnabled(true);
     updateConnectionStatus(true);
   };
 
   websocket.onclose = () => {
-    console.log("WebSocket disconnected, retrying...");
     setJoystickEnabled(false);
     setButtonEnabled(false);
     updateBatteryInfo(null);
     updateAngleInfo(null);
     updateTargetAngleInfo(null);
     updateConnectionStatus(false);
+    setRecordingState(false);
+    receivingCsv = false;
+    csvData = "";
     setTimeout(initWebSocket, 2000); // Retry connection
   };
   
   websocket.onmessage = (event) => {
+    // Recording mode (raw CSV stream)
+    if (receivingCsv) {
+      if (event.data === "save_end") {
+        receivingCsv = false;
+        saveCsv(csvData);
+        csvData = "";
+        return;
+      }
 
-  // Recording mode (raw CSV stream)
-  if (recording) {
-    // stop signal
-    if (event.data === "save_end") {
-      recording = false;
-      saveCsv(csv_data);
-      console.log("Recording saved");
+      csvData += event.data;
       return;
     }
 
-    csv_data += event.data;
-    return;
-  }
+    let message;
+    try {
+      message = JSON.parse(event.data);
+    } catch {
+      console.warn("Unknown non-JSON message:", event.data);
+      return;
+    }
 
-  // Check received message (not recording)
-  let message;
-  try {
-    message = JSON.parse(event.data);
-  } catch (e) {
-    console.warn("Unknown non-JSON message:", event.data);
-    return;
-  }
-
-  switch (message.id) {
-
-    case "save_start":
-      recording = true;
-      csv_data = "";
-      console.log("Recording started");
-      break;
-
-    case "battery":
-      updateBatteryInfo(message);
-      break;
-
-    case "angle":
-      updateAngleInfo(message);
-      break;
-
-    case "motors_on":
-    case "motors_off":
-      update_motors_button(message.id);
-      break;
-
-    case "pid_values":
-      update_pid_values(message);
-      break;
-
-    case "calibration_angle":
-      update_calibration_angle(message);
-      break;
-
-    case "target_angle":
-      updateTargetAngleInfo(message);
-      break;
-  }
+    switch (message.id) {
+      case "save_start":
+        receivingCsv = true;
+        csvData = "";
+        break;
+      case "battery":
+        updateBatteryInfo(message);
+        break;
+      case "angle":
+        updateAngleInfo(message);
+        break;
+      case "motors_on":
+      case "motors_off":
+        updateMotorsButton(message.id);
+        break;
+      case "pid_values":
+        updatePidValues(message);
+        break;
+      case "calibration_angle":
+        updateCalibrationAngle(message);
+        break;
+      case "target_angle":
+        updateTargetAngleInfo(message);
+        break;
+    }
   };
 }
-  
 
 function createJoystick(containerId, idPrefix) {
   const container = document.getElementById(containerId);
 
   const containerWidth = container.offsetWidth;
-  const joystickSize = containerWidth * 0.8; // adjust as needed
+  const joystickSize = containerWidth * 0.8;
 
   // Destroy existing joystick if any
   if (joysticks[idPrefix]) {
@@ -149,39 +142,44 @@ function createJoystick(containerId, idPrefix) {
   });
 
   joysticks[idPrefix] = joystick;
-  joystick.enabled = false; // Add manual enabled flag
+  joystick.enabled = false;
 
-  // Limit the packet to each 50 ms (20Hz)
+  // Limit packets to one every 50 ms (20 Hz).
   const sendInterval = 50; // ms
   let lastX = null;
   let lastY = null;
-  lastSent = 0;
+  let lastSent = 0;
   
-  joystick.on("move", (evt, data) => {
+  joystick.on("move", (_event, data) => {
     const now = Date.now();
-    if (data && data.vector && joystick.enabled && (now - lastSent > sendInterval)) {
+    if (
+      data &&
+      data.vector &&
+      joystick.enabled &&
+      now - lastSent > sendInterval
+    ) {
       lastSent = now;
 
       const x = idPrefix === "left" ? 0 : Math.round(data.vector.x * 100);
       const y = idPrefix === "right" ? 0 : Math.round(data.vector.y * 100);
 
       // Only send a packet when the values change
-      if (x !== lastX || y !== lastY){
+      if (x !== lastX || y !== lastY) {
         lastX = x;
         lastY = y;
         const message = {
           id: `joystick-${idPrefix}`,
-          x: x,
-          y: y,
+          x,
+          y,
         };
-        websocket.send(JSON.stringify(message));
+        sendMessage(message);
       }
     }
   });
 
   joystick.on("end", () => {
     if (joystick.enabled) {
-      websocket.send(JSON.stringify({ id: `joystick-${idPrefix}`, x: 0, y: 0 }));
+      sendMessage({ id: `joystick-${idPrefix}`, x: 0, y: 0 });
     }
   });
 }
@@ -202,103 +200,92 @@ function setJoystickEnabled(enabled) {
   });
 }
 
-  function updateBatteryInfo(message) {
+function updateBatteryInfo(message) {
   const batteryLevel = document.getElementById("battery-level");
 
-  if (message != null) {
-    const batteryPercentage = Math.round(message.percentage);
-    const batteryVoltage = message.voltage;
-
-    document.getElementById("battery-percentage").textContent = `${batteryPercentage} %`;
-    document.getElementById("battery-voltage").textContent = `${batteryVoltage} V`;
-
-    // Set new width relative to viewBox or SVG proportions
-    batteryLevel.style.width = `${batteryPercentage * 0.77}%`;
-
-    // Change color depending on level
-    if (batteryPercentage < 20) {
-      batteryLevel.setAttribute("fill", "red");
-    } else {
-      batteryLevel.setAttribute("fill", "#29b524");
-    }
-  } else {
+  if (message == null) {
     document.getElementById("battery-percentage").textContent = `--- %`;
     document.getElementById("battery-voltage").textContent = "--.- V";
-    batteryLevel.style.width = `0px`;
+    batteryLevel.style.width = "0px";
+    return;
+  }
+
+  const batteryPercentage = Math.round(message.percentage);
+  const batteryVoltage = message.voltage;
+
+  document.getElementById("battery-percentage").textContent = `${batteryPercentage} %`;
+  document.getElementById("battery-voltage").textContent = `${batteryVoltage} V`;
+  batteryLevel.style.width = `${batteryPercentage * 0.77}%`;
+
+  if (batteryPercentage < 20) {
+    batteryLevel.setAttribute("fill", "red");
+  } else {
+    batteryLevel.setAttribute("fill", "#29b524");
   }
 }
 
 function updateAngleInfo(message) {
-  const angle_text = document.getElementById("angle-text");
+  const angleText = document.getElementById("angle-text");
 
-  if (message != null) {
-    const angle_value = Number(message.value);
-
-    const sign = angle_value < 0 ? '-' : '+';
-
-    const absValue = Math.abs(angle_value);
-    const [integer, decimal] = absValue.toFixed(1).split('.');
-
-    const formatted =
-      `${sign}${integer.padStart(2, '0')}.${decimal}°`;
-
-    angle_text.textContent = formatted;
-    
-  } else {
-    document.getElementById("angle-text").textContent = `---.-°`;
+  if (message == null) {
+    angleText.textContent = "---.-°";
+    return;
   }
+
+  const angleValue = Number(message.value);
+  const sign = angleValue < 0 ? "-" : "+";
+  const absValue = Math.abs(angleValue);
+  const [integer, decimal] = absValue.toFixed(1).split(".");
+
+  angleText.textContent = `${sign}${integer.padStart(2, "0")}.${decimal}°`;
 }
+
 function updateTargetAngleInfo(message) {
-  const speed_text = document.getElementById("target-angle-text");
+  const targetAngleText = document.getElementById("target-angle-text");
 
-  if (message != null) {
-    const speed_value = Number(message.value);
-
-    const sign = speed_value < 0 ? '-' : '+';
-
-    const absValue = Math.abs(speed_value);
-    const [integer, decimal] = absValue.toFixed(2).split('.');
-
-    const formatted =
-      `${sign}${integer.padStart(1, '0')}.${decimal} °`;
-
-    speed_text.textContent = formatted;
-
-  } else {
-    speed_text.textContent = "---.-°";
+  if (message == null) {
+    targetAngleText.textContent = "---.-°";
+    return;
   }
+
+  const targetAngle = Number(message.value);
+  const sign = targetAngle < 0 ? "-" : "+";
+  const absValue = Math.abs(targetAngle);
+  const [integer, decimal] = absValue.toFixed(2).split(".");
+
+  targetAngleText.textContent = `${sign}${integer.padStart(1, "0")}.${decimal} °`;
 }
 
 function updateConnectionStatus(connected) {
-    const status = document.getElementById("connection_status");
+  const status = document.getElementById("connection-status");
 
-    if (connected) {
-        status.textContent = "Connected";
-        status.className = "connected";
-    } else {
-        status.textContent = "Disconnected";
-        status.className = "disconnected";
-    }
-}
-
-function update_motors_button(state){
-  if (state === "motors_on"){
-    motors_on = true;
-    document.getElementById("button_motors_toggle").textContent="Disable Motors";
-  }
-  else{
-    motors_on = false;
-    document.getElementById("button_motors_toggle").textContent="Enable Motors";
+  if (connected) {
+    status.textContent = "Connected";
+    status.className = "connected";
+  } else {
+    status.textContent = "Disconnected";
+    status.className = "disconnected";
   }
 }
-function update_pid_values(message){
+
+function updateMotorsButton(state) {
+  if (state === "motors_on") {
+    motorsOn = true;
+    document.getElementById("button-motors-toggle").textContent = "Disable Motors";
+  } else {
+    motorsOn = false;
+    document.getElementById("button-motors-toggle").textContent = "Enable Motors";
+  }
+}
+
+function updatePidValues(message) {
   // Update sliders
-  balanceP.value = message.balance.kp;
-  balanceI.value = message.balance.ti;
-  balanceD.value = message.balance.td;
-  velocityP.value = message.velocity.kp;
-  velocityI.value = message.velocity.ti;
-  velocityD.value = message.velocity.td;
+  pidSliders.balanceP.value = message.balance.kp;
+  pidSliders.balanceI.value = message.balance.ti;
+  pidSliders.balanceD.value = message.balance.td;
+  pidSliders.velocityP.value = message.velocity.kp;
+  pidSliders.velocityI.value = message.velocity.ti;
+  pidSliders.velocityD.value = message.velocity.td;
   // Update text
   const balancePValue = document.getElementById("balancePValue");
   const balanceIValue = document.getElementById("balanceIValue");
@@ -315,37 +302,29 @@ function update_pid_values(message){
   velocityPValue.textContent = Number(message.velocity.kp).toFixed(2);
   velocityIValue.textContent = Number(message.velocity.ti).toFixed(2);
   velocityDValue.textContent = Number(message.velocity.td).toFixed(2);
-
 }
-function update_calibration_angle(message) {
-  const angle_text = document.getElementById("calibration-angle-text");
 
-  if (message != null) {
-    const angle_value = Number(message.value);
+function updateCalibrationAngle(message) {
+  const angleText = document.getElementById("calibration-angle-text");
 
-    const sign = angle_value < 0 ? '-' : '+';
-
-    const absValue = Math.abs(angle_value);
-    const [integer, decimal] = absValue.toFixed(1).split('.');
-
-    const formatted =
-      `${sign}${integer.padStart(3, '0')}.${decimal}°`;
-
-    angle_text.textContent = formatted;
-
-  } else {
-    angle_text.textContent = "---.-°";
+  if (message == null) {
+    angleText.textContent = "---.-°";
+    return;
   }
+
+  const angleValue = Number(message.value);
+  const sign = angleValue < 0 ? "-" : "+";
+  const absValue = Math.abs(angleValue);
+  const [integer, decimal] = absValue.toFixed(1).split(".");
+
+  angleText.textContent = `${sign}${integer.padStart(3, "0")}.${decimal}°`;
 }
 
-function send_button(button) {
-  if (button === "motors_toggle"){
-    if (motors_on){
-      websocket.send(JSON.stringify({ id: `motors_off` }));
-    }
-    else{
-      websocket.send(JSON.stringify({ id: `motors_on` }));
-    }
+function toggleMotors() {
+  if (motorsOn) {
+    sendMessage({ id: "motors_off" });
+  } else {
+    sendMessage({ id: "motors_on" });
   }
 }
 
@@ -358,93 +337,94 @@ function setButtonEnabled(enabled) {
       el.classList.add("disabled");
     }
   });
-   // Also disable the <input type="color">
+  // Also disable the color input.
   const colorInput = document.getElementById("robot-color");
   if (colorInput) {
     colorInput.disabled = !enabled;
   }
 }
 
-function record(){
-  // If not recording 
-  if(!recording)
-  {
-    recording = true;
-    document.getElementById("button_record").style.backgroundColor = "red";
-    document.getElementById("button_record").textContent="Stop";
-    websocket.send(JSON.stringify({ id: `record_start` }));
+function setRecordingState(enabled) {
+  recording = enabled;
+  const recordButton = document.getElementById("button-record");
+  recordButton.style.backgroundColor = enabled ? "red" : "green";
+  recordButton.textContent = enabled ? "Stop" : "Record";
+}
+
+function toggleRecording() {
+  const nextState = !recording;
+  const messageId = nextState ? "record_start" : "record_stop";
+  if (!sendMessage({ id: messageId })) {
+    return;
   }
-  // If currently recording
-  else{
-    recording = false;
-    document.getElementById("button_record").style.backgroundColor = "green";
-    document.getElementById("button_record").textContent="Record";
-    websocket.send(JSON.stringify({ id: `record_stop` }));
-  }
+
+  setRecordingState(nextState);
 }
 
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then((reg) => {
-        console.log('Service worker registered.', reg);
-      });
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js");
   });
 }
 
 window.addEventListener("resize", () => {
+  const connected = websocket && websocket.readyState === WebSocket.OPEN;
   // Recreate joysticks to adjust to new layout
   createJoystick("joystick1", "left");
   createJoystick("joystick2", "right");
-  joysticks["left"].enabled = true;
-  joysticks["right"].enabled = true;
+  setJoystickEnabled(connected);
 });
 
-function calibrate(){
-  websocket.send(JSON.stringify({ id: `calibrate` }));
+function calibrate() {
+  sendMessage({ id: "calibrate" });
 }
 
 // PID
 const sliders = document.querySelectorAll("input[type='range']");
+const pidSliders = {
+  balanceP: document.getElementById("balanceP"),
+  balanceI: document.getElementById("balanceI"),
+  balanceD: document.getElementById("balanceD"),
+  velocityP: document.getElementById("velocityP"),
+  velocityI: document.getElementById("velocityI"),
+  velocityD: document.getElementById("velocityD"),
+};
 
-sliders.forEach(slider => {
-    const valueSpan =
-        document.getElementById(slider.id + "Value");
+sliders.forEach((slider) => {
+  const valueSpan = document.getElementById(slider.id + "Value");
 
+  valueSpan.textContent = slider.value;
+
+  slider.addEventListener("input", () => {
     valueSpan.textContent = slider.value;
-
-    slider.addEventListener("input", () => {
-        valueSpan.textContent = slider.value;
-    });
+  });
 });
 
 // Request PID info from the server
-function requestPID(){
-  websocket.send(JSON.stringify({"id":"pid_request"}));
+function requestPid() {
+  sendMessage({ id: "pid_request" });
 }
 
+function savePid() {
+  const pidValues = {
+    id: "pid_values",
+    balance: {
+      kp: parseFloat(pidSliders.balanceP.value),
+      ti: parseFloat(pidSliders.balanceI.value),
+      td: parseFloat(pidSliders.balanceD.value),
+    },
+    velocity: {
+      kp: parseFloat(pidSliders.velocityP.value),
+      ti: parseFloat(pidSliders.velocityI.value),
+      td: parseFloat(pidSliders.velocityD.value),
+    },
+  };
 
-function savePID() {
-
-    const pidValues = {
-        id: "pid_values",
-        balance: {
-            kp: parseFloat(balanceP.value),
-            ti: parseFloat(balanceI.value),
-            td: parseFloat(balanceD.value)
-        },
-        velocity: {
-            kp: parseFloat(velocityP.value),
-            ti: parseFloat(velocityI.value),
-            td: parseFloat(velocityD.value)
-        }
-    };
-    // Sned those values to the server
-    websocket.send(JSON.stringify(pidValues));
+  sendMessage(pidValues);
 }
 
-// CSV 
+// CSV
 function saveCsv(data) {
 
   const blob = new Blob(

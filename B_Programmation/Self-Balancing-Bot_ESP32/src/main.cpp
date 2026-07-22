@@ -54,6 +54,7 @@
 
 // Rest Angle
 #define D_BALANCE_ANGLE 2.1 // [°]
+#define D_COMPLEMENTARY_FILTER_ALPHA 0.9f
 
 #define D_DATASEND_PERIOD 500            // Data transmission period [ms]
 #define D_ANGLE_LIMITS {-30, 30}         // Limit angles [°]
@@ -61,7 +62,7 @@
 #define D_SPEED_DELTA_CTRL_RANGE {-2, 2} // Max pivot speed [rad/s]
 
 #define D_WHEEL_RADIUS 0.055       // [m]
-#define D_MOTOR_MAX_SPEED 5 * M_PI // [rad/s]
+#define D_MOTOR_MAX_SPEED (5.0f * M_PI) // [rad/s]
 
 // WiFi credentials
 #define D_SSID "self-balancing-bot"
@@ -70,30 +71,31 @@
 // File management (data saving)
 #define D_MAX_RECORDING_SIZE 2000 // (Samples)
 #define D_RECORDING_PERIOD 20     // ms
+#define D_RECORDING_CHUNK_SIZE 4095
 
 #define D_BATTERY_SEND_PERIOD 5000 // Update battery every x [ms]
 
 // Regulation loops frequencies
 #define D_INNER_LOOP_FREQ 500.0
-#define D_INNER_LOOP_PERI 1.0 / D_INNER_LOOP_FREQ
+#define D_INNER_LOOP_PERI (1.0f / D_INNER_LOOP_FREQ)
 #define D_OUTER_LOOP_FREQ 500.0
-#define D_OUTER_LOOP_PERI 1.0 / D_OUTER_LOOP_FREQ
+#define D_OUTER_LOOP_PERI (1.0f / D_OUTER_LOOP_FREQ)
 
-// Stuctures
-typedef struct PIDController
+// Structures
+struct PIDController
 {
   float kp;
   float ki;
   float kd;
 
   float integral;
-  float previousError;
+  float previous_error;
 
-  float outputMin;
-  float outputMax;
-} PIDController;
+  float output_min;
+  float output_max;
+};
 
-typedef struct
+struct RecordingData
 {
   float time;         // [ms]
   float acceleration; // [rad/s^2]
@@ -102,27 +104,28 @@ typedef struct
   float speed;        // [m/s]
   float speed_target; // [m/s]
   float position;     // [mm]
-} S_DATA;
+};
 
 //-------------- FUNCTION PROTOTYPES ---------------
 void init_littlefs();
 void init_wifi();
 
-void notify_clients(String msg);
+void notify_clients(const String &msg);
 void handle_websocket_message(void *arg, uint8_t *data, size_t len);
 void on_event(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 void init_websocket();
 
-float PID_update(PIDController *pid, float error, float dt);
+float pid_update(PIDController *pid, float error, float dt);
 
-void send_angle(float s);
+void send_angle(float angle);
 void send_target_angle(float target_angle);
 void send_motor_state(bool state);
 void send_battery(float battery_voltage);
 void send_recording();
 
 float read_battery();
-bool is_angle_withing_range();
+bool is_angle_within_range();
+float calculate_accelerometer_angle(const sensors_event_t &acceleration);
 float map_f(float value, float min1, float max1, float min2, float max2);
 
 //-------------- GLOBAL VARIABLES ---------------
@@ -140,9 +143,8 @@ float theta_measured = 0.0f;
 float theta_offset = 0.0f;
 float theta_target = 0.0f;
 
-unsigned long lastMicros = 0;
+unsigned long last_micros = 0;
 
-float us_speed = 0;
 float motor_speed = 0.0f;
 
 float outer_loop_cnt = 0.0f;
@@ -153,7 +155,6 @@ float acceleration = 0.0f;
 float speed = 0.0f;
 float speed_target = 0.0f;
 float pivot_speed = 0.0f;
-float speed_update = 0;
 
 float position = 0.0f;
 
@@ -163,12 +164,10 @@ float speed_delta_control_range[2] = D_SPEED_DELTA_CTRL_RANGE;
 
 bool motor_state = false;
 
-S_DATA recording_data[D_MAX_RECORDING_SIZE];
+RecordingData recording_data[D_MAX_RECORDING_SIZE];
 bool recording = false;
 uint16_t recording_size = 0;
 uint32_t recording_last_time = 0;
-
-uint16_t micro_stepping_value = 0;
 
 uint32_t angle_timer = 0;
 uint32_t battery_timer = 0;
@@ -185,41 +184,37 @@ float step_speed_value = 2.0f; // m/s
 uint32_t step_start_time = 0;
 uint32_t step_speed_period = 10000; // ms
 uint32_t step_speed_ton = 3000;     // ms
-uint32_t step_counter = 0;          // ms
 
 bool trap_enable = false;
 float trap_peak = .7f; // m/s
 uint32_t trap_start_time = 0;
 uint32_t trap_speed_period = 5000; // ms
 uint32_t trap_speed_trise = 2000;  // ms
-uint32_t trap_counter = 0;         // ms
-uint32_t t_rise = min(trap_speed_trise, trap_speed_period / 2);
-uint32_t t_flat = trap_speed_period - 2 * t_rise;
 
 // PID controllers
-PIDController acceleration_PID =
+PIDController velocity_pid =
     {
         .kp = D_REG_KPV,
         .ki = D_REG_TIV,
         .kd = D_REG_TDV,
 
         .integral = 0.0f,
-        .previousError = 0.0f,
+        .previous_error = 0.0f,
 
-        .outputMin = -5.0f, // max desired tilt [°]
-        .outputMax = 5.0f};
+        .output_min = -5.0f, // max desired tilt [°]
+        .output_max = 5.0f};
 
-PIDController tilt_PID =
+PIDController tilt_pid =
     {
         .kp = D_REG_KPT,
         .ki = D_REG_TIT,
         .kd = D_REG_TDT,
 
         .integral = 0.0f,
-        .previousError = 0.0f,
+        .previous_error = 0.0f,
 
-        .outputMin = -200, // Motor acceleration [rad/s^2]
-        .outputMax = 200};
+        .output_min = -200, // Motor acceleration [rad/s^2]
+        .output_max = 200};
 
 //-------------- SETUP FUNCTION ---------------
 void setup()
@@ -231,21 +226,29 @@ void setup()
   // Initializes TMC
   tmc2226_left.init();
   tmc2226_right.init();
-  // Get default microstepping value.
-  micro_stepping_value = D_TMC_DEF_MICROSTP;
-
   // Start MPU
-  mpu.begin();
+  if (!mpu.begin())
+  {
+    Serial.println("MPU6050 initialization failed; motors remain disabled");
+    while (true)
+    {
+      delay(1000);
+    }
+  }
 
   // Initialize MPU settings
   mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
   mpu.setGyroRange(MPU6050_RANGE_250_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_260_HZ);
 
+  sensors_event_t initial_acceleration, initial_gyro, initial_temperature;
+  mpu.getEvent(&initial_acceleration, &initial_gyro, &initial_temperature);
+  theta_measured = calculate_accelerometer_angle(initial_acceleration);
+
   // Initialize battery pin
   pinMode(D_PIN_BATTERY_LVL, INPUT);
 
-  // Start WIFI and server
+  // Start Wi-Fi and server
   init_wifi();
   init_littlefs();
   init_websocket();
@@ -260,11 +263,12 @@ void setup()
   server.begin();
 
   delay(50);
+  last_micros = micros();
 
   // Check if the bot is in a correct position
   // If angle out of safe range.
 
-  if (is_angle_withing_range())
+  if (is_angle_within_range())
   {
     motor_state = true;
     tmc2226_left.enable();
@@ -283,8 +287,8 @@ void loop()
 
   // Time reading
   unsigned long now = micros();
-  float dt = (now - lastMicros) * 1e-6f;
-  lastMicros = now;
+  float dt = (now - last_micros) * 1e-6f;
+  last_micros = now;
 
   // Speed STEP
   if (step_enable)
@@ -358,9 +362,8 @@ void loop()
     // Update target based on joystick input (position_control)
     float speed_error = speed_target - speed;
     // Generate angle theta based on position Error
-    theta_target = PID_update(&acceleration_PID, speed_error, outer_loop_cnt);
+    theta_target = pid_update(&velocity_pid, speed_error, outer_loop_cnt);
     outer_loop_cnt = 0;
-    speed_update = 0;
   }
 
   // INNER LOOP
@@ -368,7 +371,7 @@ void loop()
 
   if (inner_loop_cnt > D_INNER_LOOP_PERI)
   {
-    // Update position with current speeed
+    // Update position with current speed
     position += inner_loop_cnt * speed;
     // theta_target = speed_target;
     //  ANGLE READING
@@ -377,23 +380,20 @@ void loop()
     mpu.getEvent(&accel, &gyro, &temp);
 
     // Accelerometer angle
-    float accelAngleX =
-        atan2(accel.acceleration.x,
-              sqrt(accel.acceleration.y * accel.acceleration.y +
-                   accel.acceleration.z * accel.acceleration.z)) *
-        180.0f / PI;
+    float accel_angle_x = calculate_accelerometer_angle(accel);
 
     // Gyro rate (Adafruit returns rad/s)
-    float gyroRateX = gyro.gyro.x * 180.0f / PI;
+    float gyro_rate_x = gyro.gyro.x * 180.0f / PI;
 
     // Complementary filter
-    theta_measured = 0.9f * (theta_measured + gyroRateX * inner_loop_cnt) + 0.1f * accelAngleX;
+    theta_measured = D_COMPLEMENTARY_FILTER_ALPHA * (theta_measured + gyro_rate_x * inner_loop_cnt) +
+                     (1.0f - D_COMPLEMENTARY_FILTER_ALPHA) * accel_angle_x;
     // Defines the error from speed (and saved offset + Hard coded offset)
     float theta_error = theta_target - (theta_measured - D_BALANCE_ANGLE - theta_offset);
 
     // Generate motor speed from inner loop
     acceleration =
-        PID_update(&tilt_PID, theta_error, inner_loop_cnt);
+        pid_update(&tilt_pid, theta_error, inner_loop_cnt);
 
     // Invert acceleration
     acceleration *= -1;
@@ -411,7 +411,7 @@ void loop()
   }
 
   // If angle out of safe range.
-  if (!is_angle_withing_range())
+  if (!is_angle_within_range())
   {
 
     if (motor_state)
@@ -466,11 +466,20 @@ void loop()
 }
 //-------------- FUNCTION IMPLEMENTATIONS ---------------
 
-/// @brief Reads current angleX and assess if in the range
-/// @return
-bool is_angle_withing_range()
+/// @brief Checks whether the measured angle is inside the safe range.
+/// @return True when the robot may safely enable its motors.
+bool is_angle_within_range()
 {
   return (theta_measured - D_BALANCE_ANGLE > angle_limits[0] && theta_measured - D_BALANCE_ANGLE < angle_limits[1]);
+}
+
+/// @brief Calculates the robot angle from an accelerometer sample.
+float calculate_accelerometer_angle(const sensors_event_t &acceleration)
+{
+  return atan2(acceleration.acceleration.x,
+               sqrt(acceleration.acceleration.y * acceleration.acceleration.y +
+                    acceleration.acceleration.z * acceleration.acceleration.z)) *
+         180.0f / PI;
 }
 /// @brief Send the state of the motor to the clients
 /// @param state
@@ -499,10 +508,10 @@ void send_angle(float theta)
 void send_recording()
 {
   // Set timestamp to 0 (for the first one)
-  float first_time = recording_data[0].time;
+  float first_time = recording_size > 0 ? recording_data[0].time : 0.0f;
   // Send the recording transmit signal
   ws.textAll("{\"id\":\"save_start\"}");
-  ws.textAll("Time [ms],Acceleration [m/s^2],Speed_target [m/s],Speed [m/s],Theta_Target [deg],Theta [deg],Position [m]\n");
+  ws.textAll("Time [ms],Acceleration [rad/s^2],Speed_target [m/s],Speed [m/s],Theta_Target [deg],Theta [deg],Position [mm]\n");
   String chunk;
 
   for (int i = 0; i < recording_size; i++)
@@ -515,8 +524,8 @@ void send_recording()
              String(recording_data[i].theta, 3) + "," +
              String(recording_data[i].position, 1) + "\n";
 
-    // Send data chunck wise
-    if (chunk.length() > 4095)
+    // Send data chunk-wise
+    if (chunk.length() > D_RECORDING_CHUNK_SIZE)
     {
       ws.textAll(chunk);
 
@@ -558,25 +567,25 @@ void send_target_angle(float target_angle)
 }
 // PID //
 
-/// Update PID based on a given discrete jump.
-float PID_update(PIDController *pid, float error, float dt)
+/// @brief Updates a PID controller for one discrete time step.
+float pid_update(PIDController *pid, float error, float dt)
 {
   // Derivative
-  float derivative = (error - pid->previousError) / dt;
+  float derivative = (error - pid->previous_error) / dt;
 
-  // Compute output WITHOUT updating integral yet
+  // Compute output without updating the integral yet
   float output =
       pid->kp * error +
       pid->ki * pid->integral +
       pid->kd * derivative;
 
   // Check if output would saturate
-  bool saturatedHigh = output > pid->outputMax;
-  bool saturatedLow = output < pid->outputMin;
+  bool saturated_high = output > pid->output_max;
+  bool saturated_low = output < pid->output_min;
 
   // Anti-windup: only integrate if it helps leave saturation
-  if (!(saturatedHigh && error > 0) &&
-      !(saturatedLow && error < 0))
+  if (!(saturated_high && error > 0) &&
+      !(saturated_low && error < 0))
   {
     pid->integral += error * dt;
   }
@@ -588,12 +597,12 @@ float PID_update(PIDController *pid, float error, float dt)
       pid->kd * derivative;
 
   // Saturate output
-  if (output > pid->outputMax)
-    output = pid->outputMax;
-  else if (output < pid->outputMin)
-    output = pid->outputMin;
+  if (output > pid->output_max)
+    output = pid->output_max;
+  else if (output < pid->output_min)
+    output = pid->output_min;
 
-  pid->previousError = error;
+  pid->previous_error = error;
 
   return output;
 }
@@ -628,7 +637,7 @@ void init_wifi()
 /*
  * Sends a text message to all connected WebSocket clients
  */
-void notify_clients(String msg)
+void notify_clients(const String &msg)
 {
   ws.textAll(msg);
 }
@@ -641,96 +650,103 @@ void handle_websocket_message(void *arg, uint8_t *data, size_t len)
   // Get frame infos
   AwsFrameInfo *info = (AwsFrameInfo *)arg;
 
-  // Check if the received websocket message is valid
-  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
+  // Ignore partial, fragmented, or non-text messages.
+  if (!info->final || info->index != 0 || info->len != len || info->opcode != WS_TEXT)
   {
-    // Parse Data and Message.
-    String message = (char *)data;
-    JSONVar msg = JSON.parse(message);
+    return;
+  }
 
-    // If the received message is correct
-    if (JSON.typeof(msg) == "object")
+  String message;
+  message.reserve(len);
+  for (size_t i = 0; i < len; i++)
+  {
+    message += static_cast<char>(data[i]);
+  }
+
+  JSONVar msg = JSON.parse(message);
+  if (JSON.typeof(msg) != "object")
+  {
+    return;
+  }
+
+  String msg_id = (const char *)msg["id"];
+  if (msg_id == "motors_off")
+  {
+    motor_state = false;
+    tmc2226_left.disable();
+    tmc2226_right.disable();
+    send_motor_state(false);
+  }
+  else if (msg_id == "motors_on")
+  {
+    if (is_angle_within_range())
     {
-      String msg_id = (const char *)msg["id"];
-      if (msg_id == "motors_off")
-      {
-        motor_state = false;
-        tmc2226_left.disable();
-        tmc2226_right.disable();
-        send_motor_state(false);
-      }
-      else if (msg_id == "motors_on")
-      {
-        if (is_angle_withing_range())
-        {
-          tmc2226_left.enable();
-          tmc2226_right.enable();
-          motor_state = true;
-          send_motor_state(true);
-        }
-      }
-      else if (msg_id == "calibrate")
-      {
-        // Save angle offset
-        theta_offset = theta_measured;
-
-        // Transmit saved angle to server
-        JSONVar json;
-        json["id"] = "calibration_angle";
-        json["value"] = theta_offset;
-        String msg = JSON.stringify(json);
-        notify_clients(msg);
-      }
-      else if (msg_id == "pid_values")
-      {
-        // Safety check
-        if (msg["balance"].hasOwnProperty("kp"))
-        {
-          tilt_PID.kp = (double)msg["balance"]["kp"];
-          tilt_PID.ki = (double)msg["balance"]["ti"];
-          tilt_PID.kd = (double)msg["balance"]["td"];
-        }
-
-        if (msg["velocity"].hasOwnProperty("kp"))
-        {
-          acceleration_PID.kp = (double)msg["velocity"]["kp"];
-          acceleration_PID.ki = (double)msg["velocity"]["ti"];
-          acceleration_PID.kd = (double)msg["velocity"]["td"];
-        }
-      }
-      else if (msg_id == "pid_request")
-      {
-        JSONVar json;
-        json["id"] = "pid_values";
-        json["balance"]["kp"] = tilt_PID.kp;
-        json["balance"]["td"] = tilt_PID.kd;
-        json["balance"]["ti"] = tilt_PID.ki;
-        json["velocity"]["kp"] = acceleration_PID.kp;
-        json["velocity"]["td"] = acceleration_PID.kd;
-        json["velocity"]["ti"] = acceleration_PID.ki;
-        String msg = JSON.stringify(json);
-        notify_clients(msg);
-      }
-      else if (msg_id == "joystick-left")
-      {
-        // Adjust speed target from joystick
-        speed_target = map_f((double)msg["y"], -100, 100, speed_control_range[0], speed_control_range[1]);
-      }
-      else if (msg_id == "joystick-right")
-      {
-        pivot_speed = -map_f((double)msg["x"], -100, 100, speed_delta_control_range[0], speed_delta_control_range[1]);
-      }
-      else if (msg_id == "record_start")
-      {
-        recording_size = 0;
-        recording = true;
-      }
-      else if (msg_id == "record_stop")
-      {
-        send_recording();
-        recording = false;
-      }
+      tmc2226_left.enable();
+      tmc2226_right.enable();
+      motor_state = true;
+      send_motor_state(true);
     }
+  }
+  else if (msg_id == "calibrate")
+  {
+    // Save angle offset
+    theta_offset = theta_measured;
+
+    // Transmit saved angle to server
+    JSONVar json;
+    json["id"] = "calibration_angle";
+    json["value"] = theta_offset;
+    String msg = JSON.stringify(json);
+    notify_clients(msg);
+  }
+  else if (msg_id == "pid_values")
+  {
+    // Safety check
+    if (msg["balance"].hasOwnProperty("kp"))
+    {
+      tilt_pid.kp = (double)msg["balance"]["kp"];
+      tilt_pid.ki = (double)msg["balance"]["ti"];
+      tilt_pid.kd = (double)msg["balance"]["td"];
+    }
+
+    if (msg["velocity"].hasOwnProperty("kp"))
+    {
+      velocity_pid.kp = (double)msg["velocity"]["kp"];
+      velocity_pid.ki = (double)msg["velocity"]["ti"];
+      velocity_pid.kd = (double)msg["velocity"]["td"];
+    }
+  }
+  else if (msg_id == "pid_request")
+  {
+    JSONVar json;
+    json["id"] = "pid_values";
+    json["balance"]["kp"] = tilt_pid.kp;
+    json["balance"]["td"] = tilt_pid.kd;
+    json["balance"]["ti"] = tilt_pid.ki;
+    json["velocity"]["kp"] = velocity_pid.kp;
+    json["velocity"]["td"] = velocity_pid.kd;
+    json["velocity"]["ti"] = velocity_pid.ki;
+    String msg = JSON.stringify(json);
+    notify_clients(msg);
+  }
+  else if (msg_id == "joystick-left")
+  {
+    // Adjust speed target from joystick
+    speed_target = map_f((double)msg["y"], -100, 100, speed_control_range[0], speed_control_range[1]);
+  }
+  else if (msg_id == "joystick-right")
+  {
+    pivot_speed = -map_f((double)msg["x"], -100, 100, speed_delta_control_range[0], speed_delta_control_range[1]);
+  }
+  else if (msg_id == "record_start")
+  {
+    recording_size = 0;
+    recording = true;
+  }
+  else if (msg_id == "record_stop")
+  {
+    send_recording();
+    recording = false;
   }
 }
 
@@ -742,8 +758,11 @@ void on_event(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType
   switch (type)
   {
   case WS_EVT_CONNECT:
+    send_motor_state(motor_state);
     break;
   case WS_EVT_DISCONNECT:
+    speed_target = 0.0f;
+    pivot_speed = 0.0f;
     break;
   case WS_EVT_DATA:
     handle_websocket_message(arg, data, len);

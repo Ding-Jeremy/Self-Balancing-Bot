@@ -1,4 +1,4 @@
-const cacheName = 'self-balancing-bot-cache-v1';
+const cacheName = 'self-balancing-bot-cache-v2';
 const filesToCache = [
   '/',
   '/index.html',
@@ -14,6 +14,16 @@ const filesToCache = [
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(cacheName).then((cache) => cache.addAll(filesToCache))
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => Promise.all(
+      cacheNames
+        .filter((name) => name.startsWith('self-balancing-bot-cache-') && name !== cacheName)
+        .map((name) => caches.delete(name))
+    ))
   );
 });
 

@@ -25,21 +25,18 @@
 
 // UART constants
 #define D_TMC_INIT_BYTE 0x05
-#define D_TMC_NODE_ADDRESS 0x00
 #define D_TMC_MASTER_ADDRESS 0xFF
 #define D_TMC_FRAME_LENGTH 8 // bytes
-#define D_TMC_DATA_LENGTH 4
 #define D_TMC_BAUDRATE 500000
 
 // Default register values
 #define D_TMC_REGDFV_CHOPCONF 0x15010053
-#define D_TMC_REGDFV_GCONF 0x101
 #define D_TMC_DEF_MRES 0b0010          // Datasheet value
 #define D_TMC_DEF_MICROSTP 64          // Microstep/stp
 #define D_TMC_CLKFRQ 11.7e6f           // Hz
-#define D_TMC_VACTUALSCALE 16777216.0f //(2^24)
-#define D_TMC_VACTUAL_CONVERSION D_TMC_VACTUALSCALE / D_TMC_CLKFRQ
-#define D_TMC_STPPERREV 200
+#define D_TMC_VACTUALSCALE 16777216.0f // (2^24)
+#define D_TMC_VACTUAL_CONVERSION (D_TMC_VACTUALSCALE / D_TMC_CLKFRQ)
+#define D_TMC_STEPS_PER_REV 200
 // Class
 class TMC2226
 {
@@ -101,7 +98,7 @@ public:
 
     uint8_t node_address;
 
-    TMC2226(uint8_t nd_addr);
+    TMC2226(uint8_t address);
 
     void init();
 
@@ -115,11 +112,8 @@ public:
     int32_t rad_s_to_vactual(float rad_s);
 
 private:
-    uint8_t m_nodeAddress;
-
     void send_frame(uint8_t *frame, uint8_t length);
     void calculate_crc(uint8_t *frame, uint8_t frame_length);
-    void invert_bytes(uint8_t frane[D_TMC_FRAME_LENGTH - 4]);
 };
 
 #endif
