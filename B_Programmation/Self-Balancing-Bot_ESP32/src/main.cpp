@@ -43,7 +43,7 @@
 
 // ---------------- PID Controller Parameters ----------------
 // Velocity controller
-#define D_REG_KPV 26.76
+#define D_REG_KPV 20
 #define D_REG_TDV 0.0
 #define D_REG_TIV 0.0
 

@@ -1,7 +1,7 @@
 \section{Conditions de mesures}
 Pour les mesures de tension et de courants, les roues ont été retirées de la maquette. De cette manière, le \Gls{pcb} était facilement accessible.
 
-Pour les mesures embarquées, la période de mesure $T_{mes}$ du module est fixée à 20 ms.
+Pour les mesures embarquées, la période de mesure $T_{mes}$ du module est fixée à 20 ms. Les roues en ALU sont utilisées sauf indication contraire.
 \subsection{Appareils de mesure}
 
 \begin{table}[H]
@@ -226,9 +226,40 @@ $$
 e_x=\frac{|2.985-2.854|}{2.985}\times100 \approx 4.39\%
 $$
 
-\subsection{Impact IMU}
+\subsubsection{Comparaison entre les roues en aluminium et en PLA}
 
-L'impact représente une phase critique pour la mesure, car les accélérations importantes générées lors du contact avec le sol peuvent influencer fortement l'estimation de l'état du système. Cette partie vise à caractériser l'influence de différents paramètres sur le signal mesuré par l'IMU.
+Afin d'évaluer l'influence du matériau des roues sur les performances du système, le même profil de déplacement trapézoïdal est appliqué avec les roues en PLA. Les résultats obtenus sont ensuite comparés à ceux mesurés avec les roues en aluminium.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/graphs/trapez_alu_pla_sim.pdf}
+    \caption{Comparaison de la vitesse simulée pour les roues en aluminium et en PLA}
+    \label{fig:trapez_velocity_sim_comparison}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/graphs/trapez_mes_alu_pla.pdf}
+    \caption{Comparaison de la vitesse mesurée pour les roues en aluminium et en PLA}
+    \label{fig:trapez_velocity_mes_comparison}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/figures/graphs/trapez_mes_avg_alu_pla.pdf}
+    \caption{Comparaison de la vitesse mesurée moyennée pour les roues en aluminium et en PLA}
+    \label{fig:trapez_velocity_comparison_avg}
+\end{figure}
+
+La figure \ref{fig:trapez_velocity_sim_comparison} présente la comparaison entre les profils simulés pour les deux configurations. Les deux systèmes utilisent la même loi de vitesse trapézoïdale, ce qui permet d'évaluer uniquement l'influence du changement de matériau des roues sur le comportement réel du déplacement.
+
+Les résultats expérimentaux associés sont présentés à la figure \ref{fig:trapez_velocity_mes_comparison}. La configuration équipée de roues en PLA présente davantage d'oscillations autour de la consigne que celle équipée de roues en aluminium.
+
+Les deux configurations suivent globalement l'évolution de la consigne trapézoïdale. Lors de la phase d'accélération, les roues en PLA présentent un retard plus faible par rapport à la consigne que les roues en aluminium. La montée en vitesse est ainsi plus proche du profil demandé.
+
+Afin de mieux comparer le comportement global des deux configurations, les signaux mesurés ont été moyennés et sont présentés à la figure \ref{fig:trapez_velocity_comparison_avg}. Le filtrage permet de réduire l'influence des oscillations rapides et de mettre en évidence la tendance moyenne du déplacement.
+
+Après moyennage, la réponse obtenue avec les roues en PLA apparaît plus proche de la consigne théorique durant l'ensemble du profil. Durant la phase à vitesse constante, les deux configurations restent proches de la valeur demandée, avec toutefois un suivi moyen légèrement plus précis pour les roues en PLA.
 
 \subsubsection{Positionnement}
 
@@ -506,7 +537,3 @@ P_{modules}
     \label{tab:moteurs_allumes_maxspeed}
 \end{table}
 
-\subsection{Autonomie}
-
-L'autonomie de la maquette peut être estimée à partir des consommations mesurées précédemment. Les mesures à vitesse nulle et à vitesse maximale permettent d'encadrer la consommation électrique du système et de fournir une estimation de l'autonomie selon les conditions d'utilisation.
- 

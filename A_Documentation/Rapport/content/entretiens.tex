@@ -1,0 +1,42 @@
+
+Ce chapitre résume les principaux points abordés lors des séances de suivi du travail de Bachelor.
+
+\section*{Semaine 8 -- 16.02.2026}
+Premier entretien de lancement du projet. Le concept d'un robot auto-balançant à deux roues est validé. Les réunions hebdomadaires sont fixées au lundi matin. Un précédent travail sur un système similaire est évoqué comme source d'inspiration. Il est demandé de réfléchir au choix de la motorisation.
+
+\section*{Semaine 9 -- 23.02.2026}
+Les objectifs du projet sont précisés. Il est demandé d'établir un planning détaillé ainsi qu'un modèle théorique représentatif du système, destiné à être simulé sous Matlab/Simulink. L'intégration du comportement du capteur inertiel dans la simulation est également envisagée.
+
+\section*{Semaine 11 -- 16.03.2026}
+Les critères de conception sont affinés en privilégiant une solution simple, robuste et à faible coût. Le choix d'une motorisation par moteurs pas à pas est retenu. Il est demandé d'étudier les caractéristiques de l'IMU, la fréquence d'acquisition des mesures ainsi que le traitement des données permettant d'estimer l'angle. Le cahier des charges est complété avec les différentes tâches du projet (électronique, régulation, capteurs, PCB et fabrication).
+
+\section*{Semaines 13 à 19 -- Mars à mai 2026}
+Les séances suivantes sont consacrées au développement du modèle dynamique et de la stratégie de régulation. Les principaux points abordés sont :
+\begin{itemize}
+    \item validation et amélioration du cahier des charges ;
+    \item élaboration d'un modèle dynamique modulable sous Simulink ;
+    \item adoption d'une régulation en boucle imbriquée avec une boucle interne sur l'angle et une boucle externe sur la vitesse ;
+    \item prise en compte des effets du couple moteur, de l'inertie des roues et des erreurs de mesure ;
+    \item étude de l'influence de l'accélération sur la mesure de l'IMU ;
+    \item réalisation de la maquette et commande des composants électroniques.
+\end{itemize}
+
+\section*{Mai à juin 2026}
+Le rapport intermédiaire est présenté puis discuté. Les remarques portent principalement sur la qualité rédactionnelle, la rigueur scientifique et la cohérence générale du document. Les améliorations demandées concernent notamment :
+\begin{itemize}
+    \item renforcer l'introduction et préciser le contexte du projet ;
+    \item améliorer le fil conducteur du rapport ;
+    \item uniformiser les notations et la terminologie ;
+    \item justifier les hypothèses de modélisation ainsi que les paramètres de régulation ;
+    \item préciser l'origine des équations et des données utilisées ;
+    \item relier systématiquement les résultats de simulation aux essais expérimentaux ;
+    \item compléter les analyses par des mesures de consommation électrique.
+\end{itemize}
+
+\section*{Juillet 2026}
+Les derniers entretiens portent principalement sur la validation expérimentale du système. Les points suivants sont approfondis :
+\begin{itemize}
+    \item influence de l'accélération longitudinale sur les mesures de l'IMU ;
+    \item recherche d'une solution permettant de rendre la régulation moins sensible au décalage du centre de masse, notamment par l'ajout d'une action intégrale dans la boucle externe.
+\end{itemize}
+

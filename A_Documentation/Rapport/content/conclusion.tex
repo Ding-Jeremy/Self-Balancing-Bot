@@ -57,12 +57,17 @@ Les réponses obtenues pour les perturbations positives et négatives présenten
 
 Les essais de déplacement montrent que le profil de vitesse généré par le contrôleur est correctement suivi durant la phase d'accélération. La vitesse augmente de manière linéaire jusqu'à atteindre la valeur de consigne avant de rester pratiquement constante pendant la phase de déplacement uniforme.
 
-Une différence apparaît toutefois durant la phase de décélération. La vitesse mesurée décroît plus rapidement que la consigne théorique, ce qui indique que le système freine davantage que prévu par le modèle.
+Une différence apparaît toutefois durant la phase de décélération. La vitesse mesurée décroît plus rapidement la vitesse simulée, ce qui indique que le système freine davantage que prévu par le modèle.
 
 Cette différence se répercute sur la position finale. La simulation prévoit un déplacement de $2.985~\si{\meter}$ tandis que la mesure expérimentale atteint $2.854~\si{\meter}$, soit une erreur relative d'environ $4.4\,\%$.
 
-Cet écart reste modéré et s'explique principalement par les simplifications du modèle, les frottements mécaniques qui ne sont pas représentées dans la simulation.
+Cet écart reste modéré et s'explique principalement par les simplifications du modèle, les frottements mécaniques qui ne sont pas représentés dans la simulation, ainsi que les variations du contact entre les roues et le sol.
 
+La comparaison entre les roues en aluminium et les roues en PLA met également en évidence l'influence du matériau sur le comportement dynamique du système. La simulation montre une avance de la réponse en vitesse pour les roues en PLA, tendance qui est également observée expérimentalement. Les roues en aluminium présentent toutefois un comportement plus stable, avec un signal de vitesse moins bruité. Cette meilleure régularité s'explique par la rigidité supérieure du matériau, limitant les déformations de la roue lors du déplacement.
+
+Cependant, les roues en PLA présentent un meilleur suivi moyen de la consigne de vitesse. Malgré un niveau d'oscillation plus important sur la mesure instantanée, elles présentent un retard plus faible lors des phases transitoires, notamment pendant l'accélération. Ce comportement peut notamment s'expliquer par une inertie plus faible des roues en PLA, permettant au système d'atteindre plus rapidement la vitesse demandée.
+
+Ainsi, le choix du matériau représente un compromis entre stabilité de la réponse et précision du suivi dynamique. Les roues en aluminium permettent d'obtenir une réponse plus régulière et moins sensible au bruit, tandis que les roues en PLA offrent un comportement moyen plus proche de la consigne imposée. Dans le cadre de cet essai, les différences observées restent toutefois limitées, les deux configurations permettant de réaliser correctement le déplacement demandé.
 \subsubsection{Influence de l'IMU}
 
 Les essais mettent en évidence deux phénomènes liés aux mesures de l'IMU.
@@ -88,8 +93,54 @@ En revanche, les puissances mesurées sont systématiquement inférieures aux es
 
 Une seconde différence importante concerne la consommation des moteurs pas à pas. Les calculs théoriques supposent que le courant nominal est appliqué en permanence dans les enroulements afin de fournir le couple maximal. Or, le pilote TMC2226 met en œuvre une régulation intelligente du courant et adapte en permanence celui-ci aux besoins réels du moteur. Lorsque le couple demandé est faible ou lorsque le moteur est maintenu à l'arrêt, le courant effectivement délivré est significativement réduit. Cette gestion dynamique permet de diminuer les pertes Joule dans les enroulements et explique que les puissances mesurées, aussi bien à vitesse nulle qu'à vitesse maximale, soient sensiblement inférieures aux valeurs théoriques.
 
+De plus, les mesures expérimentales ont été réalisées avec les roues de la maquette hors contact avec le sol. Les moteurs n'avaient donc pas à fournir le couple nécessaire au déplacement de la structure ni à vaincre les efforts liés au frottement et à la charge mécanique. La charge appliquée aux moteurs étant ainsi fortement réduite, le courant réellement consommé par les pilotes est inférieur à celui attendu lors d'une utilisation en conditions réelles. Les puissances mesurées correspondent donc à un fonctionnement à vide des moteurs et constituent une estimation optimiste de la consommation en déplacement.
+
 Les mesures expérimentales montrent ainsi que le dimensionnement électrique réalisé est volontairement conservatif. Les hypothèses retenues lors de la conception garantissent que l'alimentation reste correctement dimensionnée dans les conditions les plus défavorables, tandis que la consommation réelle de la maquette demeure inférieure grâce à la gestion efficace de l'énergie par les différents composants électroniques, en particulier le pilote TMC2226.
+L'autonomie de la maquette est estimée à partir de l'énergie disponible dans la batterie et de la puissance consommée :
+
+\begin{equation}
+    t = \frac{E}{P}
+\end{equation}
+
+où \(E=\SI{19.24}{\watt\hour}\) est l'énergie stockée dans la batterie.
+
+En utilisant les puissances mesurées :
+
+\begin{itemize}
+    \item À vitesse nulle (\(P_{tot}=\SI{2.66}{\watt}\)) :
+    \begin{equation}
+        t_{\text{repos}}=\frac{19.24}{2.66}=7.23\,\si{\hour}
+    \end{equation}
+
+    \item À vitesse maximale (\(P_{tot}=\SI{8.89}{\watt}\)) :
+    \begin{equation}
+        t_{\text{max}}=\frac{19.24}{8.89}=2.16\,\si{\hour}
+    \end{equation}
+\end{itemize}
+
+L'autonomie de la maquette est donc comprise entre environ \SI{2.2}{\hour} dans les conditions les plus exigeantes et \SI{7.2}{\hour} lorsque les moteurs sont à l'arrêt. En pratique, lors d'une utilisation normale avec des vitesses variables, l'autonomie réelle se situera entre ces deux valeurs.
+
 
 \section{Améliorations possibles}
 
-\section{Conclusions personnelle}
+Plusieurs améliorations pourraient être envisagées afin de poursuivre le développement et d'améliorer les performances du système étudié.
+
+Une première amélioration concernerait la modélisation du système. Le modèle de simulation pourrait être complété en intégrant davantage de phénomènes physiques, tels que les frottements mécaniques, les pertes liées à la transmission et les variations du contact entre les roues et le sol. Une modélisation plus précise permettrait de réduire l'écart observé entre les résultats simulés et expérimentaux.
+
+Une seconde amélioration porterait sur la commande du déplacement. L'utilisation d'une régulation plus avancée, prenant mieux en compte les variations dynamiques du système, pourrait permettre d'améliorer le suivi de la consigne, notamment lors des phases d'accélération et de décélération.
+\section{Conclusion personnelle}
+
+La réalisation de ce projet a été une expérience particulièrement enrichissante. Elle m'a permis de mettre en pratique les connaissances acquises durant ma formation, tout en découvrant les différentes étapes nécessaires au développement complet d'un système robotique, de sa conception jusqu'à sa validation expérimentale.
+
+Ce travail m'a permis d'approfondir mes compétences dans de nombreux domaines techniques, notamment la modélisation et la conception 3D, la fabrication mécanique, la conception de cartes électroniques (\acrshort{pcb}), la programmation en C++, le développement d'un serveur Web ainsi que l'intégration de l'ensemble de ces éléments au sein d'un robot fonctionnel.
+
+La réalisation de ce projet m'a également sensibilisé aux contraintes liées au développement d'un système réel. Contrairement à une approche uniquement théorique, la fabrication d'un robot nécessite de prendre en compte de nombreux paramètres tels que les limitations des composants et les écarts entre la simulation et la réalité expérimentale.
+
+Les phases de tests et d'analyse des résultats m'ont permis de mieux comprendre l'importance d'une démarche expérimentale rigoureuse et de l'amélioration progressive d'un système. La comparaison des différentes solutions mécaniques, notamment l'étude de l'influence du matériau des roues, a également montré l'impact des choix de conception sur les performances finales du robot.
+Je tiens à remercier le centre de formation de la base aérienne de Payerne pour son soutien dans la réalisation de ce projet, notamment pour l'usinage des jantes en aluminium. Je remercie également le Makelab pour la fabrication des deux pièces latérales découpées au laser ainsi que pour les moyens mis à disposition.
+
+Je souhaite également remercier mon professeur accompagnant, M. Girardin Michel, pour son suivi, ses conseils et son accompagnement tout au long de la réalisation de ce projet.
+
+Enfin, je remercie mon relecteur, Ding Lionel, pour le temps consacré à la relecture de ce travail ainsi que pour ses remarques constructives ayant permis d'améliorer la qualité de ce rapport.
+
+

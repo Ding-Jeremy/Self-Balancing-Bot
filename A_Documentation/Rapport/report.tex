@@ -103,10 +103,13 @@
 
 \clearpage
 \printbibliography
-
+ 
 \appendix
 \appendixpage
 \addappheadtotoc
+\chapter{Entretiens}
+\input{content/entretiens.tex}
+
 
 \chapter{Schéma, PCB}
 \label{annexe:schema_electrique}
@@ -141,11 +144,11 @@
 \chapter{Bill Of Material}
 
 \label{annexe:bom}
-%\includepdf[
-%    pages=-,
-%    fitpaper=true,
-%    pagecommand={\thispagestyle{plain}}
-%]{assets/annexes/bom.pdf}
+\includepdf[
+    pages=-,
+    fitpaper=true,
+    pagecommand={\thispagestyle{plain}}
+]{assets/annexes/bom.pdf}
 
 \chapter{Code source embarqué}
 \label{annexe:code_source_embarque}
