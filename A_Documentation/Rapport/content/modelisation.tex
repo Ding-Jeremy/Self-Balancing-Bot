@@ -93,13 +93,53 @@ Le modèle de l'\acrshort{imu} ainsi que le filtre complémentaire sont ensuite 
 
 
 \section{Régulation}
+Le but ici est de déterminer la méthode de régulation la plus adaptée au système.
+
 \subsection{Structure de régulation retenue}
 
-Dans une architecture classique de commande mécanique, la grandeur de commande appliquée aux actionneurs est généralement le couple moteur. Le régulateur calcule alors directement le couple nécessaire afin de modifier la dynamique du système. Cependant, cette approche n'est pas directement applicable au système étudié.
+Une structure de régulation en boucle imbriquée est retenue. En effet, comme le montre la figure \ref{fig:com}, la position du centre de masse influence directement l'angle d'équilibre de la maquette.
 
-Le robot utilise des moteurs pas à pas dont la commande ne repose pas sur une régulation de couple. Les moteurs sont pilotés par des consignes de déplacement générées sous forme d'impulsions, la fréquence des impulsions définissant la vitesse de rotation et leur variation définissant l'accélération imposée aux roues.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{assets/schemas/center_of_mass.png}
+    \caption{Influence du centre de masse sur l'angle d'équilibre.}
+    \label{fig:com}
+\end{figure}
 
-La stratégie de régulation retenue est une structure en cascade composée de deux boucles :
+En pratique, il est impossible de connaître avec précision cet angle d'équilibre. Supposons que celui-ci soit décalé de $5^\circ$ par rapport à la verticale.
+
+Afin de maintenir cette inclinaison permanente, le régulateur d'angle doit générer un couple constant. Or, pour un robot de type pendule inversé, ce couple ne peut être obtenu qu'en déplaçant continuellement la base sous le centre de masse. Le système produit donc une accélération non nulle qui est maintenue tant que l'erreur d'angle subsiste. Cette accélération entraîne une augmentation continue de la vitesse, puis de la position, comme l'illustrent les figures \ref{fig:a_com_misalign} à \ref{fig:pos_com_misalign}. En d'autres termes, le robot accélère continuellement afin de conserver son équilibre autour d'un angle erroné, ce qui conduit inévitablement à une dérive de sa position.
+
+
+\begin{figure}[H]
+    \centering
+
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/figures/graphs/acceleration_misalign_com.pdf}
+        \caption{Accélération}
+        \label{fig:a_com_misalign}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/figures/graphs/velocity_misalign_com.pdf}
+        \caption{Vitesse}
+        \label{fig:v_com_misalign}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/figures/graphs/position_misalign_com.pdf}
+        \caption{Position}
+        \label{fig:pos_com_misalign}
+    \end{subfigure}
+
+    \caption{Conséquences d'un décalage de $5^\circ$ de l'angle d'équilibre : accélération constante, augmentation de la vitesse et dérive de la position.}
+    \label{fig:com_misalign}
+\end{figure}
+
+Sur la base de la notion discutée ci-dessus, la stratégie de régulation retenue est une structure en cascade composée de deux boucles :
 
 \begin{itemize}
     \item une boucle externe de régulation de vitesse, dont l'objectif est de contrôler la vitesse linéaire du châssis ;
@@ -244,6 +284,130 @@ x \\
 \theta \\
 \dot{\theta}
 \end{bmatrix}
-\]
+\]F
 
 où \(x\) représente la position linéaire, \(\dot{x}\) sa dérivée temporelle, \(\theta\) la position angulaire et \(\dot{\theta}\) la vitesse angulaire.
+
+\subsection{Synthèse des paramètres des régulateurs}
+
+L'objectif de cette section est de déterminer un ensemble de paramètres permettant d'assurer une régulation stable de l'angle tout en garantissant une bonne régulation de la vitesse.
+
+La synthèse est réalisée de manière séquentielle. La boucle interne, dédiée à la régulation de l'angle, est dimensionnée en premier car elle doit être significativement plus rapide que la boucle externe de vitesse. Une fois cette boucle stabilisée, la boucle externe est ajustée afin d'obtenir la dynamique souhaitée.
+
+Les simulations sont réalisées à partir des conditions initiales suivantes : le robot est immobile, mais présente une inclinaison initiale de $5^\circ$. Ce scénario permet d'évaluer la capacité du régulateur à rétablir rapidement l'équilibre.
+
+\[
+\vec{X}=(x,\dot{x},\theta,\dot{\theta})
+\]
+
+\[
+\vec{X}_0=(0,0,5^\circ,0)
+\]
+
+Dans un premier temps, seul le gain proportionnel de la boucle d'angle, $K_{pt}$, est utilisé. Sa valeur est progressivement augmentée jusqu'à obtenir un retour à la position d'équilibre. Lorsque ce gain devient suffisamment élevé, le système parvient à maintenir le robot debout, mais au prix d'une réponse sous-amortie caractérisée par des oscillations importantes. Cette étape permet de vérifier que le gain proportionnel apporte la rigidité nécessaire à la stabilisation du système, sans toutefois garantir un comportement satisfaisant.
+
+\begin{figure}[H]
+    \centering
+
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/figures/graphs/reg_P_acccel.pdf}
+        \caption{Accélération}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/figures/graphs/reg_P_velocity.pdf}
+        \caption{Vitesse}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/figures/graphs/reg_P_angles.pdf}
+        \caption{Angle}
+    \end{subfigure}
+
+    \caption{Réponse du système avec uniquement le gain proportionnel $K_{pt}$.}
+    \label{fig:reg_P}
+\end{figure}
+
+Afin de réduire ces oscillations, une action dérivée est ensuite ajoutée. Le paramètre $T_{dt}$ est ajusté de manière à augmenter l'amortissement du système sans ralentir excessivement sa réponse. L'action dérivée agit principalement lors des variations rapides de l'angle et limite le dépassement tout en accélérant la convergence vers l'équilibre. La dynamique obtenue est nettement plus stable que celle observée avec un simple régulateur proportionnel.
+
+\begin{figure}[H]
+    \centering
+
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/figures/graphs/reg_PD_acccel.pdf}
+        \caption{Accélération}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/figures/graphs/reg_PD_velocity.pdf}
+        \caption{Vitesse}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/figures/graphs/reg_PD_angles.pdf}
+        \caption{Angle}
+    \end{subfigure}
+
+    \caption{Réponse du système après ajout de l'action dérivée ($K_{pt}$, $T_{dt}$).}
+    \label{fig:reg_PD}
+\end{figure}
+
+Une fois la boucle interne validée, la boucle externe de vitesse est synthétisée. Les gains de cette boucle sont choisis de manière à obtenir une réponse plus lente que celle de la régulation d'angle, afin d'éviter toute interaction défavorable entre les deux niveaux de commande.
+
+La réponse finale montre que le robot retrouve rapidement sa position verticale tout en annulant progressivement sa vitesse. L'accélération est limitée à la phase transitoire, ce qui traduit un fonctionnement stable des deux boucles de régulation.
+
+\begin{figure}[H]
+    \centering
+
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/figures/graphs/reg_ALL_acccel.pdf}
+        \caption{Accélération}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/figures/graphs/reg_ALL_velocity.pdf}
+        \caption{Vitesse}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/figures/graphs/reg_ALL_angles.pdf}
+        \caption{Angle}
+    \end{subfigure}
+
+    \caption{Réponse du système avec les deux boucles de régulation synthétisées.}
+    \label{fig:reg_ALL}
+\end{figure}
+Par souci de faisabilité, le couple mécanique requis par cette stratégie de régulation est également évalué afin de vérifier sa compatibilité avec les capacités des actionneurs.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{assets/figures/graphs/reg_all_torque.pdf}
+    \caption{Couple nécessaire à la régulation obtenu à partir du modèle théorique.}
+    \label{fig:torque_physics}
+\end{figure}
+
+La figure \ref{fig:torque_physics} montre que le couple maximal demandé au système est d'environ
+$$
+T_{\mathrm{max,\,req}} = 0.5~\si{\newton\meter}.
+$$
+Ce pic apparaît au tout début du mouvement, lorsque le régulateur doit rapidement corriger l'inclinaison initiale de $5^\circ$. Une fois cette phase transitoire passée, le couple diminue rapidement et oscille autour de zéro afin de maintenir l'équilibre.
+
+Chaque moteur est capable de fournir un couple maximal de
+$$
+T_{\mathrm{max,\,mot}} = 0.45~\si{\newton\meter}.
+$$
+La maquette étant entraînée par deux moteurs, le couple maximal théorique disponible est donc
+$$
+T_{\mathrm{max,\,disp}} = 2 \times 0.45 = 0.9~\si{\newton\meter}.
+$$
+
+Le couple requis par la régulation reste ainsi largement inférieur au couple disponible, avec une marge de près de 45\,\%. Les actionneurs sont donc correctement dimensionnés et les paramètres de régulation retenus sont compatibles avec les capacités mécaniques du système. Cette réserve de couple permettra également d'absorber les incertitudes du modèle ainsi que les perturbations pouvant apparaître lors des essais expérimentaux.

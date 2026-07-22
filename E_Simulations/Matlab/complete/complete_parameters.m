@@ -29,7 +29,7 @@ Td_t = 0.38;
 Ti_t = 0;
 
 % Regulator (Outer Loop)
-Kp_v = 26.76;
+Kp_v = 26;
 Td_v = 0;
 Ti_v = 0;
 

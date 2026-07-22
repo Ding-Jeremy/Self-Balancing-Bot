@@ -326,9 +326,13 @@ $$
 
 Cette correction permet d'améliorer la précision de la mesure de la tension et de réduire l'erreur introduite par les tolérances des résistances du pont diviseur.
 
-\subsection{Tensions, Courants}
-Afin de mesurer la consommation énergétique de la maquette, l'idée est de réaliser une mesure du courant total dans le système.
-Pour ce faire, le multimètre est placé en mode ampèremètre entre le connecteur de la batterie et celui du PCB.
+\subsection{Tensions et courants}
+
+Afin d'évaluer la consommation énergétique de la maquette, une mesure du courant total absorbé par le système est réalisée. Pour ce faire, le multimètre est configuré en mode ampèremètre et placé en série entre la batterie et le PCB.
+
+Les tableaux suivants comparent les valeurs théoriques déterminées à la section \ref{section:alimentation} aux mesures expérimentales.
+
+La première mesure est réalisée avec les moteurs désactivés afin de caractériser la consommation électrique des autres modules de la maquette.
 
 \begin{table}[H]
     \centering
@@ -336,19 +340,65 @@ Pour ce faire, le multimètre est placé en mode ampèremètre entre le connecte
         \hline
         \textbf{Grandeur mesurée} & \textbf{Valeur théorique} & \textbf{Valeur mesurée} \\
         \hline
-        $V_{bat}$ & - & 16.20 V \\
+        $V_{bat}$ & $14.2-16.8\,\si{\volt}$ & $16.20\,\si{\volt}$ \\
         \hline
-        $V_{5V}$ & 5.0 V & 5.00 V \\
+        $V_{5V}$ & $5.0\,\si{\volt}$ & $5.00\,\si{\volt}$ \\
         \hline
-        $V_{IO}$ & 3.3 V & 3.28 V \\
+        $V_{IO}$ & $3.3\,\si{\volt}$ & $3.28\,\si{\volt}$ \\
         \hline
-        $I_{tot}$ & - & 0.065 A \\
+        $I_{tot}$ & - & $0.065\,\si{\ampere}$ \\
+        \hline
+        $P_{tot}$ & $\approx 2\,\si{\watt}$ & $1.05\,\si{\watt}$ \\
         \hline
     \end{tabular}
-    \caption{Mesures électriques - Moteurs éteints}
+    \caption{Mesures électriques -- moteurs désactivés}
     \label{tab:moteurs_eteints}
 \end{table}
 
+Les tensions mesurées sont très proches des valeurs théoriques. La puissance totale absorbée est de $1.05\,\si{\watt}$, contre une estimation théorique d'environ $2\,\si{\watt}$.
+
+\vspace{0.5cm}
+
+La seconde mesure est réalisée avec les moteurs alimentés mais à vitesse nulle. Dans ce cas, la vitesse angulaire est nulle ($\omega=0$) et la puissance consommée par chaque moteur correspond uniquement aux pertes Joule.
+
+La puissance électrique d'un moteur est donnée par
+
+\begin{equation}
+P_{\mathrm{elec}}
+=
+2I_{\mathrm{RMS}}^{2}R_c
++
+T_m\omega.
+\end{equation}
+
+Comme $\omega=0$,
+
+\begin{equation}
+P_{\mathrm{elec}}
+=
+2I_{\mathrm{RMS}}^{2}R_c
+=
+2\times0.81^2\times2.2
+=
+2.89\,\si{\watt}.
+\end{equation}
+
+La puissance totale théorique du système devient alors
+
+\begin{equation}
+P_{tot}
+=
+P_{modules}
++
+2P_{\mathrm{elec}}
+=
+2
++
+2\times2.89
+=
+7.78\,\si{\watt}.
+\end{equation}
+
 
 \begin{table}[H]
     \centering
@@ -356,19 +406,84 @@ Pour ce faire, le multimètre est placé en mode ampèremètre entre le connecte
         \hline
         \textbf{Grandeur mesurée} & \textbf{Valeur théorique} & \textbf{Valeur mesurée} \\
         \hline
-        $V_{bat}$ & - & 16.17 V \\
+        $V_{bat}$ & $14.2-16.8\,\si{\volt}$ & $16.17\,\si{\volt}$ \\
         \hline
-        $V_{5V}$ & 5.0 V & 5.00 V \\
+        $V_{5V}$ & $5.0\,\si{\volt}$ & $5.00\,\si{\volt}$ \\
         \hline
-        $V_{IO}$ & 3.3 V & 3.28 V \\
+        $V_{IO}$ & $3.3\,\si{\volt}$ & $3.28\,\si{\volt}$ \\
         \hline
-        $I_{tot}$ & - & 0.195 A \\
+        $I_{tot}$ & - & $0.195\,\si{\ampere}$ \\
+        \hline
+        $P_{tot}$ & $7.78\,\si{\watt}$ & $3.15\,\si{\watt}$ \\
         \hline
     \end{tabular}
-    \caption{Mesures électriques - Moteurs allumés, vitesse nulle}
+    \caption{Mesures électriques -- moteurs alimentés, vitesse nulle}
     \label{tab:moteurs_allumes}
 \end{table}
 
+La dernière mesure est réalisée lorsque les deux moteurs tournent à la vitesse maximale retenue pour le dimensionnement, soit
+
+\begin{equation}
+\omega
+=
+5\pi
+=
+15.71\,\si{\radian\per\second}.
+\end{equation}
+
+La puissance mécanique développée par un moteur est alors
+
+\begin{equation}
+P_{\mathrm{meca}}
+=
+T_m\omega
+=
+0.2\times15.71
+=
+3.14\,\si{\watt}.
+\end{equation}
+
+Les pertes Joule restant inchangées,
+
+\begin{equation}
+P_{\mathrm{Joule}}
+=
+2\times0.81^2\times2.2
+=
+2.89\,\si{\watt},
+\end{equation}
+
+la puissance électrique consommée par un moteur devient
+
+\begin{equation}
+P_{\mathrm{elec}}
+=
+P_{\mathrm{Joule}}
++
+P_{\mathrm{meca}}
+=
+2.89
++
+3.14
+=
+6.03\,\si{\watt}.
+\end{equation}
+
+La puissance totale théorique du système est donc
+
+\begin{equation}
+P_{tot}
+=
+P_{modules}
++
+2P_{\mathrm{elec}}
+=
+2
++
+2\times6.03
+=
+14.06\,\si{\watt}.
+\end{equation}
 
 \begin{table}[H]
     \centering
@@ -376,19 +491,22 @@ Pour ce faire, le multimètre est placé en mode ampèremètre entre le connecte
         \hline
         \textbf{Grandeur mesurée} & \textbf{Valeur théorique} & \textbf{Valeur mesurée} \\
         \hline
-        $V_{bat}$ & - & 16.14 V \\
+        $V_{bat}$ & $14.2-16.8\,\si{\volt}$ & $16.14\,\si{\volt}$ \\
         \hline
-        $V_{5V}$ & 5.0 V & 5.00 V \\
+        $V_{5V}$ & $5.0\,\si{\volt}$ & $5.00\,\si{\volt}$ \\
         \hline
-        $V_{IO}$ & 3.3 V & 3.28 V \\
+        $V_{IO}$ & $3.3\,\si{\volt}$ & $3.28\,\si{\volt}$ \\
         \hline
-        $I_{tot}$ & - & 0.551 A \\
+        $I_{tot}$ & - & $0.551\,\si{\ampere}$ \\
+        \hline
+        $P_{tot}$ & $14.06\,\si{\watt}$ & $8.89\,\si{\watt}$ \\
         \hline
     \end{tabular}
-    \caption{Mesures électriques - Moteurs allumés vitesse max}
+    \caption{Mesures électriques -- moteurs alimentés à vitesse maximale}
     \label{tab:moteurs_allumes_maxspeed}
 \end{table}
 
 \subsection{Autonomie}
-La mesure d'autonomie peut être approximée à l'aide de la mesure de consommation effectuée plus haut.
+
+L'autonomie de la maquette peut être estimée à partir des consommations mesurées précédemment. Les mesures à vitesse nulle et à vitesse maximale permettent d'encadrer la consommation électrique du système et de fournir une estimation de l'autonomie selon les conditions d'utilisation.
  
