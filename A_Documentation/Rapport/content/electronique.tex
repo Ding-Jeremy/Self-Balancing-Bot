@@ -49,7 +49,7 @@ En ce qui concerne le courant consommé par le module sur son entrée \SI{3.3}{V
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.6\textwidth]{assets/figures/tmc2226_consumption.png}
+    \includegraphics[width=1\textwidth]{assets/figures/tmc2226_consumption.png}
     \caption{Consommation du TMC2226}
     \label{fig:tmc_2226_consumption}
 \end{figure}
@@ -62,7 +62,7 @@ Afin de conserver une marge de sécurité lors du dimensionnement de l'alimentat
 Le datasheet du module \acrshort{imu} \cite{MPU6050_Datasheet} indique les informations suivantes concernant la consommation d'énergie.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.6\textwidth]{assets/figures/mpu_6050_consumption.png}
+    \includegraphics[width=1\textwidth]{assets/figures/mpu_6050_consumption.png}
     \caption{Consommation MPU6050}
     \label{fig:mpu_6050_consumption}
 \end{figure}
@@ -257,7 +257,7 @@ Le courant maximal consommé par l'ensemble de l'électronique alimentée en \SI
 \subsubsection{Technologie}
 \label{subsubsection:technologie}
 
-Au regard des besoins du système, une batterie \gls{lipo} constitue la solution la plus adaptée. Ce type de batterie offre une densité énergétique élevée, un poids réduit ainsi qu'une capacité à fournir des courants importants, caractéristiques particulièrement intéressantes pour une application robotique mobile.
+Au regard des besoins du système, une batterie \gls{lipo} constitue la solution la plus adaptée. Ce type de batterie offre une densité énergétique élevée, un poids réduit ainsi qu'une capacité à fournir des courants importants, outre l'important courant, ces caractéristiques sont intéressantes pour ce cas d'application.
 
 Par ailleurs, la documentation du driver moteur TMC2226 indique que les performances du moteur, notamment à vitesse élevée, sont améliorées lorsque la tension d'alimentation $V_{\mathrm{mot}}$ est importante. Une tension élevée permet en effet au courant de s'établir plus rapidement dans les enroulements malgré leur inductance, ce qui améliore le maintien du couple à vitesse élevée.
 
@@ -617,7 +617,6 @@ Les essais réalisés montrent que le système fonctionne conformément aux atte
     \caption{Circuit imprimé}
     \label{fig:pcb}
 \end{figure}
-\section{PCB}
 
 Le circuit imprimé (\acrshort{pcb}) a été conçu avec KiCad 9.0. Il s'agit d'un PCB 4 couches dont voici la constitution:
 \begin{itemize}

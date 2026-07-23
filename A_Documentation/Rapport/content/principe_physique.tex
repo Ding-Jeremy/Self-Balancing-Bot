@@ -82,9 +82,7 @@ Cette équation met en évidence l'instabilité du pendule inversé. En effet, c
 \begin{equation}
 \ddot{\theta}+\frac{g}{l}\theta=0,
 \end{equation}
-
-le signe positif devant le terme en $\theta$ implique que toute perturbation s'amplifie avec le temps. Le système est donc marginalement stable, ce qui signifie qu'il admet un seul point de stabilité, ($\theta = 0$), dans la réalité, il peut être considéré comme instable.
-
+Le signe positif devant le terme en $\theta$ implique que toute perturbation s'amplifie avec le temps. Le système admet un unique point d'équilibre en $\theta = 0$. Cependant, la moindre perturbation éloigne le système de cette position, les écarts augmentant au cours du temps. En pratique, il est donc impossible de maintenir cet équilibre, ce qui rend le système instable.
 \section{Pendule inversé avec chariot}
 
 Le modèle précédent possède cependant une limitation importante : le point d'appui est fixe. Dans le cas d'un robot auto-équilibrant, le point de contact avec le sol peut se déplacer grâce aux roues.
@@ -98,7 +96,7 @@ Les deux degrés de liberté du système sont donc :
     \item l'angle du pendule $\theta$.
 \end{itemize}
 
-La dérivation des équations de Lagrange n'est pas présentée dans ce rapport, cette méthode n'ayant pas été abordée dans le cadre de la formation suivie. Les équations utilisées proviennent de la littérature et ont été adaptées au modèle étudié. Une référence est fournie pour le lecteur souhaitant approfondir cette méthode.
+Les équations régissant ce nouveau système sont trouvées en utilisant Lagrange. Le procédé n'est pas présentée dans ce rapport, cette méthode n'ayant pas été abordée dans le cadre de la formation suivie. Les équations utilisées proviennent de la littérature et ont été adaptées au modèle étudié. Une référence est fournie pour le lecteur souhaitant approfondir cette méthode.
 \cite{wiki_inverted_pendulum}
 Voici donc les équations proposées pour ce modèle.
 \begin{equation}

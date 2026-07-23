@@ -1,12 +1,12 @@
-\label{chap:mecanique}
+
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{assets/figures/meca_raytracing.png}
+    \includegraphics[width=0.6\textwidth]{assets/figures/meca_raytracing.png}
     \caption{Maquette 3D, raytracée}
     \label{fig:meca_raytraced}
 \end{figure}
 
-Une fois le principe physique expliqué, il est temps de réaliser la maquette. Le but ici est de tenir compte des réflexions faites durant la partie théorique.
+Une fois le principe physique expliqué, il est temps de réaliser la maquette dont la vue 3D raytracée est présentée à la figure \ref{fig:meca_raytraced}. Le but ici est de tenir compte des réflexions faites durant la partie théorique.
 
 Dans ce chapitre, l'entièreté de la conception mécanique de la maquette sera traitée, en commençant par les outils utilisés, puis en présentant les contraintes mécaniques connues.
 
@@ -18,7 +18,7 @@ Les fichiers 3D des pièces sont également disponibles sur le dépôt Git indiq
 
 La conception mécanique du robot a été réalisée à l'aide du logiciel Fusion360 de Autocad.
 
-Le PCB ayant été réalisé en premier, ce deriner a été importé dans le modèle afin de pouvoir l'intégrer directement au dessin 3D.
+Le PCB ayant été réalisé en premier, ce dernier a été importé dans le modèle afin de pouvoir l'intégrer directement au dessin 3D.
 \subsection{Pièces}
 
 Le robot est constitué de pièces imprimées en 3D, découpées au laser, et usinées à la CNC 3 axes. Divers éléments d'assemblage (vis, colonnettes, écrous, etc.) proviennent du MakeLab ou de l'atelier mécanique.
@@ -67,7 +67,7 @@ Ces contraintes ont servi de fil conducteur durant toute la phase de conception 
 \subsection{Centre de gravité}
 
 La position du centre de gravité influence directement plusieurs paramètres intervenant dans le modèle dynamique du robot. 
-Dans les équations précédentes, la distance $l$ représente la distance entre l'axe de rotation des roues et le centre de gravité du châssis. 
+Dans les équations présentées dans le chapitre \ref{chap:principe_physique} la distance $l$ représente la distance entre l'axe de rotation des roues et le centre de gravité du châssis. 
 Cette distance intervient dans le terme $a = m_b l$, qui représente l'effet du poids du châssis appliqué à une distance donnée de l'axe des roues.
 
 Lorsque le centre de gravité est déplacé vers le haut, la valeur de $l$ augmente. Cela entraîne une augmentation du moment d'inertie du châssis autour de l'axe des roues, représenté par :
@@ -219,7 +219,7 @@ $J_b$ & Fusion360 & Moment d'inertie du châssis (sans les roues) autour de son 
 \label{tab:caracteristiques_mecaniques}
 \end{table}
 
-L'analyse du modèle CAO réalisée sous Fusion 360 permet de déterminer avec précision la position de l'\acrshort{imu} par rapport à l'axe de rotation des roues. Cette information est nécessaire afin de tenir compte des accélérations linéaires mesurées par le capteur lors des mouvements du robot.
+L'analyse du modèle réalisée sous Fusion 360 permet de déterminer avec précision la position de l'\acrshort{imu} par rapport à l'axe de rotation des roues. Cette information est nécessaire afin de tenir compte des accélérations linéaires mesurées par le capteur lors des mouvements du robot.
 
 La position de l'\acrshort{imu} est exprimée en coordonnées polaires, définies par la distance $\rho$ entre le capteur et l'axe de rotation des roues, ainsi que par l'angle $\phi$. Ce dernier correspond à l'angle entre l'axe vertical $Z$ du robot et le vecteur reliant l'axe de rotation des roues à la position de l'\acrshort{imu}. La convention de signe adoptée définit un angle négatif lorsque l'\acrshort{imu} est situé dans le sens opposé à l'orientation positive de l'axe de référence.
 

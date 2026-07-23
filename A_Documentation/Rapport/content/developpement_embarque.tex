@@ -5,7 +5,7 @@ Le logiciel embarqué a pour objectif d'assurer la gestion complète du système
 
 Le développement est réalisé en plusieurs étapes. Dans un premier temps, l'environnement de développement ainsi que les bibliothèques utilisées sont présentés. Ensuite, l'architecture générale du programme est détaillée afin d'expliquer l'organisation du code et le déroulement de son exécution. Enfin, les différentes fonctions permettant le pilotage des périphériques matériels sont décrites.
 
-L'intégralité du code source est disponible dans le zip.
+L'intégralité du code source est disponible dans le dossier compressé fourni sur GAPS ainsi que sur le depôt GIT.
 
 \section{Méthode et outils}
 
@@ -38,14 +38,9 @@ L'utilisation de bibliothèques existantes permet de réduire la complexité du 
 \end{figure}
 Le programme développé est organisé autour d'une architecture cyclique classique des systèmes embarqués. Après une phase d'initialisation permettant de configurer les différents composants matériels et logiciels, le microcontrôleur exécute continuellement une boucle principale chargée d'assurer le fonctionnement du système.
 
-La séparation entre l'initialisation et l'exécution permet de structurer le programme et de faciliter sa maintenance. Les différentes fonctionnalités sont regroupées en modules indépendants afin de limiter les interactions entre les parties du code.
-
-
 \subsection{Initialisation}
 
-Au démarrage de l'ESP32, lors de la mise sous tension du système, une phase d'initialisation est exécutée une unique fois. Cette étape a pour objectif de configurer l'ensemble des ressources matérielles et logicielles nécessaires au fonctionnement du programme.
-
-Les différentes initialisations sont réalisées de manière séquentielle dans l'ordre suivant :
+Les différentes tâches de l'initialisation sont réalisées de manière séquentielle dans l'ordre suivant :
 
 \begin{itemize}
     \item Initialisation de l'interface série UART1, utilisée pour la communication de débogage avec un ordinateur ;
@@ -163,7 +158,7 @@ Une fois le fonctionnement principal du code embarqué décrit, il est possible 
 \label{subsection:drivers_moteurs}
 Les drivers moteurs, TMC2226 \cite{TMC2226_datasheet} peuvent êtres interfaçés via UART bi-directionnel, comme indiqué plus haut. Une bibliothèque a donc été réalisée de 0 afin de pouvoir communiquer avec les différents registres.
 
-La bibliothèque inclue la création d'une classe TMC2226, la gestion de l'UART bi-directionnel.
+La bibliothèque inclue entre autre la création d'une classe TMC2226 ainsi que la gestion de l'UART bi-directionnel.
 \subsubsection{Initialisation des drivers}
 
 Avant de pouvoir piloter les moteurs, chaque driver TMC2226 doit être correctement initialisé. Cette étape consiste tout d'abord à configurer l'interface UART de l'ESP32 avec les paramètres imposés par le datasheet UART 500000 Baud 8N1.
@@ -171,7 +166,7 @@ Avant de pouvoir piloter les moteurs, chaque driver TMC2226 doit être correctem
 Une fois la liaison série opérationnelle, plusieurs registres de configuration du TMC2226 sont initialisés. Le registre \texttt{GCONF} est configuré afin de désactiver le mode \texttt{PDN} (\texttt{pdn\_disable = 1}), permettant ainsi d'utiliser l'interface UART comme moyen principal de communication. Le bit \texttt{mstep\_reg\_select} est également activé afin que la résolution de micro-pas soit définie par le registre \texttt{CHOPCONF} plutôt que par les broches matérielles. L'option \texttt{scale\_analog} est également activée afin d'utiliser la référence analogique du courant moteur $V_{ref}$.
 Le courant est donc séléctionné par le potentiomètre et pas le registre correspondant.
 
-La bibliothèque développée prend en charge l'addresse (voir \ref{chap:electronique}.) lors de la construction de chaque instance de la classe \texttt{TMC2226}, permettant ainsi d'envoyer les commandes au driver concerné sans conflit avec les autres périphériques présents sur le bus.
+La bibliothèque développée prend en charge l'adresse (voir \ref{chap:electronique}.) lors de la construction de chaque instance de la classe \texttt{TMC2226}, permettant ainsi d'envoyer les commandes au driver concerné sans conflit avec les autres périphériques présents sur le bus.
 
 \subsubsection{Contrôle vitesse}
 Lors du test avec le breadboard, les pins STP et DIR étaient alors utilisées afin de contrôler ces derniers. Cependant, en parcourant le datasheet du TMC2226, il existe un registre permettant

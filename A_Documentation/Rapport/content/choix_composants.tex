@@ -31,7 +31,7 @@ Les principaux éléments faisant l'objet d'une analyse comparative sont les sui
         \hline
         Système de contrôle simple & Réduit la complexité électronique et facilite l'implémentation. \\
         \hline
-        Prix &\\
+        Prix & Le coût des moteurs doit rester faible afin de limiter le coût total du robot. \\
         \hline
     \end{tabular}
     \caption{Critères moteurs}
@@ -39,7 +39,7 @@ Les principaux éléments faisant l'objet d'une analyse comparative sont les sui
 \end{table}
 Ces critères de choix sont utilisés afin de mettre en concurrence trois types de moteurs distincts, décrits ci-dessous.
 \subsection{Moteur DC}
-\subsubsection{Vitesse de rotation}
+Le moteur à courant continu (DC) est un dispositif électromécanique qui convertit l'énergie électrique en énergie mécanique de rotation, permettant ainsi d'entraîner des systèmes nécessitant un contrôle précis de la vitesse et du couple.\subsubsection{Vitesse de rotation}
 
 La vitesse de rotation d'un moteur à courant continu (DC) dépend de sa conception mécanique, laquelle varie fortement selon les modèles.
 
@@ -132,8 +132,7 @@ Ces moteurs fonctionnent selon un principe de déplacement par incréments (\tex
 
 La vitesse de rotation d'un moteur pas à pas n'est généralement pas son point fort. Elle dépend de sa capacité à enchaîner les pas.
 
-D'après les données disponibles en ligne, la vitesse maximale des moteurs pas à pas varie approximativement entre :
-
+En recherchant \textit{Stepper Motors} sur Distrelec, voici ce que l'on peut trouver.
 $$
 \omega_{\text{mot}} \in [600, 1200] \ \text{tr/min}
 $$
@@ -221,8 +220,7 @@ Le moteur brushless est un type de moteur très efficace, présentant un excelle
 
 La vitesse de rotation d'un moteur brushless peut être très élevée.
 
-En cherchant sur internet différents modèles, on trouve des vitesses maximales variant entre:
-
+En recherchant \textit{« Brushless DC motors »} sur Distrelec.
 $$
 \omega_{\text{mot}} \in [10\,000, 50\,000] \ \text{tr/min}
 $$
