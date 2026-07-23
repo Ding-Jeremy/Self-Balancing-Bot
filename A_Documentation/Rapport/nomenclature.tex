@@ -30,9 +30,9 @@ $m_b$ & Masse du corps rigide du levier (hors roues et masse ponctuelle ajoutée
 \hline
 $m_p$ & Masse ponctuelle fixée à l'extrémité du levier & \si{\kilogram} \\
 \hline
-$m_c$ & Masse totale du chariot supportant le levier, incluant le châssis et les éléments embarqués hors roues & \si{\kilogram} \\
+$m_c$ & Masse du chariot & \si{\kilogram} \\
 \hline
-$m_W$ & Masse d'une roue du chariot & \si{\kilogram} \\
+$m_w$ & Masse d'une roue du chariot & \si{\kilogram} \\
 \hline
 $\phi$ & Angle d'inclinaison de la position de l'IMU par rapport à la verticale, défini comme l'angle entre l'axe longitudinal du levier passant par l'axe des roues et l'IMU & \si{\radian} \\
 \hline
@@ -45,5 +45,9 @@ $J_b$ & Moment d'inertie du levier autour de son centre de masse & \si{\kilogram
 $g$ & Accélération gravitationnelle terrestre & \si{\metre\per\second\squared} \\
 \hline
 $V_{ref}$ & Tension de référence utilisée pour le réglage du courant du pilote moteur TMC2226 & \si{\volt} \\
+\hline
+$K_{pv},T_{dv},T_{iv}$ & Paramètre du régulateur de la boucle externe (vitesse) & - \\
+\hline
+$K_{pt},T_{dt},T_{it}$ & Paramètre du régulateur de la boucle externe (vitesse) & - \\
 \hline
 \end{longtable}

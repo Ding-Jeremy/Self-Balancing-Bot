@@ -28,18 +28,135 @@ La modélisation repose sur trois éléments principaux :
 
 \subsubsection{Position de l'\acrshort{imu}}
 \label{subsubsection:position_imu}
-L'analyse du modèle CAO réalisée sous Fusion 360 a permis de déterminer avec précision la position de l'\acrshort{imu} par rapport à l'axe de rotation des roues (\ref{chap:mecanique}). Cette position est exprimée en coordonnées polaires par une distance $\rho$ et un angle $\phi$.
 
-Le déport du capteur par rapport à l'axe de rotation induit des accélérations supplémentaires lors des mouvements du robot. En plus de l'accélération de translation du châssis, l'accéléromètre est soumis à une accélération tangentielle, proportionnelle à l'accélération angulaire $\ddot{\theta}$, ainsi qu'à une accélération centripète, proportionnelle au carré de la vitesse angulaire $\dot{\theta}$.
+L'\acrshort{imu} est située à une distance $\rho$ de l'axe de rotation des roues. Sa position dans le repère du robot est définie par
 
-Les accélérations mesurées par l'accéléromètre sont ainsi obtenues en combinant :
-\begin{itemize}
-\item la projection de la gravité selon l'orientation du robot ;
-\item l'accélération de translation du robot ;
-\item les accélérations tangentielle et centripète dues au déport de l'\acrshort{imu}.
-\end{itemize}
+\begin{equation}
+\mathbf{r}=
+\begin{bmatrix}
+r_x\\
+r_z
+\end{bmatrix}
+=
+\begin{bmatrix}
+\rho\sin\phi\\
+\rho\cos\phi
+\end{bmatrix}.
+\end{equation}
 
-L'angle estimé à partir de l'accéléromètre est ensuite calculé à l'aide de la fonction $\mathrm{atan2}$.
+L'accélération d'un point appartenant à un solide en rotation est donnée par
+
+\begin{equation}
+\mathbf{a}_{\mathrm{rot}}
+=
+\dot{\boldsymbol{\omega}}\times\mathbf{r}
++
+\boldsymbol{\omega}\times
+(\boldsymbol{\omega}\times\mathbf{r}),
+\end{equation}
+
+où
+
+\begin{equation}
+\boldsymbol{\omega}
+=
+\begin{bmatrix}
+0\\
+\dot{\theta}\\
+0
+\end{bmatrix},
+\qquad
+\dot{\boldsymbol{\omega}}
+=
+\begin{bmatrix}
+0\\
+\ddot{\theta}\\
+0
+\end{bmatrix}.
+\end{equation}
+
+Les deux termes correspondent respectivement à l'accélération tangentielle et à l'accélération centripète.
+
+L'accélération tangentielle vaut
+
+\begin{equation}
+\mathbf{a}_{\mathrm{tan}}
+=
+\begin{bmatrix}
+\ddot{\theta}\,r_z\\
+-\ddot{\theta}\,r_x
+\end{bmatrix},
+\end{equation}
+
+tandis que l'accélération centripète est
+
+\begin{equation}
+\mathbf{a}_{\mathrm{cen}}
+=
+\begin{bmatrix}
+-\dot{\theta}^{2}r_x\\
+-\dot{\theta}^{2}r_z
+\end{bmatrix}.
+\end{equation}
+
+L'accélération de rotation appliquée à l'\acrshort{imu} est donc
+
+\begin{equation}
+\mathbf{a}_{\mathrm{rot}}
+=
+\mathbf{a}_{\mathrm{tan}}
++
+\mathbf{a}_{\mathrm{cen}}.
+\end{equation}
+
+Le robot possède également une accélération longitudinale $\ddot{x}$. Cette accélération est exprimée dans le repère du capteur par
+
+\begin{equation}
+\mathbf{a}_{\mathrm{trans}}
+=
+\begin{bmatrix}
+\ddot{x}\cos\theta\\
+-\ddot{x}\sin\theta
+\end{bmatrix}.
+\end{equation}
+
+Enfin, la gravité projetée dans le repère du capteur s'écrit
+
+\begin{equation}
+\mathbf{g}
+=
+\begin{bmatrix}
+g\sin\theta\\
+g\cos\theta
+\end{bmatrix}.
+\end{equation}
+
+L'accélération mesurée par l'accéléromètre est alors
+
+\begin{equation}
+\mathbf{a}_{\mathrm{imu}}
+=
+\mathbf{a}_{\mathrm{trans}}
++
+\mathbf{a}_{\mathrm{rot}}
++
+\mathbf{g},
+\end{equation}
+
+ce qui conduit aux expressions suivantes :
+
+\begin{align}
+a_x &=
+\ddot{x}\cos\theta
++\ddot{\theta}\,r_z
+-\dot{\theta}^{2}r_x
++g\sin\theta,\\
+a_z &=
+-\ddot{x}\sin\theta
+-\ddot{\theta}\,r_x
+-\dot{\theta}^{2}r_z
++g\cos\theta.
+\end{align}
 
 \subsubsection{Modélisation du gyroscope}
 
@@ -268,7 +385,7 @@ Cette figure illustre également l'implémentation du bloc \acrshort{imu}, plac�
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/figures/simulink_schematic/torque_physics.png}
-    \caption{Calcul du couple, modèle théorique}
+    \caption{Blocs principaux de calcul}
     \label{fig:torque_physics}
 \end{figure}
 
@@ -276,7 +393,7 @@ La constante \(P\) présente dans les figures ci-dessus représente un vecteur d
 L'intégralité de ces paramètres se trouve dans le fichier \texttt{complete\_parameters.m}. 
 Le vecteur \(\vec{X}\) correspond au vecteur d'état du système, défini par :
 
-\[
+$$
 \vec{X} =
 \begin{bmatrix}
 x \\
@@ -284,7 +401,7 @@ x \\
 \theta \\
 \dot{\theta}
 \end{bmatrix}
-\]F
+$$ 
 
 où \(x\) représente la position linéaire, \(\dot{x}\) sa dérivée temporelle, \(\theta\) la position angulaire et \(\dot{\theta}\) la vitesse angulaire.
 
@@ -296,13 +413,10 @@ La synthèse est réalisée de manière séquentielle. La boucle interne, dédi�
 
 Les simulations sont réalisées à partir des conditions initiales suivantes : le robot est immobile, mais présente une inclinaison initiale de $5^\circ$. Ce scénario permet d'évaluer la capacité du régulateur à rétablir rapidement l'équilibre.
 
-\[
-\vec{X}=(x,\dot{x},\theta,\dot{\theta})
-\]
 
-\[
+$$
 \vec{X}_0=(0,0,5^\circ,0)
-\]
+$$
 
 Dans un premier temps, seul le gain proportionnel de la boucle d'angle, $K_{pt}$, est utilisé. Sa valeur est progressivement augmentée jusqu'à obtenir un retour à la position d'équilibre. Lorsque ce gain devient suffisamment élevé, le système parvient à maintenir le robot debout, mais au prix d'une réponse sous-amortie caractérisée par des oscillations importantes. Cette étape permet de vérifier que le gain proportionnel apporte la rigidité nécessaire à la stabilisation du système, sans toutefois garantir un comportement satisfaisant.
 
@@ -392,10 +506,10 @@ Par souci de faisabilité, le couple mécanique requis par cette stratégie de r
     \centering
     \includegraphics[width=\linewidth]{assets/figures/graphs/reg_all_torque.pdf}
     \caption{Couple nécessaire à la régulation obtenu à partir du modèle théorique.}
-    \label{fig:torque_physics}
+    \label{fig:required_torque}
 \end{figure}
 
-La figure \ref{fig:torque_physics} montre que le couple maximal demandé au système est d'environ
+La figure \ref{fig:required_torque} montre que le couple maximal demandé au système est d'environ
 $$
 T_{\mathrm{max,\,req}} = 0.5~\si{\newton\meter}.
 $$
@@ -411,3 +525,23 @@ T_{\mathrm{max,\,disp}} = 2 \times 0.45 = 0.9~\si{\newton\meter}.
 $$
 
 Le couple requis par la régulation reste ainsi largement inférieur au couple disponible, avec une marge de près de 45\,\%. Les actionneurs sont donc correctement dimensionnés et les paramètres de régulation retenus sont compatibles avec les capacités mécaniques du système. Cette réserve de couple permettra également d'absorber les incertitudes du modèle ainsi que les perturbations pouvant apparaître lors des essais expérimentaux.
+
+Les paramètres finaux utilisés sont les suivants :
+
+Les paramètres finaux utilisés sont les suivants :
+
+\begin{itemize}
+    \item \textbf{Boucle de vitesse :}
+    \[
+    K_{pv}=26,\qquad
+    K_{iv}=0,\qquad
+    T_{dv}=0.
+    \]
+
+    \item \textbf{Boucle d'angle ($\theta$) :}
+    \[
+    K_{pt}=1.53,\qquad
+    K_{it}=0,\qquad
+    T_{dt}=0.38.
+    \]
+\end{itemize}

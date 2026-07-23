@@ -75,6 +75,38 @@ Pendant la phase d'accélération, ces deux contributions ne peuvent plus être 
 
 Dans l'ensemble, ces essais montrent que les perturbations observées ne proviennent pas d'une erreur de la régulation mais des limites physiques de la mesure inertielle.
 
+\subsection{Paramètres PID}
+
+Les paramètres du correcteur obtenus après réglage sont cohérents avec le comportement dynamique attendu du système. Il n'est pas nécessaire d'utiliser une composante intégrale dans les deux boucles de régulation.
+
+Pour la boucle d'angle $\theta$, un correcteur de type PD est suffisant. La composante proportionnelle permet de générer un couple de correction proportionnel à l'erreur d'inclinaison du robot, tandis que la composante dérivée apporte un amortissement en s'opposant aux variations rapides de l'angle.
+
+L'utilisation d'une action intégrale n'est pas nécessaire dans cette boucle. En effet, l'objectif principal est de maintenir une consigne d'angle nulle, et non de compenser une erreur statique permanente. système.
+
+Pour la boucle de vitesse, seul un gain proportionnel est utilisé. La dynamique de cette boucle est plus lente que celle de la boucle d'équilibre et l'objectif est principalement de réguler la vitesse moyenne du robot. L'ajout d'une action dérivée n'apporte pas d'amélioration significative. De même, une action intégrale n'est pas indispensable puisque la boucle d'angle interne compense déjà les perturbations nécessaires au maintien de l'équilibre.
+
+Une composante intégrale peut être utile dans une boucle de régulation lorsque l'objectif est de conserver une position constante. En effet, en intégrant la vitesse, on obtient une position souhaitée.
+
+Cependant, dans le cadre de ce projet, l'objectif de la boucle externe n'est pas de maintenir une position, mais de contrôler la vitesse du robot. Une erreur statique de position n'est donc pas un critère de performance recherché. Le déplacement du robot doit être autorisé lorsque la consigne de vitesse est non nulle, ce qui rend l'utilisation d'une composante intégrale moins pertinente.
+
+La boucle de vitesse est ainsi réglée uniquement avec une action proportionnelle, permettant d'obtenir une réponse suffisamment rapide sans introduire de dynamique supplémentaire susceptible de dégrader la stabilité du système.
+Les paramètres finaux retenus sont donc :
+
+\begin{itemize}
+    \item \textbf{Boucle de vitesse :}
+    \[
+    K_{pv}=26,\qquad
+    K_{iv}=0,\qquad
+    T_{dv}=0.
+    \]
+
+    \item \textbf{Boucle d'angle ($\theta$) :}
+    \[
+    K_{pt}=1.53,\qquad
+    K_{it}=0,\qquad
+    T_{dt}=0.38.
+    \]
+\end{itemize}
 \section{Utilisabilité}
 
 Le système présente une bonne utilisabilité. La charge du robot est facilitée par sa conception, permettant une manipulation aisée lors des phases de désassemblage et d'assemblage. L'interface utilisateur développée sous forme d'\acrshort{pwa} est intuitive et rapidement prise en main, permettant un contrôle efficace du système.

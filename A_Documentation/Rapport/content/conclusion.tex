@@ -125,11 +125,17 @@ L'autonomie de la maquette est donc comprise entre environ \SI{2.2}{\hour} dans 
 
 Plusieurs améliorations pourraient être envisagées afin de poursuivre le développement et d'améliorer les performances du système étudié.
 
-Une première amélioration concernerait la modélisation du système. Le modèle de simulation pourrait être complété en intégrant davantage de phénomènes physiques, tels que les frottements mécaniques, les pertes liées à la transmission et les variations du contact entre les roues et le sol. Une modélisation plus précise permettrait de réduire l'écart observé entre les résultats simulés et expérimentaux.
+Une première amélioration concernerait la modélisation du système. Le modèle de simulation pourrait être complété en intégrant davantage de phénomènes physiques, les pertes du au contact entre les roues et le sol. Une modélisation plus précise permettrait de réduire l'écart observé entre les résultats simulés et expérimentaux.
 
-Une seconde amélioration porterait sur la commande du déplacement. L'utilisation d'une régulation plus avancée, prenant mieux en compte les variations dynamiques du système, pourrait permettre d'améliorer le suivi de la consigne, notamment lors des phases d'accélération et de décélération.
+Une autre amélioration possible serait l'implémentation d'un système de régulation de type \acrshort{lqr} (\textit{Linear Quadratic Regulator}). Contrairement à une approche classique basée sur plusieurs correcteurs \acrshort{pid} indépendants, le régulateur \acrshort{lqr} considère l'ensemble du système dynamique et calcule directement une commande optimale à partir de l'état complet du robot.
+
+\section{Utilisation de l'IA}
+
+Dans le cadre de ce rapport, l'IA a été utilisée uniquement comme une aide à la rédaction. Le modèle utilisé est ChatGPT.
+
+L'ensemble des concepts et des idées présentés dans ce rapport ont été développés \textbf{sans l'aide de l'IA}.
+
 \section{Conclusion personnelle}
-
 La réalisation de ce projet a été une expérience particulièrement enrichissante. Elle m'a permis de mettre en pratique les connaissances acquises durant ma formation, tout en découvrant les différentes étapes nécessaires au développement complet d'un système robotique, de sa conception jusqu'à sa validation expérimentale.
 
 Ce travail m'a permis d'approfondir mes compétences dans de nombreux domaines techniques, notamment la modélisation et la conception 3D, la fabrication mécanique, la conception de cartes électroniques (\acrshort{pcb}), la programmation en C++, le développement d'un serveur Web ainsi que l'intégration de l'ensemble de ces éléments au sein d'un robot fonctionnel.

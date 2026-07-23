@@ -31,7 +31,7 @@ Les principaux éléments faisant l'objet d'une analyse comparative sont les sui
         \hline
         Système de contrôle simple & Réduit la complexité électronique et facilite l'implémentation. \\
         \hline
-        Coût \\
+        Prix &\\
         \hline
     \end{tabular}
     \caption{Critères moteurs}
@@ -86,6 +86,14 @@ Le système de contrôle de ce type de moteur repose sur un pont en H, permettan
 La vitesse est régulée par un signal PWM en tension. La position du moteur peut être mesurée à l'aide d'un encodeur placé en sortie.
 
 L'ensemble est généralement intégré dans une boucle de régulation de type \Gls{pid} afin d'assurer un contrôle précis de la vitesse et/ou de la position.
+\subsubsection{Prix}
+
+Le moteur à courant continu est une technologie très répandue et relativement économique.
+
+Cependant, dans le cadre de ce projet, un contrôle précis de la vitesse nécessite l'utilisation d'un encodeur ainsi que d'un driver de puissance (pont en H). Le coût global ne se limite donc pas au moteur seul mais comprend également les composants nécessaires à la mesure de la vitesse et à la commande.
+
+Le prix d'un ensemble moteur DC avec réducteur, encodeur et électronique de commande reste néanmoins modéré par rapport à une solution brushless.
+
 \subsubsection{Résultat Moteur DC}
 
 \begin{table}[H]
@@ -104,13 +112,15 @@ L'ensemble est généralement intégré dans une boucle de régulation de type \
         \hline
         Système de contrôle simple & $5/10$\\
         \hline
+        Prix& 6/10\\
+        \hline
     \end{tabular}
     \caption{Résultat Moteur DC}
     \label{tab:resultat_moteur_dc}
 \end{table}
 
 $$
-\text{Note globale} = \frac{35}{50}
+\text{Note globale}=\frac{35+6}{60}=\frac{41}{60}
 $$
 
 \subsection{Moteur pas à pas}
@@ -166,6 +176,13 @@ Le contrôle se fait normalement via deux signaux principaux :
     \item \textbf{STEP} : chaque impulsion correspond à un micro-pas
     \item \textbf{DIR} : définit le sens de rotation
 \end{itemize}
+\subsubsection{Prix}
+
+Les moteurs pas à pas sont largement utilisés dans les imprimantes 3D et les machines CNC, ce qui les rend très accessibles.
+
+Leur commande ne nécessite qu'un driver STEP/DIR, généralement peu coûteux, et aucun encodeur n'est indispensable lorsque le fonctionnement en boucle ouverte est suffisant.
+
+Le coût total de la solution reste donc faible tout en offrant une excellente précision de positionnement.
 
 \subsubsection{Synthèse des performances}
 
@@ -185,13 +202,15 @@ Le contrôle se fait normalement via deux signaux principaux :
         \hline
         Système de contrôle & 7/10 \\
         \hline
+        Prix & 8/10 \\
+        \hline
     \end{tabular}
     \caption{Résultats Moteur Pas à pas}
     \label{tab:stepper_resultats}
 \end{table}
 
 $$
-\text{Note globale} = \frac{35}{50}
+\text{Note globale}=\frac{35+8}{60}=\frac{43}{60}
 $$
 
 \subsection{Moteur Brushless}
@@ -259,6 +278,14 @@ Pour obtenir de bonnes performances, il est nécessaire d'avoir une estimation d
 
 Cependant, la détection par Back-EMF est peu efficace à basse vitesse, ce qui rend la commande complexe et coûteuse à mettre en oeuvre.f
 
+\subsubsection{Prix}
+
+Le moteur brushless est généralement plus coûteux qu'un moteur DC ou un moteur pas à pas de puissance équivalente.
+
+À ce coût s'ajoute celui de l'ESC. Lorsque l'application nécessite un fonctionnement performant à basse vitesse, un contrôleur compatible avec une commande FOC, voire un capteur de position, est souvent nécessaire, ce qui augmente encore le coût global de la solution.
+
+Cette technologie représente donc l'option la plus onéreuse parmi les trois étudiées.
+
 \subsubsection{Synthèse des performances}
 
 \begin{table}[H]
@@ -277,13 +304,15 @@ Cependant, la détection par Back-EMF est peu efficace à basse vitesse, ce qui 
         \hline
         Système de contrôle & 1/10 \\
         \hline
+        Prix & 3/10 \\
+        \hline
     \end{tabular}
     \caption{Synthèse des performances du moteur brushless}
     \label{tab:brushless_resultats}
 \end{table}
 
 $$
-\text{Note globale} = \frac{28}{50}
+\text{Note globale}=\frac{28+3}{60}=\frac{31}{60}
 $$
 
 \subsection{Choix final}
