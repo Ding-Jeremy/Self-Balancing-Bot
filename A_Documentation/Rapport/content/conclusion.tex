@@ -120,6 +120,26 @@ En utilisant les puissances mesurées :
 
 L'autonomie de la maquette est donc comprise entre environ \SI{2.2}{\hour} dans les conditions les plus exigeantes et \SI{7.2}{\hour} lorsque les moteurs sont à l'arrêt. En pratique, lors d'une utilisation normale avec des vitesses variables, l'autonomie réelle se situera entre ces deux valeurs.
 
+\section{Guide d'utilisation}
+Afin de pouvoir contrôler la maquette, la procédure à suivre est la suivante:
+\begin{enumerate}
+    \item Mettre le système sous tension à l'aide de l'interrupteur \texttt{SW1}.
+    \item Établir une connexion au réseau WiFi: \texttt{self-balancing-bot} en utilisant le mot de passe: \texttt{123456789}.
+    \item Accéder à l'interface utilisateur via un navigateur web en se connectant à l'adresse \texttt{192.168.4.1}.
+    \item Ajouter l'application à l'écran d'accueil du périphérique mobile à l'aide de la fonction de partage du navigateur.
+    \item Lancer l'application depuis l'écran d'accueil afin d'accéder à l'interface de commande du module.
+\end{enumerate}
+
+Il est imporant de noter ici que pour la charge de la batterie, le système doit d'abord être mis hors tension avec l'interrupteur \texttt{SW1}, ensuite, la batterie est débranchée puis chargée.
+
+Le courant de charge est généralement exprimé en fonction de la capacité nominale de la batterie, sous la forme d'un taux de charge en \emph{C}. Dans ce cas, un courant de $1\,\mathrm{A}$ correspond à un taux de charge de :
+\[
+\frac{1\,\mathrm{A}}{1.3\,\mathrm{Ah}} \approx 0.77\,C
+\]
+Ce taux reste inférieur à une charge à $1\,C$, soit environ $1.3\,\mathrm{A}$ pour cette batterie, et permet de limiter l'échauffement ainsi que la dégradation prématurée des cellules.
+
+Une charge avec un courant supérieur à $1\,\mathrm{A}$ augmenterait les contraintes électrochimiques sur les cellules LiPo, pouvant entraîner une élévation excessive de la température, une diminution de la durée de vie de la batterie ou, dans des conditions défavorables, un risque de gonflement ou d'endommagement des cellules. La limitation à $1\,\mathrm{A}$ constitue donc un compromis entre le temps de charge et la préservation de la sécurité et de la durée de vie de la batterie.
+
 
 \section{Améliorations possibles}
 
