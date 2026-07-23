@@ -5,7 +5,7 @@ Le logiciel embarqué a pour objectif d'assurer la gestion complète du système
 
 Le développement est réalisé en plusieurs étapes. Dans un premier temps, l'environnement de développement ainsi que les bibliothèques utilisées sont présentés. Ensuite, l'architecture générale du programme est détaillée afin d'expliquer l'organisation du code et le déroulement de son exécution. Enfin, les différentes fonctions permettant le pilotage des périphériques matériels sont décrites.
 
-L'intégralité du code source est disponible à l'annexe \ref{annexe:code_source_embarque}.
+L'intégralité du code source est disponible dans le zip.
 
 \section{Méthode et outils}
 
@@ -482,15 +482,16 @@ angleX = 0.9f * (angleX + gyroRateX * inner_loop_cnt)
 L'erreur d'inclinaison est ensuite calculée en prenant en compte :
 \begin{itemize}
     \item l'angle d'équilibre du robot ;
-    \item l'angle demandé par la boucle vitesse ;
-    \item un offset de calibration du capteur (choisi par le client);
-    \item l'angle réellement mesuré.
+    \item l'angle de consigne fourni par la boucle de vitesse ;
+    \item l'offset de calibration du capteur (défini par le client) ;
+    \item l'angle d'inclinaison réellement mesuré.
 \end{itemize}
 
-Le correcteur PID d'inclinaison génère alors une accélération permettant de ramener le robot vers son angle cible. Cette accélération est intégrée afin de calculer la nouvelle vitesse des moteurs.
+L'angle d'équilibre, défini par la variable \texttt{BALANCE\_ANGLE}, a été déterminé expérimentalement en inclinant le modèle jusqu'à atteindre une position proche de l'équilibre.
 
-La vitesse obtenue est ensuite limitée afin de protéger le système :
+Le correcteur PID d'inclinaison génère ensuite une accélération permettant de ramener le robot vers son angle de consigne. Cette accélération est intégrée afin de déterminer la nouvelle consigne de vitesse des moteurs.
 
+La vitesse obtenue est finalement limitée afin de protéger le système :
 \begin{lstlisting}[language=C++]
 motor_speed =
     motor_speed > D_MOTOR_MAX_SPEED ?
